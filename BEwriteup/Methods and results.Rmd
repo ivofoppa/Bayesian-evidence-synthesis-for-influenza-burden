@@ -1,0 +1,54 @@
+---
+title: Bayesian evidence synthesis for influenza burden estimation, using FluSurv-Net
+  data
+author: "Ivo M. Foppa"
+date: "August 15, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Three models, compared to results provided by Melissa
+
+1. The first model uses influenza detection probabilities, separate for patients hospitalized with and without fatal outcome, and standard errors estimates by Melissa to create Normal sampling distributions.
+The observed outcomes, hospitalization and death in hospitalized patients, are modeled as Poisson random variables generated from the (unobserved) total numbers of patients with that outcome and the provided detection probabilities. The latent (unobserved) outcome probabilities in FluSurv-NET participants is then used to generate US numbers.
+2. The second model uses the provided sensitivity estimates/SE as priors for the test sensitivities, but uses the observed proportions positive, assuming influenza positivity to be independent of test type. 
+3. The third model relaxes the assumption of equal influenza positivity across test types.
+
+## Results
+### Model conversion
+```{r,echo=FALSE,fig.show='hold',fig.width=6}
+
+bfolder <- 'C:/Users/VOR1/Dropbox/Misc work/Bayesian evidence synthesis/BEanalysis/BE Git project/'
+setwd(paste0(bfolder,'BEwriteup'))
+load('codalsMC.RData')
+cihosp1 <- round(as.numeric(quantile(codalsMC$USfluhosp,probs = c(.5,.025,.975))))
+cideath1 <- round(as.numeric(quantile(codalsMC$USfludeath,probs = c(.5,.025,.975))))
+
+plot(codalsMC$USfluhosp,type = 'l',ylab = 'Influenza hosp. est.', main = 'Model 1')
+
+load('codalsdiffsimpl.RData')
+cihosp2 <- round(as.numeric(quantile(codalsdiffsimpl$USfluhosp,probs = c(.5,.025,.975))))
+cideath2 <- round(as.numeric(quantile(codalsdiffsimpl$USfludeath,probs = c(.5,.025,.975))))
+
+plot(codalsdiffsimpl$USfluhosp,type = 'l',ylab = 'Influenza hosp. est.', main = 'Model 2')
+
+load('codalsdiff.RData')
+cihosp3 <- round(as.numeric(quantile(codalsdiff$USfluhosp,probs = c(.5,.025,.975))))
+cideath3 <- round(as.numeric(quantile(codalsdiff$USfludeath,probs = c(.5,.025,.975))))
+
+plot(codalsdiff$USfluhosp,type = 'l',ylab = 'Influenza hosp. est.', main = 'Model 3')
+
+```
+
+### Model estimates: Comparison
+The following Table compares Melissa's estimates to the estimates from the three models
+
+Outcome  | Melissa  | Model 1 | Model 2 | Model 3
+---------|----------|---------|---------|---------
+Hosp.s    |445,724   | `r cihosp1[1]` (`rcihosp1[2]`,`rcihosp1[3]`)| `r cihosp2[1]` (`rcihosp2[2]`,`rcihosp2[3]`)| `r cihosp3[1]` (`rcihosp3[2]`,`rcihosp3[3]`)
+---------|----------|---------|---------|---------
+Deaths    |41,743    | `r cideath1[1]` (`rcideath1[2]`,`rcideath1[3]`)| `r cideath2[1]` (`rcideath2[2]`,`rcideath2[3]`)| `r cideath3[1]` (`rcideath3[2]`,`rcideath3[3]`)
+---------|----------|---------|---------|---------

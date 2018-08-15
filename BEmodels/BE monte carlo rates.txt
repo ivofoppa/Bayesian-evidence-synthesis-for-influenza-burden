@@ -1,0 +1,28 @@
+model {
+  flutot ~ dpois(rflu*FSNpop) ## the total # of flu hosp in FSN; unobserved
+
+  fluhosp ~ dbin(phosp,flutot)
+  fludeath ~ dbin(pdeath,flutot)
+  
+  fluhospdeath ~ dbin(pdih,fludeath) ## # total flu deaths in FSN; unobserved
+
+  fluoutcome[1] <- fluhosp ##
+  fluoutcome[2] <- fluhospdeath ##
+
+  RCdeathish ~ dbin(pdih,RCdeath)  ## deaths inside hospital
+
+  rflu ~ dunif(0,10)
+  phosp ~ dunif(0,1)
+  pdeath ~ dunif(0,1)
+  pdih ~ dunif(0,1)
+
+for (k in 1:2){
+  
+    pt[k] ~ dnorm(Pdetect[k],1/(PdetectSE[k]*PdetectSE[k]))I(0,)
+    
+    nfluhospobs[k] ~ dbin(pt[k],fluoutcome[k])  ## observed flu hosp in FSN
+  }
+  USflutot ~ dpois(rflu*Npop)
+  USfluhosp ~ dbin(phosp,USflutot)
+  USfludeath ~ dbin(pdeath,USflutot)
+}
