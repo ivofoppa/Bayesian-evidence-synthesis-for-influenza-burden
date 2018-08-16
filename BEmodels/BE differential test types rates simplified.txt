@@ -1,60 +1,58 @@
 model {
-  flutot ~ dpois(rflu*FSNpop) ## the total # of flu illness in FSN; unobserved
-
-  fluhosp ~ dbin(phosp,flutot)
-  fludeath ~ dbin(pdeath,flutot)
+  fluhosp ~ dpois(rfluhosp*FSNpop) ## The total # of flu hosp in FSN; unobserved
+  FSNfluhosp ~ dbin(pt[1],fluhosp) ## Observed flu hosp.
   
-  fluhospdeath ~ dbin(pdih,fludeath) ## # total flu deaths in FSN; unobserved
-
-  fluoutcome[1] <- fluhosp ##
-  fluoutcome[2] <- fluhospdeath ##
-
-  RCdeathish ~ dbin(pdih,RCdeath)  ## deaths inside hospital
-
-  rflu ~ dunif(0,10)
-  phosp ~ dunif(0,1)
-  pdeath ~ dunif(0,1)
-  pdih ~ dunif(0,1)
+  rfludeathosh <- rfluhosp*pdeath*posh/(1-posh) ## Rate of outside-of-hosp mortality
+  fludeathosh ~ dpois(rfludeathosh*FSNpop) ## The total # of flu deaths in FSN; unobserved
   
-  for (k in 1:2){
-  ## The three sensitivities, test probs and flu risks correspond to the 3 diff. tests;
-  ## the 4th flu risk and 'test prob' represents those not tested
-  
-    pt[k] <- (pflu[k]*ptest[k,1]*sens[k,1] + pflu[k]*ptest[k,2]*sens[k,2] + pflu[k]*ptest[k,3]*sens[k,3])/
-    (pflu[k]*ptest[k,1] + pflu[k]*ptest[k,2] + pflu[k]*ptest[k,3] + pflu[k]*ptest[k,4])
+  FSNfludeath ~ dbin(pdeath*pt[2],fluhosp) ## Observed deaths among hospitalized influenza patents
+
+  fludeath <- FSNfludeath + fludeathosh  ## total flu deaths
+
+    rfluhosp ~ dunif(0,10)
+    pdeath ~ dunif(0,1)
     
-    nfluhospobs[k] ~ dbin(pt[k],fluoutcome[k])  ## observed flu hosp in FSN
-    
-    nttype[k,] ~ dmulti(ptest[k,1:4],ntot[k])## observed testing freqs
-    ## priors for testing 
-    ptest1[k] ~ dunif(0,1)
-    ptest[k,1] <- ptest1[k]
-    ptest20[k] ~ dunif(0,1)
-    ptest[k,2] <- ptest20[k]*(1-ptest[k,1])
-    ptest30[k] ~ dunif(0,1)
-    ptest[k,3] <- ptest30[k]*(1-ptest[k,1]-ptest[k,2])
-    ptest[k,4] <- 1 - ptest[k,1] - ptest[k,2] - ptest[k,3]
-    
-    pflu[k] ~ dunif(0,1)
-   
-    for (m in 1:3) {
-      flupos[k,m] ~ dbin(pflu[k],nttype[k,m]) ## actual flu pos/test type, unobserved
-      testpos[k,m] ~ dbin(sens[k,m],flupos[k,m]) ## observed flu pos/test type
+    for (k in 1:2){
+      ## The three sensitivities, test probs and flu risks correspond to the 3 diff. tests;
+      ## the 4th flu risk and 'test prob' represents those not tested
+      
+      pt[k] <- (pflu[k]*ptest[k,1]*sens[k,1] + pflu[k]*ptest[k,2]*sens[k,2] + pflu[k]*ptest[k,3]*sens[k,3])/
+        (pflu[k]*ptest[k,1] + pflu[k]*ptest[k,2] + pflu[k]*ptest[k,3] + pflu[k]*ptest[k,4])
+      
+      nttype[k,] ~ dmulti(ptest[k,1:4],ntot[k])   ### Observed testing freqs
+      
+      ## priors for testing 
+      ptest1[k] ~ dunif(0,1)
+      ptest[k,1] <- ptest1[k]
+      ptest20[k] ~ dunif(0,1)
+      ptest[k,2] <- ptest20[k]*(1-ptest[k,1])
+      ptest30[k] ~ dunif(0,1)
+      ptest[k,3] <- ptest30[k]*(1-ptest[k,1]-ptest[k,2])
+      ptest[k,4] <- 1 - ptest[k,1] - ptest[k,2] - ptest[k,3]
+      
+      pflu[k] ~ dunif(0,1)
+      
+      for (m in 1:3) {
+        flupos[k,m] ~ dbin(pflu[k],nttype[k,m]) ## actual flu pos/test type, unobserved
+        testpos[k,m] ~ dbin(sens[k,m],flupos[k,m]) ## observed flu pos/test type
+      }
+      
+      ## generating a sensitvity from the given distribution
+      
+      sens1[k] ~ dnorm(pcrsens[1],1/(pcrsens[2]*pcrsens[2]))
+      logsens2[k] ~ dnorm(lrapidsens[1],1/(lrapidsens[2]*lrapidsens[2]))I(,0)
+      sens2[k] <- exp(logsens2[k])
+      sens3[k] ~ dunif(0,1)
+      
+      sens[k,1] <- sens1[k]
+      sens[k,2] <- sens2[k]
+      sens[k,3] <- sens3[k]
     }
     
-  ### generating a sensitvity from the given distribution
- 
-  sens1[k] ~ dnorm(pcrsens[1],1/(pcrsens[2]*pcrsens[2]))
-  logsens2[k] ~ dnorm(lrapidsens[1],1/(lrapidsens[2]*lrapidsens[2]))I(,0)
-  sens2[k] <- exp(logsens2[k])
-  sens3[k] ~ dunif(0,1)
-
-  sens[k,1] <- sens1[k]
-  sens[k,2] <- sens2[k]
-  sens[k,3] <- sens3[k]
-  }
-
-  USflutot ~ dpois(rflu*Npop)
-  USfluhosp ~ dbin(phosp,USflutot)
-  USfludeath ~ dbin(pdeath,USflutot)
+    USfluhosp ~ dpois(rfluhosp*Npop) ## The total # of US flu hosp
+    
+    USfludeathosh ~ dpois(rfludeathosh*Npop) ## The total # of US flu osh deaths
+    USfludeathish ~ dbin(pdeath,USfluhosp) ## The total # of US flu ish deaths
+    
+    USfludeath <- USfludeathosh + USfludeathish ## Total US flu deaths
 }

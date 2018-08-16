@@ -1,7 +1,12 @@
 library(R2jags)
+### This code is for one age group, only for season 2014-15.
+### The age group has to be selected; separately for the two data sets!
+agecatls <- list(c(65,999),'65+')
 ### Data managment for detection multiplier
-bfolder <- 'C:/Users/VOR1/Dropbox/Misc work/Bayesian evidence synthesis/BEanalysis/BE Git project/'
+bfolder <- 'C:/Users/VOR1/Dropbox/Misc work/Bayesian evidence synthesis/Bayesian-evidence-synthesis-for-influenza-burden/'
 setwd(paste0(bfolder,'BEdata'))
+
+
 
 dataset <- data.frame(read.csv('FluSurv-Net for sens etc.csv'))
 
@@ -13,15 +18,15 @@ for (k in 1:length(dataset[1,])) {
 # dataset$DateHosp <- as.Date(dataset$DateHosp,"%d%B%Y")
 # 
 # dataset$DateDeath <- as.Date(dataset$DateDeath,"%d%B%Y")
-delind <- which(dataset$Age >= 65)
-dataset65 <- dataset[delind,]
+selind <- which(dataset$Age >= agecatls[[1]][1] & dataset$Age < agecatls[[1]][2])
+datasetag <- dataset[selind,]
 ### testtypes of influenza positived, deceased or not
 nttype <- array(0,dim = c(2,4))
 ntot <- c(0,0)
 for (d in c(0,1)){
-  selind2 <- which(dataset65$Died==d)
+  selind2 <- which(datasetag$Died==d)
   ntot[d+1] <- length(selind2)
-  ds <- dataset65[selind2,]
+  ds <- datasetag[selind2,]
   nttype[d+1,1] <- length(which(ds$TestedFlu==1 & ds$TestType==1)) # PCR
   nttype[d+1,2] <- length(which(ds$TestedFlu==1 & ds$TestType==2)) # RIDT
   nttype[d+1,3] <- length(which(ds$TestedFlu==1 & ds$TestType%in%c(3:9))) # Other/unknown
@@ -42,8 +47,8 @@ pcrsens <- c(cipcr[1],seest)
 testpos <- array(0,dim = c(2,3))
 
 for (d in c(0,1)){
-  selind3 <- which(dataset65$Died==d & dataset65$TestResult==1)
-  ds <- dataset65[selind3,]
+  selind3 <- which(datasetag$Died==d & datasetag$TestResult==1)
+  ds <- datasetag[selind3,]
   testpos[d+1,1] <- length(which(ds$TestType==1)) # PCR
   testpos[d+1,2] <- length(which(ds$TestType==2)) # Other/unknown
   testpos[d+1,3] <- length(which(ds$TestType%in%c(3:9))) # Other/unknown
@@ -55,7 +60,7 @@ testpos[1,] <- colSums(testpos)
 #########################################################################################
 #########################################################################################
 #########################################################################################
-length(which(dataset65$TestedFlu==1))/length(dataset65$PatientNo)
+length(which(datasetag$TestedFlu==1))/length(datasetag$PatientNo)
 #PCR
 cipcr <- c(86.1,79.6,92.7)/100
 sepcrest <- ((cipcr[3] - cipcr[1]) + (cipcr[1] - cipcr[2]))/2/1.96
@@ -64,31 +69,33 @@ pcrsens <- c(cipcr[1],sepcrest)
 cirapid <- c(20.1,8.8,41.4)/100
 selograpidest <- ((log(cirapid[3]) - log(cirapid[1])) + (log(cirapid[1]) - log(cirapid[2])))/2/1.96
 lrapidsens <- c(log(cirapid[1]),selograpidest)
-
 #########################################################################################
-###  Reding-in other input values #######################################################
+###  Reding-in input values #############################################################
 #########################################################################################
-Assign <- function(Names, Values) {
-  sapply(seq_along(Names), function(i){assign(Names[i], Values[i], envir=.GlobalEnv)});
-  invisible()
+inputdata <- read.csv('Burden inputs All Ages.csv',header = T)
+#########################################################################################
+for (col in 1:length(inputdata[1,])){
+  inputdata[,col] <- as.vector(inputdata[,col])
+  if (col > 2){
+    inputdata[,col] <- as.numeric(inputdata[,col])
+  }
 }
-#########################################################################################
 
-varnames <- c('Npop','FSNpop','FSNfluhosp','fludeath','RCdeath','RCdeathosh','perctested',
-              'perctestedSE','sens','sensSE','Pdetect','pdetectSE','Multiplier','perctesteddth',
-              'perctesteddthSE','sensdth','sensdthSE','C-HRatio','MAprop','MAprop-Min','MAprop-Max')
+agels <- unique(inputdata$ag)
 
-varvalues <- c(46243211,3521076,10864,405,880220,588976,0.51903,0.04131,0.61674,0.05205,0.32011,
-               0.03713,3.12395,0.4323,0.0559,0.64,0.09337,11,0.56,0.53,0.6)
+selind <- which(inputdata$ag==agecatls[[2]] & inputdata$season=="2014-15") 
+seldata <- inputdata[selind,]
+### Make sure data set is not attached yet; if it is, detach it ...
+for (i in 1:3){
+  attached <- search()
+  if ('seldata'%in%attached)
+  {detach(seldata)}
+}
 
-Assign(varnames,varvalues)
+attach(seldata)
 
-nfluhospobs <- c(FSNfluhosp,fludeath)
-
-RCdeathish <- RCdeath-RCdeathosh
-
-data <- list('nfluhospobs'=nfluhospobs,'FSNpop'=FSNpop,'Npop'=Npop,
-             'RCdeath'=RCdeath,'RCdeathish'=RCdeathish,
+data <- list('FSNfluhosp'=FSNfluhosp,'FSNpop'=FSNpop,'Npop'=USpop,
+             'posh'=RCdeathoshprop,'FSNfludeath'=FSNfludeath,
              'nttype'=nttype,'testpos'=testpos,'pcrsens'=pcrsens,'lrapidsens'=lrapidsens,'ntot'=ntot)
 
 pt1init <- nttype[,1]/ntot
@@ -103,19 +110,15 @@ pfluinit <- c(testpos[,1]/sens1init + testpos[,2]/exp(logsens2init) + testpos[,3
 
 fluposinit <- round(pfluinit*nttype[,1:3])
 
-rfluinit <- nfluhospobs[1]/FSNpop*3
-pdihinit <- RCdeathish/RCdeath
-phospinit <- .9
+rfluinit <- FSNfluhosp/FSNpop*3
 
 ptestinit <- nttype/rowSums(nttype)
-pdeathinit <- 0.1
+pdeathinit <- FSNfludeath/FSNfluhosp
 
 inits <- function(){
   list(
-    rflu = rfluinit,
-    phosp = phospinit,
+    rfluhosp = rfluinit,
     pdeath = pdeathinit,
-    pdih = pdihinit,
     ptest1 = pt1init,
     ptest20 = pt20init,
     ptest30 = pt30init,
@@ -149,4 +152,4 @@ save(codalsdiffsimpl,file = 'codalsdiffsimpl.RData')
 #########################################################################################
 ###  ####################################################################################
 #########################################################################################
-
+plot(codalsdiffsimpl$USfluhosp,type = 'l')
