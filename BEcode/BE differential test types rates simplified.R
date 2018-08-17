@@ -6,8 +6,6 @@ agecatls <- list(c(65,999),'65+')
 bfolder <- 'C:/Users/VOR1/Dropbox/Misc work/Bayesian evidence synthesis/Bayesian-evidence-synthesis-for-influenza-burden/'
 setwd(paste0(bfolder,'BEdata'))
 
-
-
 dataset <- data.frame(read.csv('FluSurv-Net for sens etc.csv'))
 
 ### Changing vars into simple values
@@ -94,8 +92,10 @@ for (i in 1:3){
 
 attach(seldata)
 
+posh <- RCdeathoshprop
+
 data <- list('FSNfluhosp'=FSNfluhosp,'FSNpop'=FSNpop,'Npop'=USpop,
-             'posh'=RCdeathoshprop,'FSNfludeath'=FSNfludeath,
+             'posh'=posh,'FSNfludeath'=FSNfludeath,
              'nttype'=nttype,'testpos'=testpos,'pcrsens'=pcrsens,'lrapidsens'=lrapidsens,'ntot'=ntot)
 
 pt1init <- nttype[,1]/ntot
@@ -110,15 +110,15 @@ pfluinit <- c(testpos[,1]/sens1init + testpos[,2]/exp(logsens2init) + testpos[,3
 
 fluposinit <- round(pfluinit*nttype[,1:3])
 
-rfluinit <- FSNfluhosp/FSNpop*3
+rfluhospinit <- FSNfluhosp/FSNpop*3
+rfludeathinit <- FSNfludeath/FSNpop/(1-posh)
 
 ptestinit <- nttype/rowSums(nttype)
-pdeathinit <- FSNfludeath/FSNfluhosp
 
 inits <- function(){
   list(
-    rfluhosp = rfluinit,
-    pdeath = pdeathinit,
+    rfluhosp = rfluhospinit,
+    rfludeath = rfludeathinit,
     ptest1 = pt1init,
     ptest20 = pt20init,
     ptest30 = pt30init,
@@ -132,8 +132,8 @@ inits <- function(){
 variables <- c('USfluhosp','USfludeath')
 # variables <- c('pt')
 
-nadapt <- 100000
-niter <- 100000
+nadapt <- 10000
+niter <- 10000
 
 model.file <- 'BE differential test types rates simplified.txt'
 

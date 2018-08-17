@@ -1,116 +1,62 @@
 library(R2jags)
+### This code is for one age group, only for season 2014-15.
+### The age group has to be selected; separately for the two data sets!
+agecatls <- list(c(65,999),'65+')
 ### Data managment for detection multiplier
-bfolder <- 'C:/Users/VOR1/Dropbox/Misc work/Bayesian evidence synthesis/BEanalysis/BE Git project/'
+bfolder <- 'C:/Users/VOR1/Dropbox/Misc work/Bayesian evidence synthesis/Bayesian-evidence-synthesis-for-influenza-burden/'
 setwd(paste0(bfolder,'BEdata'))
-
-dataset <- data.frame(read.csv('FluSurv-Net for sens etc.csv'))
-
-### Changing vars into simple values
-for (k in 1:length(dataset[1,])) {
-  dataset[,k] <- as.vector(dataset[,k])
+#########################################################################################
+###  Reding-in input values #############################################################
+#########################################################################################
+inputdata <- read.csv('Burden inputs All Ages.csv',header = T)
+#########################################################################################
+for (col in 1:length(inputdata[1,])){
+  inputdata[,col] <- as.vector(inputdata[,col])
+  if (col > 2){
+    inputdata[,col] <- as.numeric(inputdata[,col])
+  }
 }
 
-# dataset$DateHosp <- as.Date(dataset$DateHosp,"%d%B%Y")
-# 
-# dataset$DateDeath <- as.Date(dataset$DateDeath,"%d%B%Y")
-delind <- which(dataset$Age >= 65)
-dataset65 <- dataset[delind,]
-### testtypes of influenza positived, deceased or not
-nttype <- array(0,dim = c(2,4))
-ntot <- c(0,0)
-for (d in c(0,1)){
-  selind2 <- which(dataset65$Died==d)
-  ntot[d+1] <- length(selind2)
-  ds <- dataset65[selind2,]
-  nttype[d+1,1] <- length(which(ds$TestedFlu==1 & ds$TestType==1)) # PCR
-  nttype[d+1,2] <- length(which(ds$TestedFlu==1 & ds$TestType==2)) # RIDT
-  nttype[d+1,3] <- length(which(ds$TestedFlu==1 & ds$TestType%in%c(3:9))) # Other/unknown
-  nttype[d+1,4] <- length(which(ds$TestedFlu!=1)) # Other/unknown
+agels <- unique(inputdata$ag)
+
+selind <- which(inputdata$ag==agecatls[[2]] & inputdata$season=="2014-15") 
+seldata <- inputdata[selind,]
+### Make sure data set is not attached yet; if it is, detach it ...
+for (i in 1:3){
+  attached <- search()
+  if ('seldata'%in%attached)
+  {detach(seldata)}
 }
-#########################################################################################
-###  nttype according to all hosp/died system ###########################################
-#########################################################################################
-nttype[1,] <- colSums(nttype)
-ntot[1] <- sum(ntot)
-#########################################################################################
 
-### test sensitivities in 65+ from Millman et al. 2015, adapted by Melissa Rolfes
-cipcr <- c(86.1,79.6,92.7)/100
-seest <- ((cipcr[3] - cipcr[1]) + (cipcr[1] - cipcr[2]))/2/1.96
-pcrsens <- c(cipcr[1],seest)
+attach(seldata)
 
-testpos <- array(0,dim = c(2,3))
+Pdetect <- 0.32; PdetectSE <- 0.04;
+Pdthdetect <- 0.28; PdthdetectSE <- 0.05; RCdeathoshprop <- .669;
 
-for (d in c(0,1)){
-  selind3 <- which(dataset65$Died==d & dataset65$TestResult==1)
-  ds <- dataset65[selind3,]
-  testpos[d+1,1] <- length(which(ds$TestType==1)) # PCR
-  testpos[d+1,2] <- length(which(ds$TestType==2)) # Other/unknown
-  testpos[d+1,3] <- length(which(ds$TestType%in%c(3:9))) # Other/unknown
-}
-#########################################################################################
-###  testpos according to all hosp/died system ##########################################
-#########################################################################################
-testpos[1,] <- colSums(testpos)
-#########################################################################################
-#PCR
-cipcr <- c(86.1,79.6,92.7)/100
-sepcrest <- ((cipcr[3] - cipcr[1]) + (cipcr[1] - cipcr[2]))/2/1.96
-pcrsens <- c(cipcr[1],sepcrest)
-
-cirapid <- c(20.1,8.8,41.4)/100
-selograpidest <- ((log(cirapid[3]) - log(cirapid[1])) + (log(cirapid[1]) - log(cirapid[2])))/2/1.96
-lograpidsens <- c(log(cirapid[1]),selograpidest)
-
-#########################################################################################
-###  Reding-in other input values #######################################################
-#########################################################################################
-Assign <- function(Names, Values) {
-  sapply(seq_along(Names), function(i){assign(Names[i], Values[i], envir=.GlobalEnv)});
-  invisible()
-}
-#########################################################################################
-
-varnames <- c('Npop','FSNpop','FSNfluhosp','fludeath','RCdeath','RCdeathosh','perctested',
-              'perctestedSE','sens','sensSE','Pdetect','PdetectSE','Multiplier','perctesteddth',
-              'perctesteddthSE','sensdth','sensdthSE','C-HRatio','MAprop','MAprop-Min','MAprop-Max',
-              'Pdthdetect','PdthdetectSE')
-
-varvalues <- c(46243211,3521076,10864,405,880220,588976,0.51903,0.04131,0.61674,0.05205,0.32011,
-               0.03713,3.12395,0.4323,0.0559,0.64,0.09337,11,0.56,0.53,0.6,0.28,0.05)
-
-
-Assign(varnames,varvalues)
-
-nfluhospobs <- c(FSNfluhosp,fludeath)
-
-RCdeathish <- RCdeath-RCdeathosh
-
-Pdetect <- c(Pdetect,Pdthdetect)
-PdetectSE <- c(PdetectSE,PdthdetectSE) 
-
-data <- list('nfluhospobs'=nfluhospobs,'FSNpop'=FSNpop,'Npop'=Npop,
-             'RCdeath'=RCdeath,'RCdeathish'=RCdeathish,
+data <- list('FSNfluhosp'=FSNfluhosp,'FSNpop'=FSNpop,'Npop'=USpop,
+             'posh'=RCdeathoshprop,'FSNfludeath'=FSNfludeath,
+             'Pdthdetect'=Pdthdetect,'PdthdetectSE'=PdthdetectSE,
              'Pdetect'=Pdetect,'PdetectSE'=PdetectSE)
 
-rfluinit <- nfluhospobs[1]/FSNpop*3
-pdihinit <- RCdeathish/RCdeath
-phospinit <- .9
 
-pdeathinit <- 0.1
+ptinit <- c(Pdetect,Pdthdetect)
+
+rfluinit <- FSNfluhosp/FSNpop*3
+rfludeathinit <- FSNfludeath/FSNpop*3
+
+pdeathinit <- FSNfludeath/FSNfluhosp
 
 inits <- function(){
   list(
-    rflu = rfluinit,
-    phosp = phospinit,
+    rfluhosp = rfluinit,
     pdeath = pdeathinit,
-    pdih = pdihinit
-  )}
+    pt = ptinit
+    )}
 
 variables <- c('USfluhosp','USfludeath')
 
 model.file <- 'BE monte carlo rates.txt'
-nadapt <- 100000
+nadapt <- 10000
 niter <- 100000
 setwd(paste0(bfolder,'BEmodels'))
 

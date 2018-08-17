@@ -1,28 +1,18 @@
 model {
-  flutot ~ dpois(rflu*FSNpop) ## the total # of flu hosp in FSN; unobserved
-
-  fluhosp ~ dbin(phosp,flutot)
-  fludeath ~ dbin(pdeath,flutot)
+  fluhosp ~ dpois(rfluhosp*FSNpop) ## The total # of flu hosp in FSN; unobserved
+  FSNfluhosp ~ dbin(pt[1],fluhosp) ## Observed flu hosp.
   
-  fluhospdeath ~ dbin(pdih,fludeath) ## # total flu deaths in FSN; unobserved
+  fludeath ~ dbin(pdeath,fluhosp) ## The total # of flu hosp in FSN; unobserved
+  FSNfludeath ~ dbin(pt[2],fludeath) ## Observed deaths among hospitalized influenza patents
+  rfludeath <- rfluhosp*pdeath/(1-posh)
 
-  fluoutcome[1] <- fluhosp ##
-  fluoutcome[2] <- fluhospdeath ##
-
-  RCdeathish ~ dbin(pdih,RCdeath)  ## deaths inside hospital
-
-  rflu ~ dunif(0,10)
-  phosp ~ dunif(0,1)
-  pdeath ~ dunif(0,1)
-  pdih ~ dunif(0,1)
-
-for (k in 1:2){
+  rfluhosp ~ dunif(0,10)
+  pdeath ~ dunif(0,10)
   
-    pt[k] ~ dnorm(Pdetect[k],1/(PdetectSE[k]*PdetectSE[k]))I(0,)
+  pt[1] ~ dnorm(Pdetect,1/(PdetectSE*PdetectSE))    
+  pt[2] ~ dnorm(Pdthdetect,1/(PdthdetectSE*PdthdetectSE))    
+  
+  USfluhosp ~ dpois(rfluhosp*Npop) ## The total # of US flu hosp
     
-    nfluhospobs[k] ~ dbin(pt[k],fluoutcome[k])  ## observed flu hosp in FSN
-  }
-  USflutot ~ dpois(rflu*Npop)
-  USfluhosp ~ dbin(phosp,USflutot)
-  USfludeath ~ dbin(pdeath,USflutot)
+  USfludeath ~ dpois(rfludeath*Npop) ## The total # of US flu osh deaths
 }
