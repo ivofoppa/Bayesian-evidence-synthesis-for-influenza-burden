@@ -1,6 +1,6 @@
 model {
-  fluhosp ~ dpois(rfluhosp*FSNpop) ## The total # of flu hosp in FSN; unobserved
-  FSNfluhosp ~ dbin(pt[1],fluhosp) ## Observed flu hosp.
+  fluhosp ~ dpois(rfluhosp*FSNpop) ## The # of flu hosp in FSN with not fatal outcome; unobserved
+  FSNfluhosp ~ dbin(pt[1],fluhosp) ## Observed flu hosp. without fatal outcome
   
   rfludeathish <- rfludeath*(1-posh)
   fludeath ~ dpois(rfludeathish*FSNpop) ## The total # of flu deaths in FSN; unobserved
@@ -45,7 +45,7 @@ model {
     sens[k,3] <- sens3[k]
     }
     
-    USfluhosp ~ dpois(rfluhosp*Npop) ## The total # of US flu hosp
+    USfluhosp ~ dpois((rfluhosp + rfludeathish)*Npop) ## The total # of US flu hosp, non-fatal + fatal
     
     USfludeath ~ dpois(rfludeath*Npop) ## The total # of US flu deaths
 }

@@ -2,17 +2,14 @@ model {
   fluhosp ~ dpois(rfluhosp*FSNpop) ## The total # of flu hosp in FSN; unobserved
   FSNfluhosp ~ dbin(pt[1],fluhosp) ## Observed flu hosp.
   
-  rfludeathosh <- rfluhosp*pdeath*posh/(1-posh) ## Rate of outside-of-hosp mortality
-  fludeathosh ~ dpois(rfludeathosh*FSNpop) ## The total # of flu deaths in FSN; unobserved
+  rfludeathish <- rfludeath*(1-posh)
+  fludeath ~ dpois(rfludeathish*FSNpop) ## The total # of flu deaths in FSN; unobserved
   
-  FSNfludeath ~ dbin(pdeath*pt[2],fluhosp) ## Observed deaths among hospitalized influenza patents
-  
-  fludeath <- FSNfludeath + fludeathosh  ## total flu deaths
-  
+  FSNfludeath ~ dbin(pt[2],fludeath) ## Observed deaths among hospitalized influenza patents
+
   rfluhosp ~ dunif(0,10)
-  pdeath ~ dunif(0,1)
-  
-  
+  rfludeath ~ dunif(0,10)
+
   for (k in 1:2){
     ## The three sensitivities, test probs and flu risks correspond to the 3 diff. tests;
     ## the 4th flu risk and 'test prob' represents those not tested
@@ -20,7 +17,7 @@ model {
     pt[k] <- (pflu[k,1]*ptest[k,1]*sens[k,1] + pflu[k,2]*ptest[k,2]*sens[k,2] + pflu[k,3]*ptest[k,3]*sens[k,k])/
       (pflu[k,1]*ptest[k,1] + pflu[k,2]*ptest[k,2] + pflu[k,3]*ptest[k,3] + pflu[k,4]*ptest[k,4])
     
-    nttype[k,] ~ dmulti(ptest[k,1:4],ntot[k])## observed testing freqs
+    nttype[k,] ~ dmulti(ptest[k,1:4],ntot[k])   ### Observed testing freqs
     ## priors for testing 
     ptest10[k] ~ dunif(0,1)
     ptest[k,1] <- ptest10[k]
@@ -49,10 +46,6 @@ model {
     sens3[k] ~ dunif(0,1)
     sens[k,3] <- sens3[k]
   }
-  USfluhosp ~ dpois(rfluhosp*Npop) ## The total # of US flu hosp
-  
-  USfludeathosh ~ dpois(rfludeathosh*Npop) ## The total # of US flu osh deaths
-  USfludeathish ~ dbin(pdeath,USfluhosp) ## The total # of US flu ish deaths
-  
-  USfludeath <- USfludeathosh + USfludeathish ## Total US flu deaths
+    USfluhosp ~ dpois(rfluhosp*Npop) ## The total # of US flu hosp 
+    USfludeath ~ dpois(rfludeath*Npop) ## The total # of US flu deaths
 }

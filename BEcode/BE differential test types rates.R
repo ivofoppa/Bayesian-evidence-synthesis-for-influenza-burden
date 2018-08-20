@@ -94,13 +94,15 @@ for (i in 1:3){
 
 attach(seldata)
 
+posh <- RCdeathoshprop
+
 data <- list('FSNfluhosp'=FSNfluhosp,'FSNpop'=FSNpop,'Npop'=USpop,
              'posh'=RCdeathoshprop,'FSNfludeath'=FSNfludeath,
              'nttype'=nttype,'testpos'=testpos,'pcrsens'=pcrsens,'lrapidsens'=lrapidsens,'ntot'=ntot)
 
 pt10init <- nttype[,1]/ntot
-pt20init <- nttype[,2]/ntot/(1 - pt1init)
-pt30init <- nttype[,3]/ntot/(1 - pt1init - pt20init*(1 - pt1init))
+pt20init <- nttype[,2]/ntot/(1 - pt10init)
+pt30init <- nttype[,3]/ntot/(1 - pt10init - pt20init*(1 - pt10init))
 
 sens1init <- c(pcrsens[1],pcrsens[1])
 logsens2init <- c(lrapidsens[1],lrapidsens[1])
@@ -112,19 +114,17 @@ pfluinit <- array(sapply(pfluinit, function(x) ifelse(x==0,.2,ifelse(x>1,.9,x)))
 
 fluposinit <- round(pfluinit[,1:3]*nttype[,1:3])
 
-rfluinit <- FSNfluhosp/FSNpop*3
+rfluhospinit <- FSNfluhosp/FSNpop*3
+rfludeathinit <- FSNfludeath/FSNpop/(1-posh)
 
 ptestinit <- nttype/rowSums(nttype)
-pdeathinit <- FSNfludeath/FSNfluhosp
 
-ptestinit <- nttype/rowSums(nttype)
-pdeathinit <- 0.1
 
 inits <- function(){
   list(
-    rfluhosp = rfluinit,
-    pdeath = pdeathinit,
-    ptest1 = pt1init,
+    rfluhosp = rfluhospinit,
+    rfludeath = rfludeathinit,
+    ptest10 = pt10init,
     ptest20 = pt20init,
     ptest30 = pt30init,
     pflu = pfluinit,
@@ -136,8 +136,8 @@ inits <- function(){
 
 variables <- c('USfluhosp','USfludeath')
 
-nadapt <- 100000
-niter <- 100000
+nadapt <- 10000
+niter <- 10000
 
 model.file <- 'BE differential test types rates.txt'
 setwd(paste0(bfolder,'BEmodels'))
