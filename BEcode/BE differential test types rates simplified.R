@@ -1,5 +1,5 @@
 library(R2jags)
-bfolder <- 'C:/Users/VOR1/Dropbox/Misc work/Bayesian evidence synthesis/Bayesian-evidence-synthesis-for-influenza-burden/'
+bfolder <- 'C:/Users/VOR1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/'
 ### This code is for one age group, only for season 2014-15.
 ### The age group has to be selected; separately for the two data sets!
 agecatlist <- list(list(c(0,5),'<5'),
@@ -36,9 +36,6 @@ for (agcat in 1:5){
     dataset[,k] <- as.vector(dataset[,k])
   }
   
-  # dataset$DateHosp <- as.Date(dataset$DateHosp,"%d%B%Y")
-  # 
-  # dataset$DateDeath <- as.Date(dataset$DateDeath,"%d%B%Y")
   selind <- which(dataset$Age >= agecatls[[1]][1] & dataset$Age < agecatls[[1]][2])
   datasetag <- dataset[selind,]
   ### testtypes of influenza positived, deceased or not
@@ -80,6 +77,7 @@ for (agcat in 1:5){
   #########################################################################################
   #########################################################################################
   cirapid <- cirapidlist[[agcat]]/100
+  
   selograpidest <- ((log(cirapid[3]) - log(cirapid[1])) + (log(cirapid[1]) - log(cirapid[2])))/2/1.96
   lrapidsens <- c(log(cirapid[1]),selograpidest)
   #########################################################################################
@@ -116,7 +114,7 @@ for (agcat in 1:5){
   logsens2init <- c(lrapidsens[1],lrapidsens[1])
   sens3init <- c(.4,.4)
   
-  pfluinit <- sapply(c(testpos[,1]/sens1init + testpos[,2]/exp(logsens2init) + testpos[,3]/sens3init)/rowSums(nttype[,1:3]),
+  pfluinit <- sapply(c(testpos[,1]/exp(logsens1init) + testpos[,2]/exp(logsens2init) + testpos[,3]/sens3init)/rowSums(nttype[,1:3]),
                      function(x) ifelse(x > .5,min(x,.95),max(x,.1)))
   
   fluposinit <- round(pfluinit*nttype[,1:3])
