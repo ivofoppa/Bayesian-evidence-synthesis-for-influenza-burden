@@ -3,25 +3,13 @@ setwd(paste0(bfolder,''))
 
 load(file = "my_work_space.RData")
 
-
-Data CA2b (DROP = __:)/
-set CA2(rename=
-          (TestType =__TestType
-           TestResult  =__TestResult
-           TestType2 = __TestType2
-           TestResult2 =__TestResult2)
-)/
-TestType = input(__TestType,1.)/
-TestResult = input(__TestResult,1.)/
-TestType2 = input(__TestType2,1.)/
-TestResult2 = input(__TestResult2,1.)/
-run/
+CA2$TestType <- as.numeric(as.vector(CA2$TestType))
+CA2$TestResult <- as.numeric(as.vector(CA2$TestResult))
+CA2$TestType2 <- as.numeric(as.vector(CA2$TestType2))
+CA2$TestResult2 <- as.numeric(as.vector(CA2$TestResult2))
 
 # ### in 2014/15, California-Kaiser did not include test type in their dataset. 
-They only use PCR, so if the patient was tested it was using PCR (testtype = 1) ### #/
-data cak3b/ set cak3/ 
-if testedflu = 1  testtype = 1/
-run/
+CAK3$testtype <- sapply(seq_along(CAK3[,1]), function(k) ifelse(CAK3$testedflu[k]==1,1,NA))
 
 MN/ #(rename=
             (DateHosp =__DateHosp
@@ -40,36 +28,38 @@ MN/ #(rename=
 # DateDeath = input(__DateDeath,best.)/
 # ICD9_1 = input(__ICD9_1,$char6.)/
 # format DateDeath date9./
-set GA/ #(rename=
-
-  
+### GA2
 GA2$State <- 'GA'
-
-for (k in 1:length(GA2$HospID)){
- if (GA2$Flu.Test.Type.1[k] =='Rapid') {GA2$TestType[k] <- 2}
- if (GA2$Flu.Test.Type.2[k] =='Rapid') {GA2$TestType2[k] <- 2} 
- if (GA2$Flu.Test.Type.1[k] =='RT-PCR') {GA2$TestType[k] <- 1}
- if (GA2$Flu.Test.Type.2[k] =='RT-PCR') {GA2$TestType2[k] <- 1}
- if (GA2$Flu.Test.Type.1[k] =='PCR') {GA2$TestType[k] <- 1}
- if (GA2$Flu.Test.Type.2[k] =='PCR') {GA2$TestType2[k] <- 1}
- 
- if (GA2$FluTest.1..Yes.No.[k] =='Yes') {GA2$testedflu[k] <- 1}
- if (GA2$FluTest.1..Yes.No.[k] =='No') {GA2$testedflu[k] <- 2}
- 
- if (GA2$Flu.Test.Result.1[k] %in% c('Positive A', 'Positive B', 'Positive Unknown', 'Positive A H1N1') ) {GA2$TestResult[k] <- 1}
- if (GA2$Flu.Test.Result.2[k] %in% c('Positive A', 'Positive B', 'Positive Unknown', 'Positive A H1N1')) {GA2$TestResult2[k] <- 1}
- 
- if (GA2$Flu.Test.Result.1[k] =='Negative') {GA2$TestResult[k] <- 2}
- if (GA2$Flu.Test.Result.2[k] =='Negative') {GA2$TestResult[k] <- 2}
- 
- if (GA2$..ICU =='Yes')  {GA2$ICU[k] <- 1}
- if (GA2$..ICU =='No')  {GA2$ICU[k] <- 2}
- 
+for (col in 1:length(GA2[1,])){
+  GA2[,col] <- as.vector(GA2[,col])
 }
 
-
-if (__ICU ==Unk"				 GA2$ICU <- 9
-
+for (k in 1:length(GA2$HospID)){
+  if (GA2$Flu.Test.Type.1[k] =='Rapid') {GA2$TestType[k] <- 2
+  } else if (GA2$Flu.Test.Type.1[k] =='RT-PCR') {GA2$TestType[k] <- 1
+  } else if (GA2$Flu.Test.Type.1[k] =='PCR') {GA2$TestType[k] <- 1
+  } else {GA2$TestType <- 9}
+  
+  if (is.na(FluTest.1..Yes.No.[k])){FluTest.1..Yes.No.[k] <- 9
+  } else if (GA2$Flu.Test.Type.2[k] =='Rapid') {GA2$TestType2[k] <- 2
+  } else if (GA2$Flu.Test.Type.2[k] =='RT-PCR') {GA2$TestType2[k] <- 1
+  } else if (GA2$Flu.Test.Type.2[k] =='PCR') {GA2$TestType2[k] <- 1
+  } else {GA2$TestType <- 9}
+  
+  
+  if (is.na(FluTest.1..Yes.No.[k])){FluTest.1..Yes.No.[k] <- 9
+  } else if (GA2$FluTest.1..Yes.No.[k] =='Yes') {GA2$testedflu[k] <- 1
+ } else if (GA2$FluTest.1..Yes.No.[k] =='No') {GA2$testedflu[k] <- 2
+ } else if (GA2$Flu.Test.Result.1[k] %in% c('Positive A', 'Positive B', 'Positive Unknown', 'Positive A H1N1') ) {GA2$TestResult[k] <- 1
+ } else if (GA2$Flu.Test.Result.2[k] %in% c('Positive A', 'Positive B', 'Positive Unknown', 'Positive A H1N1')) {GA2$TestResult2[k] <- 1
+ } else if (GA2$Flu.Test.Result.1[k] =='Negative') {GA2$TestResult[k] <- 2
+ } else if (GA2$Flu.Test.Result.2[k] =='Negative') {GA2$TestResult[k] <- 2}
+ 
+  if (is.na(GA2$ICU[k])){GA2$ICU[k] <- 9
+  } else if (GA2$ICU[k] =='Yes'){GA2$ICU[k] <- 1
+  } else if (GA2$ICU[k] =='No'){GA2$ICU[k] <- 2
+  } else {GA2$ICU[k] <- 9}
+}
 if (__Died ==Yes)				 Died = 1/
 if (__Died ==No)				 Died = 2/
 if (__Died ==Unk"				 Died = 9/
