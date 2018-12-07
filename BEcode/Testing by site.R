@@ -3,8 +3,6 @@ setwd(paste0(bfolder,''))
 
 load(file = "my_work_space.RData")
 
-
-Data CA2b (DROP = __:)/
 set CA2(rename=
           (TestType =__TestType
            TestResult  =__TestResult
