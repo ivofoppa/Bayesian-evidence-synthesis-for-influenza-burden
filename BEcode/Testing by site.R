@@ -15,11 +15,8 @@ TestType2 = input(__TestType2,1.)/
 TestResult2 = input(__TestResult2,1.)/
 run/
 
-# ### in 2014/15, California-Kaiser did not include test type in their dataset. 
-They only use PCR, so if the patient was tested it was using PCR (testtype = 1) ### #/
-data cak3b/ set cak3/ 
-if testedflu = 1  testtype = 1/
-run/
+# ### in 2014/15, California-Kaiser did not include test type in their dataset.
+CAK3$testtype <- sapply(seq_along(CAK3[,1]), function(k) ifelse(CAK3$testedflu[k]==1,1,NA))
 
 MN/ #(rename=
             (DateHosp =__DateHosp
@@ -38,36 +35,38 @@ MN/ #(rename=
 # DateDeath = input(__DateDeath,best.)/
 # ICD9_1 = input(__ICD9_1,$char6.)/
 # format DateDeath date9./
-set GA/ #(rename=
-
-  
+### GA2
 GA2$State <- 'GA'
-
-for (k in 1:length(GA2$HospID)){
- if (GA2$Flu.Test.Type.1[k] =='Rapid') {GA2$TestType[k] <- 2}
- if (GA2$Flu.Test.Type.2[k] =='Rapid') {GA2$TestType2[k] <- 2} 
- if (GA2$Flu.Test.Type.1[k] =='RT-PCR') {GA2$TestType[k] <- 1}
- if (GA2$Flu.Test.Type.2[k] =='RT-PCR') {GA2$TestType2[k] <- 1}
- if (GA2$Flu.Test.Type.1[k] =='PCR') {GA2$TestType[k] <- 1}
- if (GA2$Flu.Test.Type.2[k] =='PCR') {GA2$TestType2[k] <- 1}
- 
- if (GA2$FluTest.1..Yes.No.[k] =='Yes') {GA2$testedflu[k] <- 1}
- if (GA2$FluTest.1..Yes.No.[k] =='No') {GA2$testedflu[k] <- 2}
- 
- if (GA2$Flu.Test.Result.1[k] %in% c('Positive A', 'Positive B', 'Positive Unknown', 'Positive A H1N1') ) {GA2$TestResult[k] <- 1}
- if (GA2$Flu.Test.Result.2[k] %in% c('Positive A', 'Positive B', 'Positive Unknown', 'Positive A H1N1')) {GA2$TestResult2[k] <- 1}
- 
- if (GA2$Flu.Test.Result.1[k] =='Negative') {GA2$TestResult[k] <- 2}
- if (GA2$Flu.Test.Result.2[k] =='Negative') {GA2$TestResult[k] <- 2}
- 
- if (GA2$..ICU =='Yes')  {GA2$ICU[k] <- 1}
- if (GA2$..ICU =='No')  {GA2$ICU[k] <- 2}
- 
+for (col in 1:length(GA2[1,])){
+  GA2[,col] <- as.vector(GA2[,col])
 }
 
+for (k in 1:length(GA2$HospID)){
+  if (GA2$Flu.Test.Type.1[k] =='Rapid') {GA2$TestType[k] <- 2
+  } else if (GA2$Flu.Test.Type.1[k] =='RT-PCR') {GA2$TestType[k] <- 1
+  } else if (GA2$Flu.Test.Type.1[k] =='PCR') {GA2$TestType[k] <- 1
+  } else {GA2$TestType <- 9}
 
-if (__ICU ==Unk"				 GA2$ICU <- 9
+  if (is.na(FluTest.1..Yes.No.[k])){FluTest.1..Yes.No.[k] <- 9
+  } else if (GA2$Flu.Test.Type.2[k] =='Rapid') {GA2$TestType2[k] <- 2
+  } else if (GA2$Flu.Test.Type.2[k] =='RT-PCR') {GA2$TestType2[k] <- 1
+  } else if (GA2$Flu.Test.Type.2[k] =='PCR') {GA2$TestType2[k] <- 1
+  } else {GA2$TestType <- 9}
 
+
+  if (is.na(FluTest.1..Yes.No.[k])){FluTest.1..Yes.No.[k] <- 9
+  } else if (GA2$FluTest.1..Yes.No.[k] =='Yes') {GA2$testedflu[k] <- 1
+ } else if (GA2$FluTest.1..Yes.No.[k] =='No') {GA2$testedflu[k] <- 2
+ } else if (GA2$Flu.Test.Result.1[k] %in% c('Positive A', 'Positive B', 'Positive Unknown', 'Positive A H1N1') ) {GA2$TestResult[k] <- 1
+ } else if (GA2$Flu.Test.Result.2[k] %in% c('Positive A', 'Positive B', 'Positive Unknown', 'Positive A H1N1')) {GA2$TestResult2[k] <- 1
+ } else if (GA2$Flu.Test.Result.1[k] =='Negative') {GA2$TestResult[k] <- 2
+ } else if (GA2$Flu.Test.Result.2[k] =='Negative') {GA2$TestResult[k] <- 2}
+
+  if (is.na(GA2$ICU[k])){GA2$ICU[k] <- 9
+  } else if (GA2$ICU[k] =='Yes'){GA2$ICU[k] <- 1
+  } else if (GA2$ICU[k] =='No'){GA2$ICU[k] <- 2
+  } else {GA2$ICU[k] <- 9}
+}
 if (__Died ==Yes)				 Died = 1/
 if (__Died ==No)				 Died = 2/
 if (__Died ==Unk"				 Died = 9/
@@ -94,7 +93,7 @@ set TN (rename=
            TestType2 = __TestType2
            TestResult2 =__TestResult2
            ICD9_1 =__ICD9_1)
-)/ 
+)/
 PatientNo_ = input(__PatientNo_, $char6.)/
 TestType2 = input(__TestType2,1.)/
 TestResult2 = input(__TestResult2,1.)/
@@ -102,7 +101,7 @@ ICD9_1 = input(__ICD9_1,$char6.)/
 run/
 
 
-## A OHalloran - 07/10/2018 - rename variables so they are consistent with previous seasons 
+## A OHalloran - 07/10/2018 - rename variables so they are consistent with previous seasons
 create age, state, and year variables
 For now, only keeping essential variables because variables across sites have different
 types which won't allow concatenation #/
@@ -126,7 +125,7 @@ state = "CA"/
 format datehosp date9. dob date9./
 run/
 
-## in 2015-16, California-Kaiser did not include test type in their dataset. 
+## in 2015-16, California-Kaiser did not include test type in their dataset.
 They only use PCR, so if the patient was tested it was using PCR (testtype = 1) #/
 data cak4b (keep=testedflu testtype testtype2 testresult testresult2 died hospid datehosp
 dob year age state)/
@@ -168,7 +167,7 @@ age = floor((intck("month", dob, datehosp,'C')) / 12)/
 state = "CO"/
 run/
 
-## admdates and dob not read in for 4 records 
+## admdates and dob not read in for 4 records
 will manually enter these #/
 
 ## check with CT about case hospitalized before DOB #/
@@ -197,14 +196,14 @@ datehosp='22dec2015'd/
 dob='10oct2011'd/
 end/
 
-## A O'Halloran 07/10/2018 
+## A O'Halloran 07/10/2018
 Confirmed with Kim that the DOB should be jan 22 1989#/
   if caseid=105  do/
 datehosp='23dec2015'd/
 dob='22jan1989'd/
 end/
 
-## A O'Halloran 07/10/2018 
+## A O'Halloran 07/10/2018
 Confirmed with Kim that the DOB should be sep 20 1944#/
 if caseid=213  do/
 dob='20sep1944'd/
@@ -266,7 +265,7 @@ admdate=datehosp))/
 TestType2=input(FluTstTyp2,8.)/
 TestResult2=input(FluResult2,8.)/
 
-## A O'Halloran 07/10/2018 
+## A O'Halloran 07/10/2018
 Confirmed with Melissa McMahon that the DOB should be sep 20 1944#/
   if caseid="MN151600290"  do/
 dob='05nov1920'd/
@@ -280,7 +279,7 @@ run/
 
 ## A OHalloran 07/10/2018
 nm4 read in 4 empty records - deleting these #/
-  
+
   data nm4b (keep=testedflu testtype testtype2 testresult testresult2 died hospid datehosp
              dob year age state)/
 set nm4(rename= (FluTst=TestedFlu
@@ -324,7 +323,7 @@ if FluResult2="1=Positive"  TestResult2=1/
 else if FluResult2="2=Negative"  TestResult2=2/
 
 if FluTstTyp1 = "1=Rapid Antigen" 	 TestType = 1/
-if FluTstTyp2 = "1=Rapid Antigen" 	 TestType2 = 1/ 
+if FluTstTyp2 = "1=Rapid Antigen" 	 TestType2 = 1/
 if FluTstTyp1 = "2=Molecular Assay" 	 TestType = 2/
 if FluTstTyp2 = "2=Molecular Assay" 	 TestType2 = 2/
 if FluTstTyp1 = "3=Viral Culture" 		 TestType = 3/
@@ -377,7 +376,7 @@ age = floor((intck("month", dob, datehosp,'C')) / 12)/
 state = "OR"/
 run/
 
-## A O'Halloran 07/11/2018 
+## A O'Halloran 07/11/2018
 TN submitted new data file with dob and age added
 using this file instead#/
 
@@ -395,7 +394,7 @@ Outcome=Died
 hosp_tx=hospid
 ))/
 # Per Danielle Ndi on 7/12/2018/
-if caseid = "TNFB15160350"  admdate="4/19/2016"/ 
+if caseid = "TNFB15160350"  admdate="4/19/2016"/
 
 
 datehosp=input(admdate,mmddyy10.)/
@@ -411,7 +410,7 @@ run/
 
 # ### Combining datasets from 2010-11, 2011-12, 2012-13, 2013-14, and 2014-15 seasons ### #/
 ## A OHalloran - 07/12/2018 - Adding 1516 data #/
-data all00 / 
+data all00 /
 
 set 	##ALL0 ALL1#/
 CA2B CAK1 CAK2 CAK3b CA3B CAK4B
@@ -428,4 +427,3 @@ month1516=month(datehosp)/ ## A OHalloran - month for 1516 data #/
 month=upcase(month)/
 year=year(DateHosp)/
 run/
-
