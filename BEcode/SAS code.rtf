@@ -1,0 +1,566 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil Courier New;}{\f1\fnil\fcharset0 Courier New;}{\f2\fnil\fcharset0 Calibri;}}
+{\colortbl ;\red0\green128\blue0;\red255\green255\blue255;\red0\green0\blue0;\red0\green0\blue128;\red0\green0\blue255;\red0\green128\blue128;\red128\green0\blue128;}
+{\*\generator Riched20 10.0.16299}\viewkind4\uc1 
+\pard\cf1\highlight2\f0\fs20\lang9 * **** Data cleaning: in preparation for combining datasets **** *\cf3\par
+\cf4\b\f1\lang1033 with\cf3\b0 (\f0\lang9 A\f1\lang1033 LL\f0\lang9 1\f1\lang1033 ,\{\f0\lang9\par
+ICD91 <- ICD9_1\par
+ICD92 <- ICD9_2\par
+ICD93 <- ICD9_3\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\f1\lang1033\})\f0\lang9\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2\par
+\cf4\b run\cf3\b0\par
+\par
+\cf1 * **** Data cleaning: in preparation for combining datasets **** *\cf3\par
+\cf4\b\f1\lang1033 with\cf3\b0 (\f0\lang9 CA2\f1\lang1033 ,\f0\lang9\par
+ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\cf1 * *** in 2014/15, California-Kaiser did not include test type in their dataset. \par
+\tab\tab They only use PCR, so if the patient was tested it was using PCR (testtype <- 1) *** *\cf3\par
+\cf4\b data\cf3\b0  cak3 \cf5 set\cf3  cak3 \par
+\cf5 if\cf3  testedflu <- \cf6\b 1\cf3\b0  \cf5 then\cf3  testtype <- \cf6\b 1\cf3\b0\par
+ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\cf4\b data\cf3\b0  MN\par
+ \cf5 set\cf3  MN \par
+ ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\par
+\cf4\b data\cf3\b0  GA \par
+ \cf5 set\cf3  GA \par
+ ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\cf4\b data\cf3\b0  GA2\par
+\tab\cf5 set\cf3  GA2\par
+\tab state <- \cf7 "GA"\cf3\par
+\par
+\tab\cf5 if\cf3  Flu_Test_Type_1 <- \cf7 "Rapid"\cf3  \tab\cf5 then\cf3  TestTpe <- \cf6\b 2\cf3\b0\par
+\tab\cf5 if\cf3  Flu_Test_Type_2 <- \cf7 "Rapid"\cf3  \tab\cf5 then\cf3  TestTpe2 <- \cf6\b 2\cf3\b0  \par
+\tab\cf5 if\cf3  Flu_Test_Type_1 <- \cf7 "RT-PCR"\cf3  \tab\cf5 then\cf3  TestTpe <- \cf6\b 1\cf3\b0\par
+\tab\cf5 if\cf3  Flu_Test_Type_2 <- \cf7 "RT-PCR"\cf3  \tab\cf5 then\cf3  TestTpe2 <- \cf6\b 1\cf3\b0\par
+\tab\cf5 if\cf3  Flu_Test_Type_1 <- \cf7 "PCR"\cf3  \tab\tab\cf5 then\cf3  TestTpe <- \cf6\b 1\cf3\b0\par
+\tab\cf5 if\cf3  Flu_Test_Type_2 <- \cf7 "PCR"\cf3  \tab\tab\cf5 then\cf3  TestTpe2 <- \cf6\b 1\cf3\b0\par
+\par
+\tab\cf5 if\cf3  FluTest_1__Yes_No_ <- \cf7 "Yes"\cf3  \tab\cf5 then\cf3  testflu <- \cf6\b 1\cf3\b0\par
+\tab\cf5 if\cf3  FluTest_1__Yes_No_ <- \cf7 "No"\cf3  \tab\cf5 then\cf3  testflu <- \cf6\b 2\cf3\b0\par
+\par
+\tab\cf5 if\cf3  Flu_Test_Result_1 in (\cf7 "Positive A"\cf3 , \cf7 "Positive B"\cf3 , \cf7 "Positive Unknown"\cf3 , \cf7 "Positive A / H1N1"\cf3 )\par
+\tab\tab\tab\tab\tab\tab\tab\tab\tab\cf5 then\cf3  TestRes <- \cf6\b 1\cf3\b0\par
+\tab\cf5 if\cf3  Flu_Test_Result_2 in (\cf7 "Positive A"\cf3 , \cf7 "Positive B"\cf3 , \cf7 "Positive Unknown"\cf3 , \cf7 "Positive A / H1N1"\cf3 )\par
+\tab\tab\tab\tab\tab\tab\tab\tab\tab\cf5 then\cf3  TestRes2 <- \cf6\b 1\cf3\b0\par
+\tab\cf5 if\cf3  Flu_Test_Result_1 <- \cf7 "Negative"\cf3  \cf5 then\cf3  TestRes <- \cf6\b 2\cf3\b0\par
+\tab\cf5 if\cf3  Flu_Test_Result_2 <- \cf7 "Negative"\cf3  \cf5 then\cf3  TestRes <- \cf6\b 2\cf3\b0\par
+\par
+\tab\cf5 if\cf3  ICU <- \cf7 "Yes"\cf3  \tab\tab\tab\tab\cf5 then\cf3  ICU2 <- \cf6\b 1\cf3\b0\par
+\tab\cf5 if\cf3  ICU <- \cf7 "No"\cf3  \tab\tab\tab\tab\cf5 then\cf3  ICU2 <- \cf6\b 2\cf3\b0\par
+\tab\cf5 if\cf3  ICU <- \cf7 "Unk"\cf3\tab\tab\tab\tab\cf5 then\cf3  ICU2 <- \cf6\b 9\cf3\b0\par
+\par
+\tab\cf5 if\cf3  Died <- \cf7 "Yes"\cf3  \tab\tab\tab\tab\cf5 then\cf3  Diedhosp <- \cf6\b 1\cf3\b0\par
+\tab\cf5 if\cf3  Died <- \cf7 "No"\cf3  \tab\tab\tab\tab\cf5 then\cf3  Diedhosp <- \cf6\b 2\cf3\b0\par
+\tab\cf5 if\cf3  Died <- \cf7 "Unk"\cf3\tab\tab\tab\tab\cf5 then\cf3  Diedhosp <- \cf6\b 9\cf3\b0\par
+\par
+\tab age <- Age___Years_\par
+\tab datehosp <- admit_date\par
+\tab month=datehosp, \cf6 monname3.\cf3 )\par
+\tab\tab ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+\par
+ICU <- ICU2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\cf4\b data\cf3\b0  NM3\par
+ \cf5 set\cf3  NM3\par
+ \tab ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\cf4\b data\cf3\b0  TN\par
+ \cf5 set\cf3  TN \par
+\tab ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\par
+\cf1 ## A OHalloran - 07/10/2018 - rename variables so they are consistent with previous seasons \par
+ create age, state, and year variables\par
+ For now, only keeping essential variables because variables across sites have different\par
+ types which won't allow concatenation ##\cf3\par
+\par
+\cf4\b data\cf3\b0  ca3\par
+\tab\par
+\tab\cf5 set\cf3  ca3 \par
+\tab dob=indob,\cf6 mmddyy10.\cf3 )\par
+\tab datehosp=inadmdate,\cf6 mmddyy10.\cf3 )\par
+\tab year=year(datehosp)\par
+\tab age <- floor((intck(\cf7 "month"\cf3 , dob, datehosp,\cf7 'C'\cf3 )) / \cf6\b 12\cf3\b0 )\par
+\tab state <- \cf7 "CA"\cf3\par
+ \cf1 *format datehosp date9. dob date9.\cf3\par
+\tab\tab ICD91 <- PI_ICD_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- PI_ICD_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- PI_ICD_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inCaseID, \cf6 $char6.\cf3 )\par
+Diedhosp <- inDied\par
+TestFlu <- inFluTst\par
+TestRes <- inFluResult\par
+TestRes2 <- inFluResult2\par
+TestTpe <- inFluTstTyp1\par
+TestTpe2 <- inFluTstTyp2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+ \cf1 ## in 2015-16, California-Kaiser did not include test type in their dataset. \par
+\tab\tab They only use PCR, so if the patient was tested it was using PCR (testtype <- 1) ##\cf3\par
+\cf4\b data\cf3\b0  cak4\par
+\tab\cf5 set\cf3  cak4 (\cf5 rename\cf3 = (FluTst=TestedFlu\par
+\tab  \cf1 ##FluTstTyp1=TestType\par
+\tab\tab\tab\tab\tab  FluTstTyp2=TestType2##\cf3\par
+\tab\tab\tab\tab\tab  FluResult1=TestResult\par
+\tab\tab\tab\tab\tab  \cf1 ##FluResult2=TestResult2##\cf3\par
+\tab\tab\tab\tab\tab  Outcome=Died\par
+ hosp_tx=hospid\par
+ admdate=datehosp\par
+ ))\par
+ TestResult2=inFluResult2,\cf6\b 8.\cf3\b0 )\par
+\tab year=year(datehosp)\par
+\tab age <- floor((intck(\cf7 "month"\cf3 , dob, datehosp,\cf7 'C'\cf3 )) / \cf6\b 12\cf3\b0 )\par
+\tab state <- \cf7 "CA2"\cf3\par
+\tab\cf5 if\cf3  testedflu <- \cf6\b 1\cf3\b0  \cf5 then\cf3  \cf5 do\cf3\par
+\tab  \cf5 if\cf3  testresult ne \cf6\b .\cf3\b0  \cf5 then\cf3  testtype=\cf6\b 1\cf3\b0\par
+\tab  \cf5 if\cf3  testresult2 ne \cf6\b .\cf3\b0  \cf5 then\cf3  testtype2=\cf6\b 1\cf3\b0\par
+ \cf5 end\cf3\par
+\tab\cf5 format\cf3  datehosp \cf6 date9.\cf3  dob \cf6 date9.\cf3\par
+\tab\tab ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\cf1 *Continue here ...\par
+data co4 (keep=testedflu testtype testtype2 testresult testresult2 died hospid datehosp\par
+ dob year age state)\cf3\par
+\tab\cf5 set\cf3  co4 (\cf5 rename\cf3 = (FluTst=TestedFlu\par
+\tab  FluTstTyp1=TestType\par
+\tab\tab\tab\tab\tab  \cf1 ##FluTstTyp2=TestType2##\cf3\par
+\tab\tab\tab\tab\tab  FluResult1=TestResult\par
+\tab\tab\tab\tab\tab  \cf1 ##FluResult2=TestResult2##\cf3\par
+\tab\tab\tab\tab\tab  Outcome=Died\par
+ \cf1 ##hosp_tx=hospid##\cf3\par
+ admdate=datehosp))\par
+\tab hospid=hosp_tx,\cf6\b 5.\cf3\b0 )\par
+\tab year=year(datehosp)\par
+\tab age <- floor((intck(\cf7 "month"\cf3 , dob, datehosp,\cf7 'C'\cf3 )) / \cf6\b 12\cf3\b0 )\par
+\tab state <- \cf7 "CO"\cf3\par
+\tab\tab ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\cf1 ## admdates and dob not read in for 4 records \par
+ will manually enter these ##\cf3\par
+\par
+\cf1 ## check with CT about case hospitalized before DOB ##\cf3\par
+\cf4\b data\cf3\b0  ct5 (\cf5 keep\cf3 =testedflu testtype testtype2 testresult testresult2 died hospid datehosp\par
+ dob year age state)\par
+\tab\cf5 set\cf3  ct5 (\cf5 rename\cf3 = (FluTst=TestedFlu\par
+\tab  FluTstTyp1=TestType\par
+\tab\tab\tab\tab\tab  FluTstTyp2=TestType2\par
+\tab\tab\tab\tab\tab  FluResult1=TestResult\par
+\tab\tab\tab\tab\tab  FluResult2=TestResult2\par
+\tab\tab\tab\tab\tab  Outcome=Died\par
+ hosp_tx=hospid\par
+ admdate=datehosp))\par
+ \cf5 if\cf3  caseid=\cf6\b 1\cf3\b0  \cf5 then\cf3  \cf5 do\cf3\par
+\tab\tab datehosp=\cf6\b '16dec2015'd\cf3\b0\par
+\tab\tab dob=\cf6\b '19dec2011'd\cf3\b0\par
+\tab\cf5 end\cf3\par
+\par
+\tab\cf5 if\cf3  caseid=\cf6\b 2\cf3\b0  \cf5 then\cf3  \cf5 do\cf3\par
+\tab\tab datehosp=\cf6\b '29dec2015'd\cf3\b0\par
+\tab\tab dob=\cf6\b '18nov2011'd\cf3\b0\par
+\tab\cf5 end\cf3\par
+\par
+\tab\cf5 if\cf3  caseid=\cf6\b 3\cf3\b0  \cf5 then\cf3  \cf5 do\cf3\par
+\tab\tab datehosp=\cf6\b '22dec2015'd\cf3\b0\par
+\tab\tab dob=\cf6\b '10oct2011'd\cf3\b0\par
+\tab\cf5 end\cf3\par
+\par
+\tab\cf1 ## A O'Halloran 07/10/2018 \par
+\tab  Confirmed with Kim that the DOB should be jan 22 1989##\cf3\par
+\tab\cf5 if\cf3  caseid=\cf6\b 105\cf3\b0  \cf5 then\cf3  \cf5 do\cf3\par
+\tab\tab datehosp=\cf6\b '23dec2015'd\cf3\b0\par
+\tab\tab dob=\cf6\b '22jan1989'd\cf3\b0\par
+\tab\cf5 end\cf3\par
+ \par
+\tab\cf1 ## A O'Halloran 07/10/2018 \par
+\tab  Confirmed with Kim that the DOB should be sep 20 1944##\cf3\par
+\tab\cf5 if\cf3  caseid=\cf6\b 213\cf3\b0  \cf5 then\cf3  \cf5 do\cf3\par
+\tab\tab dob=\cf6\b '20sep1944'd\cf3\b0\par
+\tab\cf5 end\cf3\par
+\par
+\tab year=year(datehosp)\par
+\tab age <- floor((intck(\cf7 "month"\cf3 , dob, datehosp,\cf7 'C'\cf3 )) / \cf6\b 12\cf3\b0 )\par
+\tab state <- \cf7 "CT"\cf3\par
+\tab\tab ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\cf4\b data\cf3\b0  ga3 (\cf5 keep\cf3 =testedflu testtype testtype2 testresult testresult2 died hospid datehosp\par
+ dob year age state)\par
+\tab\cf5 set\cf3  ga3(\cf5 rename\cf3 = (FluTst=TestedFlu\par
+\tab  FluTstTyp1=TestType\par
+\tab\tab\tab\tab\tab  \cf1 ##FluTstTyp2=TestType2##\cf3\par
+\tab\tab\tab\tab\tab  FluResult1=TestResult\par
+\tab\tab\tab\tab\tab  \cf1 ##FluResult2=TestResult2##\cf3\par
+\tab\tab\tab\tab\tab  Outcome=Died\par
+ \cf1 ##hosp_tx=hospid##\cf3\par
+ admdate=datehosp))\par
+\tab hospid=hosp_tx,\cf6\b 5.\cf3\b0 )\par
+ TestResult2=inFluResult2,\cf6\b 8.\cf3\b0 )\par
+\tab TestType2=inFluTstType2,\cf6\b 8.\cf3\b0 )\par
+\tab year=year(datehosp)\par
+\tab age <- floor((intck(\cf7 "month"\cf3 , dob, datehosp,\cf7 'C'\cf3 )) / \cf6\b 12\cf3\b0 )\par
+\tab state <- \cf7 "GA"\cf3\par
+\tab\tab ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\cf4\b data\cf3\b0  mi (\cf5 keep\cf3 =testedflu testtype testtype2 testresult testresult2 died hospid datehosp\par
+ dob year age state)\par
+\tab\cf5 set\cf3  mi(\cf5 rename\cf3 = (FluTst=TestedFlu\par
+\tab  FluTstTyp1=TestType\par
+\tab\tab\tab\tab\tab  FluTstTyp2=TestType2\par
+\tab\tab\tab\tab\tab  FluResult1=TestResult\par
+\tab\tab\tab\tab\tab  FluResult2=TestResult2\par
+\tab\tab\tab\tab\tab  Outcome=Died\par
+ hosp_tx=hospid\par
+\tab\tab\tab\tab\tab  dob=_dob\par
+ \cf1 ##admdate=datehosp##\cf3 ))\par
+\tab dob=in_dob,\cf6 mmddyy10.\cf3 )\par
+\tab datehosp=inadmdate,\cf6 mmddyy10.\cf3 )\par
+\tab year=year(datehosp)\par
+\tab age <- floor((intck(\cf7 "month"\cf3 , dob, datehosp,\cf7 'C'\cf3 )) / \cf6\b 12\cf3\b0 )\par
+\tab state <- \cf7 "MI"\cf3\par
+\tab\tab ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\cf1 ## check with MN about case MN151600290 born in 2020 ##\cf3\par
+\cf4\b data\cf3\b0  mn3 (\cf5 keep\cf3 =testedflu testtype testtype2 testresult testresult2 died hospid datehosp\par
+ dob year age state)\par
+\tab\cf5 set\cf3  mn3(\cf5 rename\cf3 = (FluTst=TestedFlu\par
+\tab  FluTstTyp1=TestType\par
+\tab\tab\tab\tab\tab  \cf1 ##FluTstTyp2=TestType2##\cf3\par
+\tab\tab\tab\tab\tab  FluResult1=TestResult\par
+\tab\tab\tab\tab\tab  \cf1 ##FluResult2=TestResult2##\cf3\par
+\tab\tab\tab\tab\tab  Outcome=Died\par
+ hosp_tx=hospid\par
+ admdate=datehosp))\par
+\par
+ TestType2=inFluTstTyp2,\cf6\b 8.\cf3\b0 )\par
+\tab TestResult2=inFluResult2,\cf6\b 8.\cf3\b0 )\par
+\par
+\tab\tab  \cf1 ## A O'Halloran 07/10/2018 \par
+\tab  Confirmed with Melissa McMahon that the DOB should be sep 20 1944##\cf3\par
+\tab\cf5 if\cf3  caseid=\cf7 "MN151600290"\cf3  \cf5 then\cf3  \cf5 do\cf3\par
+\tab\tab dob=\cf6\b '05nov1920'd\cf3\b0\par
+\tab\cf5 end\cf3\par
+\par
+\tab year=year(datehosp)\par
+\tab age <- floor((intck(\cf7 "month"\cf3 , dob, datehosp,\cf7 'C'\cf3 )) / \cf6\b 12\cf3\b0 )\par
+\tab state <- \cf7 "MN"\cf3\par
+\tab ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\cf1 ## A OHalloran 07/10/2018\par
+ nm4 read in 4 empty records - deleting these ##\cf3\par
+ \par
+\cf4\b data\cf3\b0  nm4 (\cf5 keep\cf3 =testedflu testtype testtype2 testresult testresult2 died hospid datehosp\par
+ dob year age state)\par
+\tab\cf5 set\cf3  nm4(\cf5 rename\cf3 = (FluTst=TestedFlu\par
+\tab  FluTstTyp1=TestType\par
+\tab\tab\tab\tab\tab  FluTstTyp2=TestType2\par
+\tab\tab\tab\tab\tab  FluResult1=TestResult\par
+\tab\tab\tab\tab\tab  FluResult2=TestResult2\par
+\tab\tab\tab\tab\tab  \cf1 ##Outcome=Died##\cf3\par
+ hosp_tx=hospid\par
+ admdate=datehosp))\par
+ \cf5 if\cf3  caseid ne \cf7 " "\cf3\par
+\tab year=year(datehosp)\par
+\tab age <- floor((intck(\cf7 "month"\cf3 , dob, datehosp,\cf7 'C'\cf3 )) / \cf6\b 12\cf3\b0 )\par
+\tab state <- \cf7 "NM"\cf3\par
+\tab\tab ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\cf4\b data\cf3\b0  ny4 (\cf5 keep\cf3 =testedflu testtype testtype2 testresult testresult2 died hospid datehosp\par
+ dob year age state)\par
+\tab\cf5 set\cf3  ny4(\cf5 rename\cf3 = (\cf1 ##FluTst=TestedFlu\par
+\tab  FluTstTyp1=TestType\par
+\tab\tab\tab\tab\tab  FluTstTyp2=TestType2\par
+\tab\tab\tab\tab\tab  FluResult1=TestResult\par
+\tab\tab\tab\tab\tab  FluResult2=TestResult2\par
+\tab\tab\tab\tab\tab  Outcome=Died\par
+ hosp_tx=hospid##\cf3\par
+ admdate=datehosp))\par
+ \cf5 if\cf3  caseid ne \cf7 " "\cf3\par
+\par
+\tab hospid=hosp_tx,\cf6\b 5.\cf3\b0 )\par
+\par
+\tab\cf5 if\cf3  FluTst=\cf7 "1=Yes"\cf3  \cf5 then\cf3  testedflu=\cf6\b 1\cf3\b0\par
+\tab\cf5 else\cf3  \cf5 if\cf3  flutst=\cf7 "2=No"\cf3  \cf5 then\cf3  testedflu=\cf6\b 2\cf3\b0\par
+\par
+\tab\cf5 if\cf3  FluResult1=\cf7 "1=Positive"\cf3  \cf5 then\cf3  TestResultult=\cf6\b 1\cf3\b0\par
+\tab\cf5 else\cf3  \cf5 if\cf3  FluResult1=\cf7 "2=Negative"\cf3  \cf5 then\cf3  TestResultult=\cf6\b 2\cf3\b0\par
+\par
+\tab\cf5 if\cf3  FluResult2=\cf7 "1=Positive"\cf3  \cf5 then\cf3  TestResultult2=\cf6\b 1\cf3\b0\par
+\tab\cf5 else\cf3  \cf5 if\cf3  FluResult2=\cf7 "2=Negative"\cf3  \cf5 then\cf3  TestResultult2=\cf6\b 2\cf3\b0\par
+\par
+\tab\cf5 if\cf3  FluTstTyp1 <- \cf7 "1=Rapid Antigen"\cf3  \tab\cf5 then\cf3  TestType <- \cf6\b 1\cf3\b0\par
+\tab\cf5 if\cf3  FluTstTyp2 <- \cf7 "1=Rapid Antigen"\cf3  \tab\cf5 then\cf3  TestType2 <- \cf6\b 1\cf3\b0  \par
+\tab\cf5 if\cf3  FluTstTyp1 <- \cf7 "2=Molecular Assay"\cf3  \tab\cf5 then\cf3  TestType <- \cf6\b 2\cf3\b0\par
+\tab\cf5 if\cf3  FluTstTyp2 <- \cf7 "2=Molecular Assay"\cf3  \tab\cf5 then\cf3  TestType2 <- \cf6\b 2\cf3\b0\par
+\tab\cf5 if\cf3  FluTstTyp1 <- \cf7 "3=Viral Culture"\cf3  \tab\tab\cf5 then\cf3  TestType <- \cf6\b 3\cf3\b0\par
+\tab\cf5 if\cf3  FluTstTyp2 <- \cf7 "3=Viral Culture"\cf3  \tab\tab\cf5 then\cf3  TestType2 <- \cf6\b 3\cf3\b0\par
+\par
+\tab\cf5 if\cf3  outcome=\cf7 "1=Deceased"\cf3  \cf5 then\cf3  died=\cf6\b 1\cf3\b0\par
+\tab\cf5 else\cf3  \cf5 if\cf3  outcome=\cf7 "2=Alive"\cf3  \cf5 then\cf3  died=\cf6\b 2\cf3\b0\par
+\par
+\tab year=year(datehosp)\par
+\tab age <- floor((intck(\cf7 "month"\cf3 , dob, datehosp,\cf7 'C'\cf3 )) / \cf6\b 12\cf3\b0 )\par
+\tab state <- \cf7 "NY"\cf3\par
+\tab ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\cf4\b data\cf3\b0  ny5 (\cf5 keep\cf3 =testedflu testtype testtype2 testresult testresult2 died hospid datehosp\par
+ dob year age state)\par
+\tab\cf5 set\cf3  ny5(\cf5 rename\cf3 = (FluTst=TestedFlu\par
+\tab  FluTstTyp1=TestType\par
+\tab\tab\tab\tab\tab  \cf1 ##FluTstTyp2=TestType2##\cf3\par
+\tab\tab\tab\tab\tab  FluResult1=TestResult\par
+\tab\tab\tab\tab\tab  \cf1 ##FluResult2=TestResult2##\cf3\par
+\tab\tab\tab\tab\tab  Outcome=Died\par
+ hosp_tx=hospid\par
+ admdate=datehosp))\par
+\par
+\par
+ \cf5 if\cf3  caseid ne \cf7 " "\cf3\par
+\par
+\tab TestType2=inFluTstTyp2,\cf6\b 8.\cf3\b0 )\par
+\tab TestResult2=inFluResult2,\cf6\b 8.\cf3\b0 )\par
+\tab year=year(datehosp)\par
+\tab age <- floor((intck(\cf7 "month"\cf3 , dob, datehosp,\cf7 'C'\cf3 )) / \cf6\b 12\cf3\b0 )\par
+\tab state <- \cf7 "NY"\cf3\par
+\tab ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\cf4\b data\cf3\b0  or5(\cf5 keep\cf3 =testedflu testtype testtype2 testresult testresult2 died hospid datehosp\par
+ dob year age state)\par
+\tab\cf5 set\cf3  or5(\cf5 rename\cf3 = (FluTst=TestedFlu\par
+\tab  FluTstTyp1=TestType\par
+\tab\tab\tab\tab\tab  \cf1 ##FluTstTyp2=TestType2##\cf3\par
+\tab\tab\tab\tab\tab  FluResult1=TestResult\par
+\tab\tab\tab\tab\tab  \cf1 ##FluResult2=TestResult2##\cf3\par
+\tab\tab\tab\tab\tab  Outcome=Died\par
+ hosp_tx=hospid\par
+ admdate=datehosp))\par
+ \cf5 if\cf3  caseid ne \cf7 " "\cf3\par
+\tab TestType2=inFluTstTyp2,\cf6\b 8.\cf3\b0 )\par
+\tab TestResult2=inFluResult2,\cf6\b 8.\cf3\b0 )\par
+\tab year=year(datehosp)\par
+\tab age <- floor((intck(\cf7 "month"\cf3 , dob, datehosp,\cf7 'C'\cf3 )) / \cf6\b 12\cf3\b0 )\par
+\tab state <- \cf7 "OR"\cf3\par
+\tab\tab ICD91 <- ICD9_1,\cf6\b 6.\cf3\b0 )\par
+ICD92 <- ICD9_2,\cf6\b 6.\cf3\b0 )\par
+ICD93 <- ICD9_3,\cf6\b 6.\cf3\b0 )\par
+PatNo <- inPatientNo\par
+Diedhosp <- inDied\par
+TestFlu <- inTestedFlu\par
+TestRes <- inTestResult\par
+TestRes2 <- inTestResult2\par
+TestTpe <- inTestType\par
+TestTpe2 <- inTestType2\par
+\cf5 keep\cf3  ICD91 ICD92 ICD93 PatNo Diedhosp TestFlu TestRes TestRes2 TestTpe TestTpe2 state\par
+\cf4\b run\cf3\b0\par
+\par
+\cf1 ## A O'Halloran 07/11/2018 \par
+ TN submitted new data file with dob and age added\par
+ using this file instead##\cf3\par
+\par
+\cf1 ##\par
+data tn2b\par
+\tab set tn2(rename= (FluTst=TestedFlu\par
+\tab  FluTstTyp1=TestType\par
+\tab\tab\tab\tab\tab  FluTstTyp2=TestType2\par
+\tab\tab\tab\tab\tab  FluResult1=TestResult\par
+\tab\tab\tab\tab\tab  FluResult2=TestResult2\par
+\tab\tab\tab\tab\tab  Outcome=Died\par
+ hosp_tx=hospid\par
+ ))\par
+* Per Danielle Ndi on 7/12/2018\par
+ if caseid <- "TNFB15160350" then admdate="4/19/2016" \par
+\par
+\par
+\tab datehosp=inadmdate,mmddyy10.)\par
+\par
+\tab if caseid <- "TNFB15160159" then datehosp=37049\par
+ if caseid ne " "\par
+\tab year=year(datehosp)\par
+\tab age <- floor((intck("month", dob, datehosp,'C')) / 12)\par
+\tab state <- "TN"\par
+run\par
+##\cf3\par
+
+\pard\sa200\sl276\slmult1\cf0\highlight0\f2\fs22\par
+}
+ 
