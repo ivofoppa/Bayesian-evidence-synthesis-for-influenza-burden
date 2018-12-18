@@ -2,11 +2,11 @@ library(R2jags)
 bfolder <- 'C:/Users/VOR1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/'
 ### This code is for one age group, only for season 2014-15.
 ### The age group has to be selected; separately for the two data sets!
-agecatlist <- list(list(c(0,5),'<5'),
-                   list(c(5,18),'5 to 17'),
-                   list(c(18,50),'18-49'),
-                   list(c(50,65),'50-64'),
-                   list(c(65,999),'65+'))
+agecatlist <- list(list(c(0,4),'<5'),
+                   list(c(5,17),'5 to 17'),
+                   list(c(18,49),'18-49'),
+                   list(c(50,64),'50-64'),
+                   list(c(65,120),'65+'))
 
 ### Age specific estimates from Millman et al. EID 2015, 21 (9):
 cipcrlist <- list(c(95.0,82,98.7),c(95.0,82,98.7),c(94.1,81.1,98.7),c(94.1,81.1,98.7),c(86.1,79.6,92.7))
@@ -25,10 +25,39 @@ for (i in 1:5){
   {detach(seldata)}
 }
 
+# agcat <- 4
+
 agecatls <- agecatlist[[agcat]]
+#########################################################################################
+###  Defining influenza seasons #########################################################
+#########################################################################################
+fromyr <- 2010
+toyr <- 2016
+fromwk <- 40
+towk <- 39
+
+nseas <- toyr - fromyr
+### Define 'global N'
+
+mmwrdat0<-read.table("mmwrweeks.txt",header=T)
+mmwrdat<-mmwrdat[which((mmwrdat0$wyear==fromyr&mmwrdat0$week>=fromwk)|(mmwrdat0$wyear>fromyr&mmwrdat0$wyear<toyr)|(mmwrdat0$wyear==toyr&mmwrdat0$week<=towk)),]
+
+DVDun <- mmwrdat$dvdweek
+
+N <- length(mmwrdat$dvdweek)
+seasbeg <- which(mmwrdat$week==fromwk)
+seasend <- which(mmwrdat$week==towk)
+time <- (1:N)/N
+
+seaslist <- list()
+for (seas in 1:nseas){
+  seaslist[[seas]] <- c(max(seasbeg[seas],3),min(seasend[seas],N))
+}
+#########################################################################################
+###  FluSurv-NET data set ###############################################################
+#########################################################################################
 ### Data managment for detection multiplier
 setwd(paste0(bfolder,'BEdata'))
-
 dataset <- data.frame(read.csv('20181214_1415burden_bysite.csv'))
 
 ### Changing vars into simple values
@@ -36,13 +65,39 @@ for (k in 1:length(dataset[1,])) {
   dataset[,k] <- as.vector(dataset[,k])
 }
 
-DateHosp <- as.Date(datasetagst$DateHosp,"%m/%d/%Y")
+DateHosp <- as.Date(dataset$DateHosp,"%m/%d/%Y")
+DateHosp$dataset <- DateHosp
 
 statels <- unique(dataset$State)
 #########################################################################################
+### NCHS data set: Weekly mortality by age group, week, diagnostic group and ############
+### place of death for proportion deaths outside the hospital                ############
 #########################################################################################
-# agecat <- 2
+setwd(paste0(bfolder,'BEdata'))
+dataset2 <- data.frame(read.csv('mort2010_16_week_5agstate.csv'))
+dataset2$oshospdth <- sapply(dataset2$placdth, function(plce) ifelse(plce==1,1,0) )
 
+dataset2$DVD <- sapply(dataset2$studywk, function(week) mmwrdat0$dvdweek[which(mmwrdat0$studywk==week)])
+### Changing vars into simple values
+for (k in 1:length(dataset2[1,])) {
+  dataset2[,k] <- as.vector(dataset2[,k])
+}
+stateselind <- which(dataset2$stateoc %in% statels) ## restrict data to states represented in FluSurv-NET data
+dataset2 <- dataset2[stateselind,]
+###  summing over seasons ###############################################################
+dataset2cum <- NULL
+for (seas in 1:nseas){
+  for (ag in 1:5){
+    for (state in statels){
+      for (plce in 0:1){
+        selind <- which (dataset2$studywk)
+      }
+    }
+  }
+}
+#########################################################################################
+#########################################################################################
+#########################################################################################
 selindst <- which(dataset$State==state)
 datasetstate <- dataset[selindst,]
 
