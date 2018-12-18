@@ -1,7 +1,8 @@
 library(R2jags)
+#########################################################################################
+#########################################################################################
 bfolder <- 'C:/Users/VOR1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/'
-### This code is for one age group, only for season 2014-15.
-### The age group has to be selected; separately for the two data sets!
+
 agecatlist <- list(list(c(0,4),'<5'),
                    list(c(5,17),'5 to 17'),
                    list(c(18,49),'18-49'),
@@ -25,34 +26,10 @@ for (i in 1:5){
   {detach(seldata)}
 }
 
-# agcat <- 4
-
-agecatls <- agecatlist[[agcat]]
 #########################################################################################
-###  Defining influenza seasons #########################################################
-#########################################################################################
-fromyr <- 2010
-toyr <- 2016
-fromwk <- 40
-towk <- 39
-
-nseas <- toyr - fromyr
-### Define 'global N'
-
-mmwrdat0<-read.table("mmwrweeks.txt",header=T)
-mmwrdat<-mmwrdat[which((mmwrdat0$wyear==fromyr&mmwrdat0$week>=fromwk)|(mmwrdat0$wyear>fromyr&mmwrdat0$wyear<toyr)|(mmwrdat0$wyear==toyr&mmwrdat0$week<=towk)),]
-
-DVDun <- mmwrdat$dvdweek
-
-N <- length(mmwrdat$dvdweek)
-seasbeg <- which(mmwrdat$week==fromwk)
-seasend <- which(mmwrdat$week==towk)
-time <- (1:N)/N
-
-seaslist <- list()
-for (seas in 1:nseas){
-  seaslist[[seas]] <- c(max(seasbeg[seas],3),min(seasend[seas],N))
-}
+setwd(paste0(bfolder,'BEdata'))
+fname <- 'OSHdeath_2010-2016,FluSURV-NET.csv'
+oshdata <- read.csv(fname)
 #########################################################################################
 ###  FluSurv-NET data set ###############################################################
 #########################################################################################
@@ -66,44 +43,40 @@ for (k in 1:length(dataset[1,])) {
 }
 
 DateHosp <- as.Date(dataset$DateHosp,"%m/%d/%Y")
-DateHosp$dataset <- DateHosp
+dataset$DateHosp <- DateHosp
 
 statels <- unique(dataset$State)
-#########################################################################################
-### NCHS data set: Weekly mortality by age group, week, diagnostic group and ############
-### place of death for proportion deaths outside the hospital                ############
-#########################################################################################
-setwd(paste0(bfolder,'BEdata'))
-dataset2 <- data.frame(read.csv('mort2010_16_week_5agstate.csv'))
-dataset2$oshospdth <- sapply(dataset2$placdth, function(plce) ifelse(plce==1,1,0) )
 
-dataset2$DVD <- sapply(dataset2$studywk, function(week) mmwrdat0$dvdweek[which(mmwrdat0$studywk==week)])
-### Changing vars into simple values
-for (k in 1:length(dataset2[1,])) {
-  dataset2[,k] <- as.vector(dataset2[,k])
+for (state in statels){
+  
 }
-stateselind <- which(dataset2$stateoc %in% statels) ## restrict data to states represented in FluSurv-NET data
-dataset2 <- dataset2[stateselind,]
-###  summing over seasons ###############################################################
-dataset2cum <- NULL
-for (seas in 1:nseas){
-  for (ag in 1:5){
-    for (state in statels){
-      for (plce in 0:1){
-        selind <- which (dataset2$studywk)
-      }
-    }
+### This is not what we need; need 
+#########################################################################################
+###  Reding-in input values #############################################################
+#########################################################################################
+inputdata <- read.csv('Burden inputs All Ages.csv',header = T)
+#########################################################################################
+for (col in 1:length(inputdata[1,])){
+  inputdata[,col] <- as.vector(inputdata[,col])
+  if (col > 2){
+    inputdata[,col] <- as.numeric(inputdata[,col])
   }
 }
-#########################################################################################
-#########################################################################################
-#########################################################################################
+
 selindst <- which(dataset$State==state)
 datasetstate <- dataset[selindst,]
 
+selindst2 <- which(oshdata$state==state)
+datasetstate2 <- oshdata[selindst2,]
+
 for (agcat in 1:5){
+  agecatls <- agecatlist[[agcat]]
+  
   selindag <- which(datasetstate$Age >= agecatls[[1]][1] & datasetstate$Age < agecatls[[1]][2])
   datasetagst <- datasetstate[selindag,]
+
+  selindag2 <- which(datasetstate2$ag == agcat)
+  datasetagst2 <- datasetstate2[selindag2,]
   ### testtypes of influenza positived, deceased or not
   nttype <- array(0,dim = c(2,4))
   ntot <- c(0,0)
@@ -146,17 +119,7 @@ for (agcat in 1:5){
   
   selograpidest <- ((log(cirapid[3]) - log(cirapid[1])) + (log(cirapid[1]) - log(cirapid[2])))/2/1.96
   lrapidsens <- c(log(cirapid[1]),selograpidest)
-  #########################################################################################
-  ###  Reding-in input values #############################################################
-  #########################################################################################
-  inputdata <- read.csv('Burden inputs All Ages.csv',header = T)
-  #########################################################################################
-  for (col in 1:length(inputdata[1,])){
-    inputdata[,col] <- as.vector(inputdata[,col])
-    if (col > 2){
-      inputdata[,col] <- as.numeric(inputdata[,col])
-    }
-  }
+
   ### NEED TO CONTINUE HERE
   posh <- RCdeathoshprop
   
