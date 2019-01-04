@@ -111,6 +111,12 @@ for (seas in 1:nseas){
 }
 colnames(dataset2cum) <- c('season','state','ag','rcu','pi','osh')
 #########################################################################################
+###  Reading-in denominator data ########################################################
+#########################################################################################
+library(readxl)
+xlsFile <- 'NCHS 1516 population estimates.xls'
+popfile <- read_excel(xlsFile, sheet = 1)
+#########################################################################################
 setwd(paste0(bfolder,'BEdata'))
 outfname <- 'OSHdeath_2010-2016,FluSURV-NET.csv'
 write.csv(dataset2cum,file = outfname,quote = F)
