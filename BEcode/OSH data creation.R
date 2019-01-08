@@ -59,6 +59,7 @@ for (seas in 1:nseas){
 #########################################################################################
 ### Data managment for detection multiplier
 setwd(paste0(bfolder,'BEdata'))
+
 dataset <- data.frame(read.csv('20181214_1415burden_bysite.csv'))
 
 ### Changing vars into simple values
@@ -70,6 +71,7 @@ DateHosp <- as.Date(dataset$DateHosp,"%m/%d/%Y")
 dataset$DateHosp <- DateHosp
 
 statels <- unique(dataset$State)
+seaslabls <- sapply(1:7, function(s) paste0(10 + s-1,10 + s))
 #########################################################################################
 ### NCHS data set: Weekly mortality by age group, week, diagnostic group and ############
 ### place of death for proportion deaths outside the hospital                ############
@@ -109,13 +111,39 @@ for (seas in 1:nseas){
     }
   }
 }
+
+for (col in c(1,3:6)){
+  dataset2cum[,col] <- as.numeric(dataset2cum[,col])
+}
 colnames(dataset2cum) <- c('season','state','ag','rcu','pi','osh')
+dataset2cum <- data.frame(dataset2cum)
 #########################################################################################
 ###  Reading-in denominator data ########################################################
 #########################################################################################
 library(readxl)
-xlsFile <- 'NCHS 1516 population estimates.xls'
-popfile <- read_excel(xlsFile, sheet = 1)
+# 
+dataset2cum$pop <- dataset2cum$rcu*0
+
+
+for (s in 1:7){
+  seas <- seaslabls[[s]]
+  xlsFile <- paste0('NCHS ',seas,' population estimates.xls')
+  popfile <- read_excel(xlsFile, sheet = 1)
+  for (st in statels){
+    for (ag in 1:5){
+      aglim <- agecatlist[[ag]][[1]]
+      stpopselind <- which(substr(ls,1,2)==st)
+      if (length(stpopselind) > 1){
+        stpopdat <- cbind(popfile$age, rowSums(popfile[,stpopselind]),deparse.level = 0)
+      } else stpopdat <- cbind(popfile$age, popfile[,stpopselind],deparse.level = 0)
+      agpopselind <- which(stpopdat[,1] >= aglim[1] & stpopdat[,1] <= aglim[2])
+      agpop <- sum(stpopdat[agpopselind,2])
+      
+    }
+  }
+  
+}
+
 #########################################################################################
 setwd(paste0(bfolder,'BEdata'))
 outfname <- 'OSHdeath_2010-2016,FluSURV-NET.csv'
