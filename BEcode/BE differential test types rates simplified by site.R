@@ -30,6 +30,13 @@ for (i in 1:5){
 setwd(paste0(bfolder,'BEdata'))
 fname <- 'OSHdeath_2010-2016,FluSURV-NET.csv'
 oshdata <- read.csv(fname)
+
+popfname <- 'FluSurv-NET pops.csv'
+popdata <- read.csv(popfname)
+### Changing vars into simple values
+for (k in 1:length(popdata[1,])) {
+  popdata[,k] <- as.vector(popdata[,k])
+}
 #########################################################################################
 ###  FluSurv-NET data set ###############################################################
 #########################################################################################
