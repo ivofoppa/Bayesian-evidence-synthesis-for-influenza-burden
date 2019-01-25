@@ -1,1 +1,2 @@
-ls <- which(DateHosp >= mmwrdat$mmwrstrt[seaslist[[4]][1]] & DateHosp <= mmwrdat$mmwrend[seaslist[[4]][2]])
+
+ls <- which(DateHosp >= mmwrstrt[seaslist[[1]][1]] & DateHosp <= mmwrend[seaslist[[1]][2]])

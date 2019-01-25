@@ -108,6 +108,19 @@ for (k in 1:length(dataset[1,])) {
 
 DateHosp <- as.Date(dataset$DateHosp,"%m/%d/%Y")
 dataset$DateHosp <- DateHosp
+### For creation of a season variable in the FluSurv-NET data set #######################
+mmwrstrt <- as.vector(mmwrdat$mmwrstrt)
+mmwrstrt <- as.Date(mmwrstrt,"%m/%d/%Y")
+
+mmwrend <- as.vector(mmwrdat$mmwrend)
+mmwrend <- as.Date(mmwrend,"%m/%d/%Y")
+
+for (seas in 1:6){
+  ls <- which(DateHosp >= mmwrstrt[seaslist[[seas]][1]] & DateHosp <= mmwrend[seaslist[[seas]][2]])
+  dataset$season[ls] <- seas
+}
+
+#########################################################################################
 
 statels <- unique(dataset$State)
 seaslabls <- sapply(1:7, function(s) paste0(10 + s-1,10 + s))
