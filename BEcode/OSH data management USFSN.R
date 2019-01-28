@@ -7,7 +7,7 @@ agecatlist <- list(list(c(0,4),'<5'),
                    list(c(5,17),'5 to 17'),
                    list(c(18,49),'18-49'),
                    list(c(50,64),'50-64'),
-                   list(c(65,120),'65+'))
+                   list(c(65,86),'65+'))
 
 #########################################################################################
 #########################################################################################
@@ -32,6 +32,7 @@ oshls <- unique(oshdat$Season)
 ##  to combine data from the two NY sites ###############################################
 #########################################################################################
 for (seas in seasls){
+  s <- which(seasls==seas)
   for (ag in agels){
     for (osh in 0:1){
       selind1 <- which(oshdat$Season==seas & oshdat$Age==ag & oshdat$osh==osh & oshdat$State=='NYA')
@@ -46,8 +47,17 @@ for (seas in seasls){
       }
   }
 }
-#########################################################################################
 
+seas <- sapply(oshdat$Season, function(s) which(seasls==s))
+oshdat$seas <- seas
+
+ag <- sapply(oshdat$Age, function(ag) which(agels==ag))
+oshdat$ag <- ag
+
+oshdat$freq <- oshdat$COUNT
+
+oshdat <- oshdat[,c('seas','State','ag','osh','freq')]
+#########################################################################################
 ### Age specific estimates from Millman et al. EID 2015, 21 (9):
 cipcrlist <- list(c(95.0,82,98.7),c(95.0,82,98.7),c(94.1,81.1,98.7),c(94.1,81.1,98.7),c(86.1,79.6,92.7))
 cirapidlist <- list(c(66.7,61.3,71.7),c(66.7,61.3,71.7),c(53.9,47.8,59.8),c(53.9,47.8,59.8),c(20.1,8.8,41.4))
@@ -121,34 +131,44 @@ for (seas in 1:6){
 }
 
 #########################################################################################
-
 statels <- unique(dataset$State)
 seaslabls <- sapply(1:7, function(s) paste0(10 + s-1,10 + s))
+## "0-4y"   "5-17y"  "18-49y" "50-64y" "65+y"
+ag <- sapply(dataset$Age, function(ag) ifelse(ag %in% c(0:4),1,
+                                              ifelse(ag %in% c(5:17),2,
+                                                     ifelse(ag %in% c(18:49),3,
+                                                            ifelse(ag %in% c(50:64),4,
+                                                                   ifelse(ag %in% c(65:110),5,NA))))))
+dataset$ag <- ag
+dataset <- dataset[which(!is.na(ag)),]
+#########################################################################################
+### Aggregating dataset by season, state, ag, testing, test type and test result ########
+#########################################################################################
+# "State", "TestedFlu" ,"TestType","TestResult","TestType2","TestResult2","TestType3","TestResult3",
+#"Died","season","othtest","ag"
+
 #########################################################################################
 ###  Reading-in denominator data ########################################################
 #########################################################################################
 library(readxl)
 # 
+agseaspop <- NULL
+
 for (s in 1:7){
   seas <- seaslabls[[s]]
   xlsFile <- paste0('NCHS ',seas,' population estimates.xls')
   popfile <- read_excel(xlsFile, sheet = 1)
-  ls <- names(popfile)
   for (st in statels){
+    stpopselind <- which(substr(stnms,1,2)==st)+1
     for (ag in 1:5){
       aglim <- agecatlist[[ag]][[1]]
-      stpopselind <- which(substr(ls,1,2)==st)
-      if (length(stpopselind) > 1){
-        stpopdat <- cbind(popfile$age, rowSums(popfile[,stpopselind]),deparse.level = 0)
-      } else stpopdat <- cbind(popfile$age, popfile[,stpopselind],deparse.level = 0)
-      agpopselind <- which(stpopdat[,1] >= aglim[1] & stpopdat[,1] <= aglim[2])
-      agpop <- sum(stpopdat[agpopselind,2])
-      
+      drow <- c(s,ag,st,sum(popfile[aglim,stpopselind]))
+      agseaspop <- rbind(agseaspop,drow,deparse.level = 0)
     }
   }
-  
 }
-
+colnames(agseaspop) <- c('season','ag','state','pop')
+agseaspop <- data.frame(agseaspop)
 #########################################################################################
 setwd(paste0(bfolder,'BEdata'))
 outfname <- 'OSHdeath_2010-2016,FluSURV-NET.csv'
