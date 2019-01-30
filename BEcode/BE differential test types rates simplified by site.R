@@ -9,40 +9,17 @@ agecatlist <- list(list(c(0,4),'<5'),
                    list(c(50,64),'50-64'),
                    list(c(65,120),'65+'))
 
-### Age specific estimates from Millman et al. EID 2015, 21 (9):
-cipcrlist <- list(c(95.0,82,98.7),c(95.0,82,98.7),c(94.1,81.1,98.7),c(94.1,81.1,98.7),c(86.1,79.6,92.7))
-cirapidlist <- list(c(66.7,61.3,71.7),c(66.7,61.3,71.7),c(53.9,47.8,59.8),c(53.9,47.8,59.8),c(20.1,8.8,41.4))
-#########################################################################################
-### Reading-in data set and making sure DateHosp is actually data variable  #############
-#########################################################################################
-### Make sure data set is not attached yet; if it is, detach it ...
-if (exists('ag'))
-{
-  rm(ag)
-}
-for (i in 1:5){
-  attached <- search()
-  if ('seldata'%in%attached)
-  {detach(seldata)}
-}
-
-#########################################################################################
+### Load data 
+infname <- 'FluSURV-NET_burden.RData'
 setwd(paste0(bfolder,'BEdata'))
-fname <- 'OSHdeath_2010-2016,FluSURV-NET.csv'
-oshdata <- read.csv(fname)
 
-popfname <- 'FluSurv-NET pops.csv'
-popdata <- read.csv(popfname)
-### Changing vars into simple values
-for (k in 1:length(popdata[1,])) {
-  popdata[,k] <- as.vector(popdata[,k])
-}
+load(infname)
+#########################################################################################
 #########################################################################################
 ###  FluSurv-NET data set ###############################################################
 #########################################################################################
 ### Data managment for detection multiplier
-setwd(paste0(bfolder,'BEdata'))
-dataset <- data.frame(read.csv('20181214_1415burden_bysite.csv'))
+dataset <- fulldata[['FluSurvdata']]
 
 ### Changing vars into simple values
 for (k in 1:length(dataset[1,])) {
