@@ -149,22 +149,37 @@ dataset$Died <- sapply(dataset$Died,function(d) ifelse(is.na(d),0,d))
 #########################################################################################
 # "State", "TestedFlu" ,"TestType","TestResult","TestType2","TestResult2","TestType3","TestResult3",
 #"Died","season","othtest","ag"
-dataset2 <- dataset[,c("State","season","ag", "TestedFlu" ,"TestType","TestResult","TestType2","TestResult2","TestType3","TestResult3",
-                       "Died")]
-TestType <- sapply(seq_along(dataset2$TestType), 
-                   function(tt) ifelse(dataset2$TestResult[tt]==1,dataset2$TestType[tt],
-                                       ifelse(dataset2$TestResult2[tt]==1,dataset2$TestType2[tt],
-                                              ifelse(dataset2$TestResult3[tt]==1,dataset2$TestType3[tt],0))))
 
-TestType <- sapply(TestType,function(tt) ifelse(is.na(tt),0,tt))
+dataset2 <- dataset[,c("State","season","ag","Died", "TestedFlu" ,"TestType","TestResult","TestType2",
+                       "TestResult2","TestType3","TestResult3")]
+
+TestResult <- dataset2$TestResult
+TestResult2 <- dataset2$TestResult2
+TestResult3 <- dataset2$TestResult3
+
+TestResult[which(is.na(TestResult) | TestResult==9 | TestResult==2)] <- 0
+TestResult2[which(is.na(TestResult2) | TestResult2==9 | TestResult2==2)] <- 0
+TestResult3[which(is.na(TestResult3) | TestResult3==9 | TestResult3==2)] <- 0
+
+TestResult <- sapply(seq_along(TestResult), 
+                     function(t) ifelse(TestResult[t]==1,1,
+                                        ifelse(TestResult2[t]==1,1,
+                                               ifelse(TestResult3[t]==1,1,0))))
+
+
+TestType <- dataset2$TestType
+TestType2 <- dataset2$TestType2
+TestType3 <- dataset2$TestType3
+
+TestType[which(is.na(TestType) | TestType==9 | TestType==7)] <- 0
+TestType2[which(is.na(TestType2) | TestType2==9 | TestType2==7)] <- 0
+TestType3[which(is.na(TestType3) | TestType3==9 | TestType3==7)] <- 0
+
+TestType <- sapply(seq_along(TestType),function(tt) ifelse(TestResult[tt]==1,TestType[tt],
+                                       ifelse(TestResult2[tt]==1,TestType2[tt],
+                                              ifelse(TestResult3[tt]==1,TestType3[tt],0))))
+
 TestType <- sapply(TestType,function(tt) ifelse(tt==1,1,ifelse(tt==2,2,ifelse(tt>2,3,0))))
-
-TestResult <- sapply(seq_along(dataset2$TestResult), 
-                     function(t) ifelse(dataset2$TestResult[t]==1,1,
-                                        ifelse(dataset2$TestResult2[t]==1,1,
-                                               ifelse(dataset2$TestResult3[t]==1,1,0))))
-
-TestResult[which(is.na(TestResult) | TestResult==2)] <- 0
 
 dataset2$TestType <- TestType
 dataset2$TestResult <- TestResult
@@ -177,7 +192,7 @@ dataset2$TestedFlu[which(dataset2$TestResult==1)] <- 1
 #########################################################################################
 ### Aggregating dataset by season, state, ag, testing, test type and test result ########
 #########################################################################################
-State <- dataset2$State
+state <- dataset2$State
 seas <- dataset2$seas
 ag <- dataset2$ag
 TestedFlu <- dataset2$TestedFlu
@@ -195,13 +210,13 @@ for (st in statels){
           if (t==1){
             for (tty in 1:3){
               for (res in 0:1){
-                selind <- which(State==st & seas==s & ag==a & died==dd & TestedFlu==1 & TestType==tty & TestResult==res)
+                selind <- which(state==st & seas==s & ag==a & died==dd & TestedFlu==1 & TestType==tty & TestResult==res)
                 row <- c(st,s,a,dd,t,tty,res,length(selind))
                 agdataset <- rbind(agdataset,row,deparse.level = 0)
               }
             }
           } else {
-            selind <- which(State==st & seas==s & ag==a & died==dd & TestedFlu==0)
+            selind <- which(state==st & seas==s & ag==a & died==dd & TestedFlu==0)
             row <- c(st,s,a,dd,0,0,0,length(selind))
             agdataset <- rbind(agdataset,row,deparse.level = 0)
           }
@@ -217,7 +232,7 @@ for (col in 2:length(agdataset[1,])){
 
 agdataset <- data.frame(agdataset)
 
-colnames(agdataset) <- c("State","season","ag","died", "TestedFlu" ,"TestType","TestResult","freq")
+colnames(agdataset) <- c("state","season","ag","died", "TestedFlu" ,"TestType","TestResult","freq")
 FluSurvdata <- agdataset
 FluSurvdata$died <- sapply(FluSurvdata$died, function(d) ifelse(is.na(d),0,1))
 
