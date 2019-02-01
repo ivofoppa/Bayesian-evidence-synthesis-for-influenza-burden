@@ -81,30 +81,6 @@ agcat <- 4
 
 agecatls <- agecatlist[[agcat]]
 #########################################################################################
-###  Defining influenza seasons #########################################################
-#########################################################################################
-fromyr <- 2010
-toyr <- 2016
-fromwk <- 40
-towk <- 39
-
-nseas <- toyr - fromyr
-### Define 'global N'
-setwd(paste0(bfolder,'BEdata'))
-mmwrdat0<-read.table("mmwrweeks.txt",header=T)
-mmwrdat<-mmwrdat0[which((mmwrdat0$wyear==fromyr&mmwrdat0$week>=fromwk)|(mmwrdat0$wyear>fromyr&mmwrdat0$wyear<toyr)|(mmwrdat0$wyear==toyr&mmwrdat0$week<=towk)),]
-
-DVDun <- mmwrdat$dvdweek
-
-N <- length(mmwrdat$dvdweek)
-seasbeg <- which(mmwrdat$week==fromwk)
-seasend <- which(mmwrdat$week==towk)
-time <- (1:N)/N
-
-seaslist <- list()
-for (seas in 1:nseas){
-  seaslist[[seas]] <- c(max(seasbeg[seas],3),min(seasend[seas],N))
-}
 #########################################################################################
 ###  FluSurv-NET data set ###############################################################
 #########################################################################################
@@ -118,20 +94,11 @@ for (k in 1:length(dataset[1,])) {
   dataset[,k] <- as.vector(dataset[,k])
 }
 
-DateHosp <- as.Date(dataset$DateHosp,"%m/%d/%Y")
-dataset$DateHosp <- DateHosp
-### For creation of a season variable in the FluSurv-NET data set #######################
-mmwrstrt <- as.vector(mmwrdat$mmwrstrt)
-mmwrstrt <- as.Date(mmwrstrt,"%m/%d/%Y")
+delind <- which(is.na(dataset$season))
+dataset <- dataset[-delind,]
 
-mmwrend <- as.vector(mmwrdat$mmwrend)
-mmwrend <- as.Date(mmwrend,"%m/%d/%Y")
-
-for (seas in 1:6){
-  ls <- which(DateHosp >= mmwrstrt[seaslist[[seas]][1]] & DateHosp <= mmwrend[seaslist[[seas]][2]])
-  dataset$season[ls] <- seas
-}
-
+season <- sapply(dataset$season, function(s) switch(which(seasls==s),1,2,3,4,5,6))
+dataset$season <- season
 #########################################################################################
 statels <- unique(dataset$State)
 seaslabls <- sapply(1:7, function(s) paste0(10 + s-1,10 + s))
@@ -155,50 +122,44 @@ dataset2 <- dataset[,c("State","season","ag","Died", "TestedFlu" ,"TestType","Te
 
 TestResult <- dataset2$TestResult
 TestResult2 <- dataset2$TestResult2
-TestResult3 <- dataset2$TestResult3
 
 TestResult[which(is.na(TestResult) | TestResult==9 | TestResult==2)] <- 0
 TestResult2[which(is.na(TestResult2) | TestResult2==9 | TestResult2==2)] <- 0
-TestResult3[which(is.na(TestResult3) | TestResult3==9 | TestResult3==2)] <- 0
 
 TestResult <- sapply(seq_along(TestResult), 
-                     function(t) ifelse(TestResult[t]==1,1,
-                                        ifelse(TestResult2[t]==1,1,
-                                               ifelse(TestResult3[t]==1,1,0))))
+                     function(k) ifelse(TestResult[k]==1,1,
+                                        ifelse(TestResult2[k]==1,1,0)))
 
 
 TestType <- dataset2$TestType
 TestType2 <- dataset2$TestType2
-TestType3 <- dataset2$TestType3
 
 TestType[which(is.na(TestType) | TestType==9 | TestType==7)] <- 0
 TestType2[which(is.na(TestType2) | TestType2==9 | TestType2==7)] <- 0
-TestType3[which(is.na(TestType3) | TestType3==9 | TestType3==7)] <- 0
 
-TestType <- sapply(seq_along(TestType),function(tt) ifelse(TestResult[tt]==1,TestType[tt],
-                                       ifelse(TestResult2[tt]==1,TestType2[tt],
-                                              ifelse(TestResult3[tt]==1,TestType3[tt],0))))
+TestType <- sapply(seq_along(TestType),function(k) ifelse(TestResult[k]==1,TestType[k],
+                                       ifelse(TestResult2[k]==1,TestType2[k],0)))
 
-TestType <- sapply(TestType,function(tt) ifelse(tt==1,1,ifelse(tt==2,2,ifelse(tt>2,3,0))))
+TestType <- sapply(TestType,function(tt) ifelse(tt>2,3,tt))
 
 dataset2$TestType <- TestType
 dataset2$TestResult <- TestResult
 
-dataset2 <- dataset2[,c("State","season","ag","Died", "TestedFlu" ,"TestType","TestResult")]
+dataset3 <- dataset2[,c("State","season","ag","Died", "TestedFlu" ,"TestType","TestResult")]
 
-dataset2$TestedFlu[which(is.na(dataset2$TestedFlu) | dataset2$TestedFlu>=2)] <- 0
-dataset2$TestedFlu[which(dataset2$TestResult==1)] <- 1
+dataset3$TestedFlu[which(is.na(TestedFlu) | TestedFlu>=2)] <- 0
+dataset3$TestedFlu[which(TestResult==1)] <- 1
 
 #########################################################################################
 ### Aggregating dataset by season, state, ag, testing, test type and test result ########
 #########################################################################################
-state <- dataset2$State
-seas <- dataset2$seas
-ag <- dataset2$ag
-TestedFlu <- dataset2$TestedFlu
-TestedType <- dataset2$TestedType
-TestResult <- dataset2$TestResult
-died <- dataset2$Died
+state <- dataset3$State
+seas <- dataset3$seas
+ag <- dataset3$ag
+TestedFlu <- dataset3$TestedFlu
+TestedType <- dataset3$TestedType
+TestResult <- dataset3$TestResult
+died <- dataset3$Died
 
 agdataset <- NULL
 
@@ -210,15 +171,15 @@ for (st in statels){
           if (t==1){
             for (tty in 1:3){
               for (res in 0:1){
-                selind <- which(state==st & seas==s & ag==a & died==dd & TestedFlu==1 & TestType==tty & TestResult==res)
-                row <- c(st,s,a,dd,t,tty,res,length(selind))
-                agdataset <- rbind(agdataset,row,deparse.level = 0)
+                selind1 <- which(state==st & seas==s & ag==a & died==dd & TestedFlu==1 & TestType==tty & TestResult==res)
+                row1 <- c(st,s,a,dd,t,tty,res,length(selind1))
+                agdataset <- rbind(agdataset,row1,deparse.level = 0)
               }
             }
           } else {
-            selind <- which(state==st & seas==s & ag==a & died==dd & TestedFlu==0)
-            row <- c(st,s,a,dd,0,0,0,length(selind))
-            agdataset <- rbind(agdataset,row,deparse.level = 0)
+            selind0 <- which(state==st & seas==s & ag==a & died==dd & TestedFlu==0)
+            row0 <- c(st,s,a,dd,0,0,0,length(selind0))
+            agdataset <- rbind(agdataset,row0,deparse.level = 0)
           }
         }
       }
