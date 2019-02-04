@@ -147,55 +147,66 @@ dataset2$TestResult <- TestResult
 
 dataset3 <- dataset2[,c("State","season","ag","Died", "TestedFlu" ,"TestType","TestResult")]
 
+TestedFlu <- dataset3$TestedFlu
+
 dataset3$TestedFlu[which(is.na(TestedFlu) | TestedFlu>=2)] <- 0
 dataset3$TestedFlu[which(TestResult==1)] <- 1
+
+for (col in 2:length(dataset3[1,])){
+  dataset3[,col] <- as.numeric(as.vector(dataset3[,col]))
+}
 
 #########################################################################################
 ### Aggregating dataset by season, state, ag, testing, test type and test result ########
 #########################################################################################
 state <- dataset3$State
-seas <- dataset3$seas
+seas <- dataset3$season
 ag <- dataset3$ag
-TestedFlu <- dataset3$TestedFlu
-TestedType <- dataset3$TestedType
-TestResult <- dataset3$TestResult
 died <- dataset3$Died
+TestedFlu <- dataset3$TestedFlu
+TestResult <- dataset3$TestResult
+TestType <- dataset3$TestType
+
+uniqueds <- unique(dataset3)
+
+for (col in 2:length(uniqueds[1,])){
+  uniqueds[,col] <- as.numeric(as.vector(uniqueds[,col]))
+}
 
 agdataset <- NULL
 
-for (st in statels){
-  for (s in 1:6){
-    for (a in 1:5){
-      for (dd in 0:1){
-        for (t in 0:1){
-          if (t==1){
-            for (tty in 1:3){
-              for (res in 0:1){
-                selind1 <- which(state==st & seas==s & ag==a & died==dd & TestedFlu==1 & TestType==tty & TestResult==res)
-                row1 <- c(st,s,a,dd,t,tty,res,length(selind1))
-                agdataset <- rbind(agdataset,row1,deparse.level = 0)
-              }
-            }
-          } else {
-            selind0 <- which(state==st & seas==s & ag==a & died==dd & TestedFlu==0)
-            row0 <- c(st,s,a,dd,0,0,0,length(selind0))
-            agdataset <- rbind(agdataset,row0,deparse.level = 0)
-          }
-        }
-      }
-    }
-  }
+for (k in seq_along(uniqueds$State)){
+  dsrow <- uniqueds[k,]
+  selind1 <- which(state==dsrow$State & seas==dsrow$season & ag==dsrow$ag & died==dsrow$Died &
+                     TestedFlu==dsrow$TestedFlu & TestType==dsrow$TestType & TestResult==dsrow$TestResult)
+  row1 <- c(dsrow$State,dsrow$season,dsrow$ag,dsrow$Died,dsrow$TestedFlu,dsrow$TestType,
+            dsrow$TestResult,length(selind1))
+  
+  agdataset <- rbind(agdataset,row1,deparse.level = 0)
 }
 
 for (col in 2:length(agdataset[1,])){
-  agdataset[,col] <- as.numeric(agdataset[,col])
+  agdataset[,col] <- as.numeric(as.vector(agdataset[,col]))
 }
 
 agdataset <- data.frame(agdataset)
 
 colnames(agdataset) <- c("state","season","ag","died", "TestedFlu" ,"TestType","TestResult","freq")
 FluSurvdata <- agdataset
-FluSurvdata$died <- sapply(FluSurvdata$died, function(d) ifelse(is.na(d),0,1))
+died <- sapply(FluSurvdata$died, function(d) ifelse(is.na(d) | d==0,0,1))
+FluSurvdata$died <- died
+
+FluSurvdata <- FluSurvdata[order(FluSurvdata$state,FluSurvdata$season,FluSurvdata$ag,
+                                 FluSurvdata$died,
+                                 FluSurvdata$TestedFlu,
+                                 FluSurvdata$TestType,
+                                 FluSurvdata$TestResult),]
+
+# FluSurvdatashort <- FluSurvdata[,c('state','season','ag','died','TestedFlu','TestResult','freq')]
+# FluSurvdatashort <- FluSurvdatashort[order(FluSurvdatashort$state,FluSurvdatashort$season,FluSurvdatashort$ag,
+#                                  FluSurvdatashort$died,
+#                                  FluSurvdatashort$TestedFlu,
+#                                  FluSurvdatashort$TestResult),]
 
 #########################################################################################
 ###  Reading-in denominator data ########################################################
