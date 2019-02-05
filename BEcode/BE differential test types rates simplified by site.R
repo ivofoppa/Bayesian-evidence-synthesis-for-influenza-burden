@@ -24,11 +24,14 @@ load(infname)
 st <- 'NY'
 ag <- 4
 
-selindst <- which(dataset$State==state)
-datasetstate <- dataset[selindst,]
+selind1 <- which(FluSurvdata$state==st & FluSurvdata$ag==ag)
+FluSurvdatasel <- FluSurvdata[selind1,]
 
-selindst2 <- which(oshdata$state==state)
-datasetstate2 <- oshdata[selindst2,]
+selind2 <- which(agseaspop$state==st & agseaspop$ag==ag)
+agseaspopsel <- agseaspop[selind2,]
+
+selind3 <- which(oshdat$state==st & oshdat$ag==ag)
+oshdatsel <- oshdat[selind3,]
 
 for (agcat in 1:5){
   agecatls <- agecatlist[[agcat]]
