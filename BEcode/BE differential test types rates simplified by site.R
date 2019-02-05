@@ -17,35 +17,12 @@ load(infname)
 #########################################################################################
 #########################################################################################
 ###  FluSurv-NET data set ###############################################################
+###  Subsetting by site and age group ###################################################
 #########################################################################################
-### Data managment for detection multiplier
-dataset <- fulldata[['FluSurvdata']]
+###  FluSurvdata,sensdata,agseaspop,oshdat
 
-### Changing vars into simple values
-for (k in 1:length(dataset[1,])) {
-  dataset[,k] <- as.vector(dataset[,k])
-}
-
-DateHosp <- as.Date(dataset$DateHosp,"%m/%d/%Y")
-dataset$DateHosp <- DateHosp
-
-statels <- unique(dataset$State)
-
-for (state in statels){
-  
-}
-### This is not what we need; need 
-#########################################################################################
-###  Reding-in input values #############################################################
-#########################################################################################
-inputdata <- read.csv('Burden inputs All Ages.csv',header = T)
-#########################################################################################
-for (col in 1:length(inputdata[1,])){
-  inputdata[,col] <- as.vector(inputdata[,col])
-  if (col > 2){
-    inputdata[,col] <- as.numeric(inputdata[,col])
-  }
-}
+st <- 'NY'
+ag <- 4
 
 selindst <- which(dataset$State==state)
 datasetstate <- dataset[selindst,]

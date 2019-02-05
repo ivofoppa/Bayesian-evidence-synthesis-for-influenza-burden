@@ -49,7 +49,7 @@ for (seas in seasls){
 }
 
 seas <- sapply(oshdat$Season, function(s) which(seasls==s))
-oshdat$seas <- seas
+oshdat$season <- seas
 
 ag <- sapply(oshdat$Age, function(ag) which(agels==ag))
 oshdat$ag <- ag
@@ -57,7 +57,7 @@ oshdat$ag <- ag
 oshdat$freq <- oshdat$COUNT
 oshdat$state <- oshdat$State
 
-oshdat <- oshdat[,c('seas','state','ag','osh','freq')]
+oshdat <- oshdat[,c('state','season','ag','osh','freq')]
 #########################################################################################
 ### Age specific estimates from Millman et al. EID 2015, 21 (9):
 cipcrlist <- list(c(95.0,82,98.7),c(95.0,82,98.7),c(94.1,81.1,98.7),c(94.1,81.1,98.7),c(86.1,79.6,92.7))
@@ -173,33 +173,21 @@ for (col in 2:length(uniqueds[1,])){
   uniqueds[,col] <- as.numeric(as.vector(uniqueds[,col]))
 }
 
-agdataset <- NULL
-
 for (k in seq_along(uniqueds$State)){
   dsrow <- uniqueds[k,]
   selind1 <- which(state==dsrow$State & seas==dsrow$season & ag==dsrow$ag & died==dsrow$Died &
                      TestedFlu==dsrow$TestedFlu & TestType==dsrow$TestType & TestResult==dsrow$TestResult)
-  row1 <- c(dsrow$State,dsrow$season,dsrow$ag,dsrow$Died,dsrow$TestedFlu,dsrow$TestType,
-            dsrow$TestResult,length(selind1))
-  
-  agdataset <- rbind(agdataset,row1,deparse.level = 0)
+  uniqueds$freq[k] <- length(selind1)
 }
 
-for (col in 2:length(agdataset[1,])){
-  agdataset[,col] <- as.numeric(as.vector(agdataset[,col]))
-}
+colnames(uniqueds) <- c("state","season","ag","died", "TestedFlu" ,"TestType","TestResult","freq")
 
-agdataset <- data.frame(agdataset)
-
-colnames(agdataset) <- c("state","season","ag","died", "TestedFlu" ,"TestType","TestResult","freq")
-FluSurvdata <- agdataset
-died <- sapply(FluSurvdata$died, function(d) ifelse(is.na(d) | d==0,0,1))
-FluSurvdata$died <- died
+FluSurvdata <- uniqueds
 
 FluSurvdata <- FluSurvdata[order(FluSurvdata$state,FluSurvdata$season,FluSurvdata$ag,
-                                 FluSurvdata$died,
                                  FluSurvdata$TestedFlu,
                                  FluSurvdata$TestType,
+                                 FluSurvdata$died,
                                  FluSurvdata$TestResult),]
 
 # FluSurvdatashort <- FluSurvdata[,c('state','season','ag','died','TestedFlu','TestResult','freq')]
@@ -231,15 +219,19 @@ for (s in 1:7){
     }
   }
 }
-colnames(agseaspop) <- c('seas','ag','state','pop')
+colnames(agseaspop) <- c('season','ag','state','pop')
 agseaspop <- data.frame(agseaspop)
-agseaspop <- agseaspop[,c('state','seas','ag','pop')]
+agseaspop <- agseaspop[,c('state','season','ag','pop')]
 #########################################################################################
 setwd(paste0(bfolder,'BEdata'))
 outfname <- 'FluSURV-NET_burden.RData'
-fulldata <- list(FluSurvdata=FluSurvdata,sensdata=sensdata,agseaspop=agseaspop,oshdat=oshdat)
+# fulldata <- list(FluSurvdata=FluSurvdata,sensdata=sensdata,agseaspop=agseaspop,oshdat=oshdat)
+save(FluSurvdata,sensdata,agseaspop,oshdat,file = outfname)
+#########################################################################################
+#########################################################################################
+#########################################################################################
+rm(FluSurvdata,sensdata,agseaspop,oshdat)
 
-save(fulldata,file = outfname)
-#########################################################################################
-#########################################################################################
-#########################################################################################
+setwd(paste0(bfolder,'BEdata'))
+infname <- 'FluSURV-NET_burden.RData'
+load(infname)
