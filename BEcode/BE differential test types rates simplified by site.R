@@ -22,35 +22,31 @@ load(infname)
 ###  FluSurvdata,sensdata,agseaspop,oshdat
 
 st <- 'NY'
-ag <- 4
+agcat <- 5
 
-selind1 <- which(FluSurvdata$state==st & FluSurvdata$ag==ag)
+selind1 <- which(FluSurvdata$state==st & FluSurvdata$ag==agcat)
 FluSurvdatasel <- FluSurvdata[selind1,]
 
-selind2 <- which(agseaspop$state==st & agseaspop$ag==ag)
+selind2 <- which(agseaspop$state==st & agseaspop$ag==agcat)
 agseaspopsel <- agseaspop[selind2,]
 
-selind3 <- which(oshdat$state==st & oshdat$ag==ag)
+selind3 <- which(oshdat$state==st & oshdat$ag==agcat)
 oshdatsel <- oshdat[selind3,]
+
+sensdatasel <- list(sensdata[[1]][agcat],sensdata[[2]][agcat])
 
 for (agcat in 1:5){
   agecatls <- agecatlist[[agcat]]
   
-  selindag <- which(datasetstate$Age >= agecatls[[1]][1] & datasetstate$Age < agecatls[[1]][2])
-  datasetagst <- datasetstate[selindag,]
-
-  selindag2 <- which(datasetstate2$ag == agcat)
-  datasetagst2 <- datasetstate2[selindag2,]
-  ### testtypes of influenza positived, deceased or not
   nttype <- array(0,dim = c(2,4))
   ntot <- c(0,0)
   for (d in c(0,1)){
-    selind2 <- which(datasetagst$Died==d)
+    selind2 <- which(FluSurvdatasel$died==d)
     ntot[d+1] <- length(selind2)
-    ds <- datasetagst[selind2,]
+    ds <- FluSurvdatasel[selind2,]
     nttype[d+1,1] <- length(which(ds$TestedFlu==1 & ds$TestType==1)) # PCR
     nttype[d+1,2] <- length(which(ds$TestedFlu==1 & ds$TestType==2)) # RIDT
-    nttype[d+1,3] <- length(which(ds$TestedFlu==1 & ds$TestType%in%c(3:9))) # Other/unknown
+    nttype[d+1,3] <- length(which(ds$TestedFlu==1 & ds$TestType%in%c(0,3:9))) # Other/unknown
     nttype[d+1,4] <- length(which(ds$TestedFlu!=1)) # Other/unknown
   }
   #########################################################################################
@@ -66,8 +62,8 @@ for (agcat in 1:5){
   testpos <- array(0,dim = c(2,3))
   
   for (d in c(0,1)){
-    selind3 <- which(datasetagst$Died==d & datasetagst$TestResult==1)
-    ds <- datasetagst[selind3,]
+    selind3 <- which(FluSurvdatasel$died==d & FluSurvdatasel$TestResult==1)
+    ds <- FluSurvdatasel[selind3,]
     testpos[d+1,1] <- length(which(ds$TestType==1)) # PCR
     testpos[d+1,2] <- length(which(ds$TestType==2)) # Other/unknown
     testpos[d+1,3] <- length(which(ds$TestType%in%c(3:9))) # Other/unknown

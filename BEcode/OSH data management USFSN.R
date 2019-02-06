@@ -156,6 +156,9 @@ for (col in 2:length(dataset3[1,])){
   dataset3[,col] <- as.numeric(as.vector(dataset3[,col]))
 }
 
+colnames(dataset3) <- c("state","season","ag","died", "TestedFlu" ,"TestType","TestResult")
+FluSurvdata <- dataset3
+
 #########################################################################################
 ### Aggregating dataset by season, state, ag, testing, test type and test result ########
 #########################################################################################
