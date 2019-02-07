@@ -20,7 +20,6 @@ load(infname)
 ###  Subsetting by site and age group ###################################################
 #########################################################################################
 ###  FluSurvdata,sensdata,agseaspop,oshdat
-
 st <- 'NY'
 agcat <- 5
 
@@ -38,40 +37,61 @@ sensdatasel <- list(sensdata[[1]][agcat],sensdata[[2]][agcat])
 for (agcat in 1:5){
   agecatls <- agecatlist[[agcat]]
   
-  nttype <- array(0,dim = c(2,4))
-  ntot <- c(0,0)
-  for (d in c(0,1)){
-    selind2 <- which(FluSurvdatasel$died==d)
-    ntot[d+1] <- length(selind2)
-    ds <- FluSurvdatasel[selind2,]
-    nttype[d+1,1] <- length(which(ds$TestedFlu==1 & ds$TestType==1)) # PCR
-    nttype[d+1,2] <- length(which(ds$TestedFlu==1 & ds$TestType==2)) # RIDT
-    nttype[d+1,3] <- length(which(ds$TestedFlu==1 & ds$TestType%in%c(0,3:9))) # Other/unknown
-    nttype[d+1,4] <- length(which(ds$TestedFlu!=1)) # Other/unknown
+  nttypelist <- list()
+  ntotlist <- list()
+  testposlist <- list()
+  poshlist <- list()
+  
+  for (seas in 1:5){
+    nttype <- array(0,dim = c(2,4))
+    ntot <- c(0,0)
+    for (d in c(0,1)){
+      selind2 <- which(FluSurvdatasel$died==d & FluSurvdatasel$season==seas)
+      ntot[d+1] <- length(selind2)
+      ds <- FluSurvdatasel[selind2,]
+      nttype[d+1,1] <- length(which(ds$TestedFlu==1 & ds$TestType==1)) # PCR
+      nttype[d+1,2] <- length(which(ds$TestedFlu==1 & ds$TestType==2)) # RIDT
+      nttype[d+1,3] <- length(which(ds$TestedFlu==1 & ds$TestType==3)) # Other/unknown
+      nttype[d+1,4] <- length(which(ds$TestedFlu!=1)) # not tested
+    }
+    #########################################################################################
+    ###  nttype according to all hosp/died system ###########################################
+    #########################################################################################
+    nttype[1,] <- colSums(nttype)
+    ntot[1] <- sum(ntot)
+    
+    nttypelist[[seas]] <- nttype
+    ntotlist[[seas]] <- ntot
+    
+    #########################################################################################
+    testpos <- array(0,dim = c(2,3))
+    for (d in c(0,1)){
+      selind3 <- which(FluSurvdatasel$died==d & FluSurvdatasel$TestResult==1 & FluSurvdatasel$season==seas)
+      ds <- FluSurvdatasel[selind3,]
+      testpos[d+1,1] <- length(which(ds$TestType==1)) # PCR
+      testpos[d+1,2] <- length(which(ds$TestType==2)) # Other/unknown
+      testpos[d+1,3] <- length(which(ds$TestType==3)) # Other/unknown
+    }
+    #########################################################################################
+    ###  testpos according to all hosp/died system ##########################################
+    #########################################################################################
+    testpos[1,] <- colSums(testpos)
+    testposlist[[seas]] <- testpos
+    #########################################################################################
+    #########################################################################################
+    selind4 <- which(oshdatsel$season==seas)
+    ds <- oshdatsel[selind4,]
+
+    poshlist[[seas]] <- ds$freq[which(ds$osh==1)]/(sum(ds$freq))
+    
   }
   #########################################################################################
-  ###  nttype according to all hosp/died system ###########################################
   #########################################################################################
-  nttype[1,] <- colSums(nttype)
-  ntot[1] <- sum(ntot)
   #########################################################################################
   cipcr <- cipcrlist[[agcat]]/100
   seest <- ((cipcr[3] - cipcr[1]) + (cipcr[1] - cipcr[2]))/2/1.96
   pcrsens <- c(cipcr[1],seest)
   
-  testpos <- array(0,dim = c(2,3))
-  
-  for (d in c(0,1)){
-    selind3 <- which(FluSurvdatasel$died==d & FluSurvdatasel$TestResult==1)
-    ds <- FluSurvdatasel[selind3,]
-    testpos[d+1,1] <- length(which(ds$TestType==1)) # PCR
-    testpos[d+1,2] <- length(which(ds$TestType==2)) # Other/unknown
-    testpos[d+1,3] <- length(which(ds$TestType%in%c(3:9))) # Other/unknown
-  }
-  #########################################################################################
-  ###  testpos according to all hosp/died system ##########################################
-  #########################################################################################
-  testpos[1,] <- colSums(testpos)
   #########################################################################################
   #########################################################################################
   #########################################################################################
@@ -79,10 +99,9 @@ for (agcat in 1:5){
   
   selograpidest <- ((log(cirapid[3]) - log(cirapid[1])) + (log(cirapid[1]) - log(cirapid[2])))/2/1.96
   lrapidsens <- c(log(cirapid[1]),selograpidest)
-
-  ### NEED TO CONTINUE HERE
-  posh <- RCdeathoshprop
   
+  ### NEED TO CONTINUE HERE
+    
   data <- list('FSNfluhosp'=FSNfluhosp-FSNfludeath,'FSNpop'=FSNpop,'Npop'=USpop,
                'posh'=posh,'FSNfludeath'=FSNfludeath,
                'nttype'=nttype,'testpos'=testpos,'pcrsens'=pcrsens,'lrapidsens'=lrapidsens,'ntot'=ntot)
