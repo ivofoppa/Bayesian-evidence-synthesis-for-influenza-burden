@@ -162,7 +162,7 @@ FluSurvdata <- dataset3
 ###  Reading-in denominator data ########################################################
 #########################################################################################
 library(readxl)
-#,
+#
 statels2 <- c("CA","GA","OR","CT","CO","NM","NYA","NYR","MN","TN","MI")
 
 setwd(paste0(bfolder,'BEdata'))
@@ -184,6 +184,8 @@ for (s in 1:7){
 colnames(agseaspop) <- c('season','ag','state','pop')
 agseaspop <- data.frame(agseaspop)
 agseaspop <- agseaspop[,c('state','season','ag','pop')]
+pop <- as.numeric(as.vector(agseaspop$pop))
+agseaspop$pop <- pop
 #########################################################################################
 setwd(paste0(bfolder,'BEdata'))
 outfname <- 'FluSURV-NET_burden.RData'

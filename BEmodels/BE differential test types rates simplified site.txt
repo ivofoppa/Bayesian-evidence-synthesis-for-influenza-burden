@@ -1,51 +1,52 @@
 model {
-  fluhosp ~ dpois(rfluhosp*FSNpop) ## The # of flu hosp in FSN with not fatal outcome; unobserved
-  FSNfluhosp ~ dbin(pt[1],fluhosp) ## Observed flu hosp. without fatal outcome
-  
-  rfludeathish <- rfludeath*(1-posh)
-  fludeath ~ dpois(rfludeathish*FSNpop) ## The total # of flu deaths in FSN; unobserved
-  
-  FSNfludeath ~ dbin(pt[2],fludeath) ## Observed deaths among hospitalized influenza patents
-
-  rfluhosp ~ dunif(0,10)
-  rfludeath ~ dunif(0,10)
-
-  for (k in 1:2){
-    ## The three sensitivities, test probs and flu risks correspond to the 3 diff. tests;
-    ## the 4th flu risk and 'test prob' represents those not tested
-      
-    pt[k] <- (pflu[k]*ptest[k,1]*sens[k,1] + pflu[k]*ptest[k,2]*sens[k,2] + pflu[k]*ptest[k,3]*sens[k,3])/(pflu[k]*ptest[k,1] + pflu[k]*ptest[k,2] + pflu[k]*ptest[k,3] + pflu[k]*ptest[k,4])
-      
-    nttype[k,] ~ dmulti(ptest[k,1:4],ntot[k])   ### Observed testing freqs
-      
-    ## priors for testing 
-    ptest1[k] ~ dunif(0,1)
-    ptest[k,1] <- ptest1[k]
-    ptest20[k] ~ dunif(0,1)
-    ptest[k,2] <- ptest20[k]*(1-ptest[k,1])
-    ptest30[k] ~ dunif(0,1)
-    ptest[k,3] <- ptest30[k]*(1-ptest[k,1]-ptest[k,2])
-    ptest[k,4] <- 1 - ptest[k,1] - ptest[k,2] - ptest[k,3]
-      
-    pflu[k] ~ dunif(0,1)
-      
-    for (m in 1:3) {
-      flupos[k,m] ~ dbin(pflu[k],nttype[k,m]) ## actual flu pos/test type, unobserved
-      testpos[k,m] ~ dbin(sens[k,m],flupos[k,m]) ## observed flu pos/test type
-    }
-      
-    ## generating a sensitvity from the given distribution
-    sens1[k] ~ dnorm(pcrsens[1],1/(pcrsens[2]*pcrsens[2]))
-    logsens2[k] ~ dnorm(lrapidsens[1],1/(lrapidsens[2]*lrapidsens[2]))I(,0)
-    sens2[k] <- exp(logsens2[k])
-    sens3[k] ~ dunif(0,1)
-      
-    sens[k,1] <- sens1[k]
-    sens[k,2] <- sens2[k]
-    sens[k,3] <- sens3[k]
-    }
+  for (seas in 1:5){
+    fluhospls[seas] ~ dpois(rfluhospls[seas]*FSNpopls[seas]) ## The # of flu hosp in FSN with not fatal outcome; unobserved
+    FSNfluhosp[seas] ~ dbin(pt[1],fluhospls[seas]) ## Observed flu hosp. without fatal outcome
     
-    USfluhosp ~ dpois((rfluhosp + rfludeathish)*Npop) ## The total # of US flu hosp, non-fatal + fatal
+    rfludeathish <- rfludeath[seas]*(1-posh[seas])
+    fludeath ~ dpois(rfludeathish*FSNpop) ## The total # of flu deaths in FSN; unobserved
     
-    USfludeath ~ dpois(rfludeath*Npop) ## The total # of US flu deaths
+    FSNfludeath ~ dbin(pt[2],fludeath) ## Observed deaths among hospitalized influenza patents
+    
+    rfluhospls[seas] ~ dunif(0,10)
+    rfludeathls[seas] ~ dunif(0,10)
+    
+    for (k in 1:2){
+      ## The three sensitivities, test probs and flu risks correspond to the 3 diff. tests;
+      ## the 4th flu risk and 'test prob' represents those not tested
+      pt[seas,k] <- (pflu[k]*ptest[k,1]*sens[k,1] + pflu[k]*ptest[k,2]*sens[k,2] + pflu[k]*ptest[k,3]*sens[k,3])/(pflu[k]*ptest[k,1] + pflu[k]*ptest[k,2] + pflu[k]*ptest[k,3] + pflu[k]*ptest[k,4])
+      
+      nttype[k,] ~ dmulti(ptest[k,1:4],ntot[k])   ### Observed testing freqs
+      
+      ## priors for testing 
+      ptest1[seas,k] ~ dunif(0,1)
+      ptest[k,1,seas] <- ptest1[seas,k]
+      ptest20[seas,k] ~ dunif(0,1)
+      ptest[k,2,seas] <- ptest20[seas,k]*(1-ptest[k,1,seas])
+      ptest30[seas,k] ~ dunif(0,1)
+      ptest[k,3,seas] <- ptest30[seas,k]*(1-ptest[k,1,seas]-ptest[k,2,seas])
+      ptest[k,4,seas] <- 1 - ptest[k,1,seas] - ptest[k,2,seas] - ptest[k,3,seas]
+      
+      pflu[seas,k] ~ dunif(0,1)
+      
+      for (m in 1:3) {
+        flupos[k,m] ~ dbin(pflu[k],nttype[k,m]) ## actual flu pos/test type, unobserved
+        testpos[k,m] ~ dbin(sens[k,m],flupos[k,m]) ## observed flu pos/test type
+      }
+      
+      ## generating a sensitvity from the given distribution
+      sens1[k] ~ dnorm(pcrsens[1],1/(pcrsens[2]*pcrsens[2]))
+      logsens2[k] ~ dnorm(lrapidsens[1],1/(lrapidsens[2]*lrapidsens[2]))I(,0)
+      sens2[k] <- exp(logsens2[k])
+      sens3[k] ~ dunif(0,1)
+      
+      sens[k,1] <- sens1[k]
+      sens[k,2] <- sens2[k]
+      sens[k,3] <- sens3[k]
+    }
+  }
+  
+  USfluhosp ~ dpois((rfluhosp + rfludeathish)*Npop) ## The total # of US flu hosp, non-fatal + fatal
+  
+  USfludeath ~ dpois(rfludeath*Npop) ## The total # of US flu deaths
 }

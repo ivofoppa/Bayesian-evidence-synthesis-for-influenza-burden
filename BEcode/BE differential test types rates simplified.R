@@ -11,7 +11,7 @@ agecatlist <- list(list(c(0,5),'<5'),
 ### Age specific estimates from Millman et al. EID 2015, 21 (9):
 cipcrlist <- list(c(95.0,82,98.7),c(95.0,82,98.7),c(94.1,81.1,98.7),c(94.1,81.1,98.7),c(86.1,79.6,92.7))
 cirapidlist <- list(c(66.7,61.3,71.7),c(66.7,61.3,71.7),c(53.9,47.8,59.8),c(53.9,47.8,59.8),c(20.1,8.8,41.4))
-# agecat <- 2
+# agecat <- 5
 for (agcat in 1:5){
   ### Make sure data set is not attached yet; if it is, detach it ...
   if (exists('ag'))
@@ -114,7 +114,7 @@ for (agcat in 1:5){
   logsens2init <- c(lrapidsens[1],lrapidsens[1])
   sens3init <- c(.4,.4)
   
-  pfluinit <- sapply(c(testpos[,1]/exp(logsens1init) + testpos[,2]/exp(logsens2init) + testpos[,3]/sens3init)/rowSums(nttype[,1:3]),
+  pfluinit <- sapply(c(testpos[,1]/sens1init + testpos[,2]/exp(logsens2init) + testpos[,3]/sens3init)/rowSums(nttype[,1:3]),
                      function(x) ifelse(x > .5,min(x,.95),max(x,.1)))
   
   fluposinit <- round(pfluinit*nttype[,1:3])
