@@ -147,11 +147,6 @@ fluposinit <- sapply(1:nseas,function(s) round(pfluinit[s,]*t(nttypearr[,1:3,s])
 rfluhospinit <- FSNfluhospls /FSNpopls*3
 rfludeathinit <- FSNfludeathls/FSNpopls/(1 - poshls )
 
-ptestinit <- array(0,dim=c(2,4,nseas))
-
-### Fix here  !!!
-sapply(1:nseas,function(s) ptestinit[,,s] <- nttypearr[,,s]/rowSums(nttypearr[,,s]));
-
 inits <- function(){
   list(
     rfluhosp = rfluhospinit,
