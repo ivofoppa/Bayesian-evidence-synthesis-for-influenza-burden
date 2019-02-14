@@ -1,12 +1,12 @@
 model {
   for (seas in 1:5){
     fluhospls[seas] ~ dpois(rfluhospls[seas]*FSNpopls[seas]) ## The # of flu hosp in FSN with not fatal outcome; unobserved
-    FSNfluhosp[seas] ~ dbin(pt[1],fluhospls[seas]) ## Observed flu hosp. without fatal outcome
+    FSNfluhospls[seas] ~ dbin(ptarr[seas,1],fluhospls[seas]) ## Observed flu hosp. without fatal outcome
     
-    rfludeathish <- rfludeath[seas]*(1-posh[seas])
-    fludeath ~ dpois(rfludeathish*FSNpop) ## The total # of flu deaths in FSN; unobserved
+    rfludeathishls[seas] <- rfludeathls[seas]*(1-poshls[seas])
+    fludeathls[seas] ~ dpois(rfludeathishls[seas]*FSNpopls[seas]) ## The total # of flu deaths in FSN; unobserved
     
-    FSNfludeath ~ dbin(pt[2],fludeath) ## Observed deaths among hospitalized influenza patents
+    FSNfludeathls[seas] ~ dbin(ptarr[seas,2],fludeathls) ## Observed deaths among hospitalized influenza patents
     
     rfluhospls[seas] ~ dunif(0,10)
     rfludeathls[seas] ~ dunif(0,10)
@@ -14,7 +14,7 @@ model {
     for (k in 1:2){
       ## The three sensitivities, test probs and flu risks correspond to the 3 diff. tests;
       ## the 4th flu risk and 'test prob' represents those not tested
-      pt[seas,k] <- (pfluarr[seas,k]*ptestarr[k,1,seas]*sens[k,1] + pfluarr[seas,k]*ptestarr[k,2,seas]*sens[k,2] + pfluarr[seas,k]*ptestarr[k,3,seas]*sens[k,3])/(pfluarr[seas,k]*ptestarr[k,1,seas] + pfluarr[seas,k]*ptestarr[k,2,seas] + pfluarr[seas,k]*ptestarr[k,3,seas] + pfluarr[seas,k]*ptestarr[k,4,seas])
+      ptarr[seas,k] <- (pfluarr[seas,k]*ptestarr[k,1,seas]*sens[k,1] + pfluarr[seas,k]*ptestarr[k,2,seas]*sens[k,2] + pfluarr[seas,k]*ptestarr[k,3,seas]*sens[k,3])/(pfluarr[seas,k]*ptestarr[k,1,seas] + pfluarr[seas,k]*ptestarr[k,2,seas] + pfluarr[seas,k]*ptestarr[k,3,seas] + pfluarr[seas,k]*ptestarr[k,4,seas])
       
       nttypearr[k,,seas] ~ dmulti(ptestarr[k,1:4,seas],ntotarr[k,seas])   ### Observed testing freqs
       
@@ -30,20 +30,20 @@ model {
       pfluarr[seas,k] ~ dunif(0,1)
       
       for (m in 1:3) {
-        flupos[k,m] ~ dbin(pfluarr[seas,k],nttype[k,m]) ## actual flu pos/test type, unobserved
-        testpos[k,m,seas] ~ dbin(sens[k,m],flupos[k,m]) ## observed flu pos/test type
+        fluposarr[k,m,seas] ~ dbin(pfluarr[seas,k],nttypearr[k,m,seas]) ## actual flu pos/test type, unobserved
+        testposarr[k,m,seas] ~ dbin(sens[k,m],fluposarr[k,m,seas]) ## observed flu pos/test type
       }
     }
   }
-  
   ## generating a sensitvity from the given distribution
-  sens1[k] ~ dnorm(pcrsens[1],1/(pcrsens[2]*pcrsens[2]))
-  logsens2[k] ~ dnorm(lrapidsens[1],1/(lrapidsens[2]*lrapidsens[2]))I(,0)
-  sens2[k] <- exp(logsens2[k])
-  sens3[k] ~ dunif(0,1)
-  
-  sens[k,1] <- sens1[k]
-  sens[k,2] <- sens2[k]
-  sens[k,3] <- sens3[k]
-  
+  for (k in 1:2){
+    sens1[k] ~ dnorm(pcrsens[1],1/(pcrsens[2]*pcrsens[2]))
+    logsens2[k] ~ dnorm(lrapidsens[1],1/(lrapidsens[2]*lrapidsens[2]))I(,0)
+    sens2[k] <- exp(logsens2[k])
+    sens3[k] ~ dunif(0,1)
+    
+    sens[k,1] <- sens1[k]
+    sens[k,2] <- sens2[k]
+    sens[k,3] <- sens3[k]
+  }
 }

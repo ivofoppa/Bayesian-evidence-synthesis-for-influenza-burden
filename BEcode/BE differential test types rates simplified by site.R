@@ -16,7 +16,7 @@ load(infname)
 nseas <- 5
 #########################################################################################
 ###  The following only needed for US pop data; when doing national analysis  ###########
-# #########################################################################################
+#########################################################################################
 # inputdata <- read.csv('Burden inputs All Ages.csv',header = T)
 # agcatls <- unique(agls)
 # agls <- as.vector(inputdata$ag)
@@ -139,42 +139,46 @@ logsens2init <- c(lrapidsens[1],lrapidsens[1])
 sens3init <- c(.4,.4)
 
 ## Add one to ensure non-zero denominator
-pfluinit <- t(sapply(1:nseas, function(s) sapply(c(testposarr[,1,s]/sens1init + testposarr[,2,s]/exp(logsens2init) + testposarr[,3,s]/sens3init)/rowSums(nttypearr[,1:3,s]+1),
+pfluarrinit <- t(sapply(1:nseas, function(s) sapply(c(testposarr[,1,s]/sens1init + testposarr[,2,s]/exp(logsens2init) + testposarr[,3,s]/sens3init)/rowSums(nttypearr[,1:3,s]+1),
                    function(x) ifelse(x > .5,min(x,.95),max(x,.1)))))
 
-fluposinit <- sapply(1:nseas,function(s) round(pfluinit[s,]*t(nttypearr[,1:3,s])))
+fluposarrinit <- array(0,dim = c(2,3,nseas))
 
-rfluhospinit <- FSNfluhospls /FSNpopls*3
-rfludeathinit <- FSNfludeathls/FSNpopls/(1 - poshls )
+for (s in 1:nseas){
+  fluposarrinit[,,s] <- round(pfluarrinit[s,]*nttypearr[,1:3,s])
+}
+
+rfluhosplsinit <- FSNfluhospls /FSNpopls*3
+rfludeathlsinit <- FSNfludeathls/FSNpopls/(1 - poshls )
 
 inits <- function(){
   list(
-    rfluhosp = rfluhospinit,
-    rfludeath = rfludeathinit,
+    rfluhospls = rfluhosplsinit,
+    rfludeathls = rfludeathinit,
     ptest1 = pt1init,
     ptest20 = pt20init,
     ptest30 = pt30init,
-    pflu = pfluinit,
-    flupos = fluposinit,
+    pfluarr = pfluarrinit,
+    fluposarr = fluposarrinit,
     sens1 = sens1init,
     logsens2 = logsens2init,
     sens3 = sens3init
   )}
 
-variables <- c('USfluhosp','USfludeath')
+variables <- c('rfluhospls')
 # variables <- c('pt')
   # variables <- c('pt')
   
-  nadapt <- 10000
-  niter <- 10000
+nadapt <- 10000
+niter <- 10000
+
+model.file <- 'BE differential test types rates simplified site.txt'
   
-  model.file <- 'BE differential test types rates simplified.txt'
+setwd(paste0(bfolder,'BEmodels'))
   
-  setwd(paste0(bfolder,'BEmodels'))
-  
-  j.model <- jags.model(file=model.file,data=data, inits=inits, n.adapt=nadapt, n.chains=3)
-  j.samples<-coda.samples(j.model, variable.names=variables, n.iter=niter, thin = 5) 
-  
+j.model <- jags.model(file=model.file,data=data, inits=inits, n.adapt=nadapt, n.chains=3)
+j.samples<-coda.samples(j.model, variable.names=variables, n.iter=niter, thin = 5) 
+
   summary(j.samples)
   
   codals <- rbind(j.samples[[1]],j.samples[[2]],j.samples[[3]],deparse.level=0)
