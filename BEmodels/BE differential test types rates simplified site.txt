@@ -6,7 +6,7 @@ model {
     rfludeathishls[seas] <- rfludeathls[seas]*(1-poshls[seas])
     fludeathls[seas] ~ dpois(rfludeathishls[seas]*FSNpopls[seas]) ## The total # of flu deaths in FSN; unobserved
     
-    FSNfludeathls[seas] ~ dbin(ptarr[seas,2],fludeathls) ## Observed deaths among hospitalized influenza patents
+    FSNfludeathls[seas] ~ dbin(ptarr[seas,2],fludeathls[seas] + (1 - step(fludeathls[seas] - 1))) ## Observed deaths among hospitalized influenza patents
     
     rfluhospls[seas] ~ dunif(0,10)
     rfludeathls[seas] ~ dunif(0,10)
@@ -19,18 +19,18 @@ model {
       nttypearr[k,,seas] ~ dmulti(ptestarr[k,1:4,seas],ntotarr[k,seas])   ### Observed testing freqs
       
       ## priors for testing 
-      ptestarr1[seas,k] ~ dunif(0,1)
-      ptestarr[k,1,seas] <- ptestarr1[seas,k]
-      ptestarr20[seas,k] ~ dunif(0,1)
-      ptestarr[k,2,seas] <- ptestarr20[seas,k]*(1-ptestarr[k,1,seas])
-      ptestarr30[seas,k] ~ dunif(0,1)
-      ptestarr[k,3,seas] <- ptestarr30[seas,k]*(1-ptestarr[k,1,seas]-ptestarr[k,2,seas])
+      ptest1[seas,k] ~ dunif(0,1)
+      ptestarr[k,1,seas] <- ptest1[seas,k]
+      ptest20[seas,k] ~ dunif(0,1)
+      ptestarr[k,2,seas] <- ptest20[seas,k]*(1-ptestarr[k,1,seas])
+      ptest30[seas,k] ~ dunif(0,1)
+      ptestarr[k,3,seas] <- ptest30[seas,k]*(1-ptestarr[k,1,seas]-ptestarr[k,2,seas])
       ptestarr[k,4,seas] <- 1 - ptestarr[k,1,seas] - ptestarr[k,2,seas] - ptestarr[k,3,seas]
       
       pfluarr[seas,k] ~ dunif(0,1)
       
       for (m in 1:3) {
-        fluposarr[k,m,seas] ~ dbin(pfluarr[seas,k],nttypearr[k,m,seas]) ## actual flu pos/test type, unobserved
+        fluposarr[k,m,seas] ~ dbin(pfluarr[seas,k],nttypearr[k,m,seas] + (1-step(nttypearr[k,m,seas] - 1))) ## actual flu pos/test type, unobserved
         testposarr[k,m,seas] ~ dbin(sens[k,m],fluposarr[k,m,seas]) ## observed flu pos/test type
       }
     }

@@ -154,10 +154,10 @@ rfludeathlsinit <- FSNfludeathls/FSNpopls/(1 - poshls )
 inits <- function(){
   list(
     rfluhospls = rfluhosplsinit,
-    rfludeathls = rfludeathinit,
-    ptest1 = pt1init,
-    ptest20 = pt20init,
-    ptest30 = pt30init,
+    rfludeathls = rfludeathlsinit,
+    ptest1 = t(pt1init),
+    ptest20 = t(pt20init),
+    ptest30 = t(pt30init),
     pfluarr = pfluarrinit,
     fluposarr = fluposarrinit,
     sens1 = sens1init,
