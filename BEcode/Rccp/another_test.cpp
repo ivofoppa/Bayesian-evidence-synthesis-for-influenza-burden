@@ -1,5 +1,4 @@
 #include <Rcpp.h>
-
 using namespace Rcpp;
 
 // This is a simple example of exporting a C++ function to R. You can
@@ -13,26 +12,16 @@ using namespace Rcpp;
 //
 
 // [[Rcpp::export]]
-int choosecpp(int n, int k) 
-{ 
-  // Base Cases 
-  if (k==0 || k==n) 
-    return 1; 
-  
-  // Recur 
-  return choosecpp(n-1, k-1) + choosecpp(n-1, k); 
-} 
-// [[Rcpp::export]]
-double binompdf(int x, int n, double p) 
-{
-  double f ;
-  if ( (p < 0) || (p > 1) || (x > n) ) 
-  {
-    return(0) ; 
-  }
-  else 
-  {
-    f = choose(n,x)*pow(p,x)*pow((1-p),(n-x)) ;
-    return(f) ;
-  }
+int fact_rec_c(int M){
+  if (M==1 || M==0) return 1;
+  return M*fact_rec_c(M-1);
 }
+
+// You can include R code blocks in C++ files processed with sourceCpp
+// (useful for testing and development). The R code will be automatically 
+// run after the compilation.
+//
+
+/*** R
+fact_rec_c(20)
+*/
