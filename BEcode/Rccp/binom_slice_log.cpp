@@ -5,7 +5,7 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 NumericVector binomslicep(int x, int n, double p0, double delta, int num ) 
 {
-  double f0, f1, f2, fnew, yran, p1, p2, pran ;
+  double logf0, logf1, logf2, logfnew, yran, p1, p2, pran ;
   NumericVector pout(num) ;
   
   if ( (p0 < 0) || (p0 > 1) || (x > n)) 
@@ -16,26 +16,26 @@ NumericVector binomslicep(int x, int n, double p0, double delta, int num )
   {
     pran = p0 ;
     for ( int i=0 ; i <= num ; i++ ) {
-      f0 = R::dbinom(x, n, pran, false) ;
-      yran = R::runif(0,f0) ;
+      logf0 = R::dbinom(x, n, pran, true) ;
+      yran = R::rexp(1) ;
       p1 = std::max(p0 - delta, 0.) ;
       p2 = std::min(p0 + delta, 1.) ;
       
-      f1 = R::dbinom(x, n, p1, false) ;
-      f2 = R::dbinom(x, n, p2, false) ;
+      f1 = R::dbinom(x, n, p1, true) ;
+      f2 = R::dbinom(x, n, p2, true) ;
       
       while ( f1 > yran && p1 > 0 ) {
         p1 = std::max(p1 - delta, 0.) ;
-        f1 = R::dbinom(x, n, p1, false) ;
+        f1 = R::dbinom(x, n, p1, true) ;
       }
       while ( f2 > yran && p2 < 1) {
         p2 = std::min(p2 + delta, 1.) ;
-        f2 = R::dbinom(x, n, p2, false) ;
+        f2 = R::dbinom(x, n, p2, true) ;
       }
       fnew = 0.;
       while ( fnew  < yran ) {
         pran = R::runif(p1,p2) ;
-        fnew = R::dbinom(x, n, pran, false) ;
+        fnew = R::dbinom(x, n, pran, true) ;
       }
       pout[i] = pran ;
     }
@@ -57,7 +57,7 @@ IntegerVector binomslicen(int x, int n0, double p, int delta, int num )
   {
     nran = n0 ;
     for (int i=0 ; i <= num ; i++ ) {
-      f0 = R::dbinom(x, nran, p, false) ;
+      f0 = R::dbinom(x, nran, p, log) ;
       yran = R::runif(0,f0) ;
       n1 = std::max(nran - delta, 0) ;
       n2 = nran + delta ;
