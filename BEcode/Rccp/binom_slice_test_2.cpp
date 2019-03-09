@@ -1,7 +1,15 @@
 #include <Rcpp.h>
-
 using namespace Rcpp;
 
+// This is a simple example of exporting a C++ function to R. You can
+// source this function into an R session using the Rcpp::sourceCpp 
+// function (or via the Source button on the editor toolbar). Learn
+// more about Rcpp at:
+//
+//   http://www.rcpp.org/
+//   http://adv-r.had.co.nz/Rcpp.html
+//   http://gallery.rcpp.org/
+//
 // [[Rcpp::export]]
 NumericVector binomslicep(int x, int n, double p0, double delta, int num ) 
 {
@@ -33,7 +41,7 @@ NumericVector binomslicep(int x, int n, double p0, double delta, int num )
         p2 = std::min(p2 + delta, 1.) ;
         logf2 = R::dbinom(x, n, p2, true) ;
       }
-      logfnew = -999;
+      logfnew = -9999;
       while ( logfnew  < logz ) {
         pran = R::runif(p1,p2) ;
         logfnew = R::dbinom(x, n, pran, true) ;
@@ -43,6 +51,8 @@ NumericVector binomslicep(int x, int n, double p0, double delta, int num )
     return pout ;
   }
 }
+
+
 /*** R
 binomslicep(20,100,.3,.1,100)
-  */
+*/
