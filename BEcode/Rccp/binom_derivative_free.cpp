@@ -37,7 +37,7 @@ NumericVector intsct2(NumericVector absc, int x, int n){
 // [[Rcpp::export]]
 NumericVector pval(NumericVector & absc, int x, int n){
   double a, b ;
-  NumericVector zvec(absc.length() - 3), f(absc.length()), pvec((absc.length() - 3)*2 + 2) ;
+  NumericVector zvec(absc.length() - 3), f(absc.length()), pvec(1) ;
   zvec = intsct2(absc,x,n) ;
   
   for (int i = 1 ; i < f.length() ; i++){
@@ -51,12 +51,12 @@ NumericVector pval(NumericVector & absc, int x, int n){
     
     b = (f[i + 3] - f[i + 2])/(absc[i + 3] - absc[i + 2]) ;
     
-    pvec[i*2 + 1] = std::exp(f[i + 1])/a * (std::exp(a * (zvec[i] - absc[i + 1]) - 1)) ;
-    pvec[i*2 + 2] = std::exp(f[i + 2])/b * (1 - std::exp(b * (zvec[i] - absc[i + 2]))) ;
+    pvec.push_back(std::exp(f[i + 1])/a * (std::exp(a * (zvec[i] - absc[i + 1]) - 1))) ;
+    pvec.push_back(std::exp(f[i + 2])/b * (1 - std::exp(b * (zvec[i] - absc[i + 2])))) ;
   }
   
   pvec[0] = std::exp(f[1]) * (absc[1] - absc[0])/2 ;
-  pvec[(absc.length() - 3)*2 + 1] = std::exp(f[f.length() - 2]) * (absc[absc.length() - 1] - absc[absc.length() - 2])/2 ;
+  pvec.push_back(std::exp(f[f.length() - 2]) * (absc[absc.length() - 1] - absc[absc.length() - 2])/2) ;
   
   return pvec ;
 }
@@ -72,8 +72,7 @@ int whichP(NumericVector & cumpvec, double x){
       sumcnt += 1 ;
     }
   }
-  
-return indvec[indvec.size() - 1] ;
+return indvec.std::end() ;
 }
 
 /*** R
