@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include <limits>
 using namespace Rcpp;
 
 // This is a simple example of exporting a C++ function to R. You can
@@ -10,12 +11,11 @@ using namespace Rcpp;
 //   http://adv-r.had.co.nz/Rcpp.html
 //   http://gallery.rcpp.org/
 //
-
 // [[Rcpp::export]]
 NumericVector intsct2(NumericVector absc, int x, int n){
   double p, f1, f2, f3, f4, p1,p2,p3,p4,a, b ;
   NumericVector out(absc.length() - 3) ;
-  for (int i=0 ; i < (absc.length() - 3) ; i++) {
+  for (int i=0 ; i < out.length() ; i++) {
     p1 = absc[i] ;
     p2 = absc[i + 1] ;
     p3 = absc[i + 2] ;
@@ -34,13 +34,7 @@ NumericVector intsct2(NumericVector absc, int x, int n){
   }
   return out ;
 }
-
-// You can include R code blocks in C++ files processed with sourceCpp
-// (useful for testing and development). The R code will be automatically 
-// run after the compilation.
-//
-
 /*** R
-absc <- c(1e-15,0.1,.2,.3,.5,.7,1-1e-15)
-intsct2(absc,20,100)
+absc <- c(1e-15,0.1,.2,.3,.5,.7,1 - 1e-15)
+  intsct2(absc,20,100)
   */
