@@ -25,10 +25,10 @@ zval <- intsct2(absc2,x,n)
 ### Indices of lower and upper ranges where "step method" can be used
 lowerind <- seq(1,min(f3mxind) - 1)
 ### Augmenting absc for use in sampling
+upperind <- seq(max(f3mxind) + 1,length(absc) + 1)
+
 abscaug <- unique(c(absc[lowerind],absc[f3mxind[1]],zval,absc[f3mxind[2]],absc[upperind - 1],max(absc)))
 # f3mxindaug <- unique(c(f3mxind,f3mxind + 1))
-upperind <- seq(max(f3mxind) + 1,length(abscaug))
-
 ### "chord" function for lower hull
 flowerhull <- function(p,absc,f) {
   selind <- tail(which(absc <= p),1)
@@ -37,6 +37,8 @@ flowerhull <- function(p,absc,f) {
 }
 
 f <- sapply(abscaug,fbin)
+#########################################################################################
+#########################################################################################
 #########################################################################################
 #########################################################################################
 ###               Upper hull
@@ -70,6 +72,72 @@ fupperhull <- function(p,abscaug,f) {
     fval <- fexp
   }
   fval
+}
+#########################################################################################
+fprob <- function(abscaug,f,zval) {
+  zind <- ifelse(fbin(zval) < fbin(zval + 1e-5),0,1)
+  probvec <- NULL
+  for (k in seq_along(abscaug[-1])){
+    if (abscaug[k] < zval & zind==0) {
+      prob <- exp(f[k + 1])*(abscaug[k + 1] - abscaug[k])
+    } else if (abscaug[k] < zval & zind==1) {
+      f0 <- f[k - 1]
+      f1 <- f[k]
+      p0 <- abscaug[k - 1]
+      p1 <- abscaug[k]
+      a <- (f1 - f0)/(p1 - p0)
+      prob <- exp(f1)*(exp(a*(zval - p1)) - 1)/a
+    } else if (abscaug[k] == zval & zind==1) {
+      prob <- exp(f[k])*(abscaug[k + 1] - abscaug[k])
+    } else if (abscaug[k] < zval & zind==0) {
+      f0 <- f[k + 1]
+      f1 <- f[k + 2]
+      p0 <- abscaug[k + 1]
+      p1 <- abscaug[k + 2]
+      a <- (f1 - f0)/(p1 - p0)
+      prob <- exp(f1)*(1 - exp(a*(zval - p1)))/a
+    }
+    probvec[k] <- prob
+  }
+  probvec
+}
+#########################################################################################
+#########################################################################################
+###     Setting up the probabilities per "segment"
+#########################################################################################
+#########################################################################################
+fprob <- function(abscaug,f,zval) {
+  pvec <- NULL
+  
+  zind <- ifelse(fbin(zval + 1e-5) > fbin(zval), 0,1) ### indicator 1 if maximum after zval
+  
+  for (k in seq_along(abscaug[-1])) {
+    
+    if (k%in%f3mxind) {
+      if (abscaug[k] < zval & zind==0) {
+        prob <- exp(f[k + 1])*(abscaug[k + 1] - abscaug[k])
+      } else if (abscaug[k] < zval & zind==1) {
+        f0 <- f[k - 1]
+        f1 <- f[k]
+        p0 <- abscaug[k - 1]
+        p1 <- abscaug[k]
+        a <- (f1 - f0)/(p1 - p0)
+        fval <- exp(f1)*(exp(a*(zval - p1)) - 1)/a
+      } else if (abscaug[k] == zval & zind==1) {
+        prob <- exp(f[k])*(abscaug[k + 1] - abscaug[k])
+      } else if (abscaug[k] == zval & zind==0) {
+        f0 <- f[k + 1]
+        f1 <- f[k + 2]
+        p0 <- abscaug[k + 1]
+        p1 <- abscaug[k + 2]
+        a <- (f1 - f0)/(p1 - p0)
+        fval <- exp(f1)*(exp(a*(zval - p1)) - 1)
+      }
+    }
+    fval
+    
+  }
+  
 }
 
 ### Sampling
