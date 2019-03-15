@@ -1,4 +1,4 @@
-absc <- c(1e-10,.1,.15,.2,.25,.4,.5,1 - 1e-10)
+absc <- c(1e-10,.1,.12,.15,.25,.4,.5,1 - 1e-10)
 
 n <- 100; x <- 20;
 
@@ -44,70 +44,37 @@ f <- sapply(abscaug,fbin)
 ###               Upper hull
 #########################################################################################
 #########################################################################################
-fupperhull <- function(p,abscaug,f) {
-  selind <- max(which(abscaug <= p))
-  
-  if (selind%in%f3mxind) {
-    if (p <= zval) {
-      f0 <- f[selind - 1]
-      f1 <- f[selind]
-      p0 <- abscaug[selind - 1]
-      p1 <- abscaug[selind]
-      a <- (f1 - f0)/(p1 - p0)
-      fval <- exp(f1 + a*(p - p1))
-    } else if (p > zval) {
-      f0 <- f[selind + 1]
-      f1 <- f[selind + 2]
-      p0 <- abscaug[selind + 1]
-      p1 <- abscaug[selind + 2]
-      a <- (f1 - f0)/(p1 - p0)
-      fval <- exp(f0 + a*(p - p0))
-    }
-  } else if (selind%in%lowerind) {
-    fexp <- exp(f[selind + 1])
-    fval <- fexp
-    
-  } else if (selind%in%upperind) {
-    fexp <- exp(f[selind ])
-    fval <- fexp
-  }
+fupperhull <- function(p,abscaug,f,zval) {
+  zind <- ifelse(fbin(zval + 1e-5) > fbin(zval), 0,1) ### indicator 1 if maximum after zval
+  k <- max(which(abscaug <= p))
+  if ((abscaug[k + 1]==zval & zind==0) | (abscaug[k + 1]<zval)){
+    fval <- exp(f[k + 1])
+  } else if (abscaug[k + 1] == zval & zind==1){
+    f0 <- f[k - 1]
+    f1 <- f[k]
+    p0 <- abscaug[k - 1]
+    p1 <- abscaug[k]
+    a <- (f1 - f0)/(p1 - p0)
+    fval <- exp(f1 + a*(p - p1))
+  } else if (abscaug[k] == zval & zind==0){
+    f0 <- f[k + 1]
+    f1 <- f[k + 2]
+    p0 <- abscaug[k + 1]
+    p1 <- abscaug[k + 2]
+    a <- (f1 - f0)/(p1 - p0)
+    fval <- exp(f0 + a*(p - p0))
+  } else if ((abscaug[k]==zval & zind==0) | (abscaug[k] > zval)){
+    fval <- exp(f[k])
+  } 
   fval
-}
-#########################################################################################
-fprob <- function(abscaug,f,zval) {
-  zind <- ifelse(fbin(zval) < fbin(zval + 1e-5),0,1)
-  probvec <- NULL
-  for (k in seq_along(abscaug[-1])){
-    if (abscaug[k] < zval & zind==0) {
-      prob <- exp(f[k + 1])*(abscaug[k + 1] - abscaug[k])
-    } else if (abscaug[k] < zval & zind==1) {
-      f0 <- f[k - 1]
-      f1 <- f[k]
-      p0 <- abscaug[k - 1]
-      p1 <- abscaug[k]
-      a <- (f1 - f0)/(p1 - p0)
-      prob <- exp(f1)*(exp(a*(zval - p1)) - 1)/a
-    } else if (abscaug[k] == zval & zind==1) {
-      prob <- exp(f[k])*(abscaug[k + 1] - abscaug[k])
-    } else if (abscaug[k] < zval & zind==0) {
-      f0 <- f[k + 1]
-      f1 <- f[k + 2]
-      p0 <- abscaug[k + 1]
-      p1 <- abscaug[k + 2]
-      a <- (f1 - f0)/(p1 - p0)
-      prob <- exp(f1)*(1 - exp(a*(zval - p1)))/a
-    }
-    probvec[k] <- prob
-  }
-  probvec
 }
 #########################################################################################
 #########################################################################################
 ###     Setting up the probabilities per "segment"
 #########################################################################################
 #########################################################################################
-fprob <- function(abscaug,f,zval) {
-  pvec <- NULL
+fliksum <- function(abscaug,f,zval) {
+  lvec <- NULL
   
   zind <- ifelse(fbin(zval + 1e-5) > fbin(zval), 0,1) ### indicator 1 if maximum after zval
   
@@ -133,35 +100,51 @@ fprob <- function(abscaug,f,zval) {
         a <- (f1 - f0)/(p1 - p0)
         fval <- exp(f1)*(exp(a*(zval - p1)) - 1)
       }
-    }
-    fval
-    
+    } else if (k%in%lowerind) {
+      prob <- exp(f[k + 1])*(abscaug[k + 1] - abscaug[k])
+    } else if (k%in%upperind) {
+      prob <- exp(f[k])*(abscaug[k + 1] - abscaug[k])
+    } 
+    lvec[k] <- prob
   }
+  lvec
+}
+### CDF
+lvec <- fliksum(abscaug,f,zval)
+#########################################################################################
+###    Sampling a p from cummulative distribution
+#########################################################################################
+fpsample <- function(abscaug,lvec,f,zval) {
+  zind <- ifelse(fbin(zval + 1e-5) > fbin(zval), 0,1) ### indicator 1 if maximum after zval
+
+  pvec <- lvec/sum(lvec)
+  pveccum <- c(0,cumsum(pvec))
   
+  pran <- runif(1)
+  k <- max(which(pveccum <= pran))
+  pbase <- pveccum[k - 1]
+  ptop <- pveccum[k]
+  prm <- pran - pbase
+  
+  if ((abscaug[k + 1] == zval & zind==0) | (abscaug[k] > zval) | (abscaug[k] == zval & zind==1) | (abscaug[k + 1] < zval)) {
+    pout <- abscaug[k] + (abscaug[k + 1] - abscaug[k])*prm/(ptop - pbase)
+  } else if (abscaug[k + 1] == zval & zind==1) {
+    f0 <- f[k - 1]
+    f1 <- f[k]
+    p0 <- abscaug[k - 1]
+    p1 <- abscaug[k]
+    a <- (f1 - f0)/(p1 - p0)
+    pout <- (log(exp(f1) + a*prm*sum(lvec)) + a*p1 - f1)/a
+  } else if (abscaug[k] == zval & zind==0) {
+    f0 <- f[k + 1]
+    f1 <- f[k + 2]
+    p0 <- abscaug[k + 1]
+    p1 <- abscaug[k + 2]
+    a <- (f1 - f0)/(p1 - p0)
+    pout <- (log(exp(f0 + a*(zval - p0)) + prm*a*sum(lvec)) + a*p0 - f0)/a
+  }
+  pout
 }
 
-### Sampling
-rval <- runif(1)
-pselind <- max(which(pveccum <= rval))
-abscsel <- abscaug[pselind]
 
-prm <- rval - pveccum[pselind]
-
-if (pselind==f3mxind[1]) {
-  f0 <- f[pselind - 1]
-  f1 <- f[pselind]
-  p0 <- abscaug[pselind - 1]
-  p1 <- abscaug[pselind]
-  a <- (f1 - f0)/(p1 - p0)
-  p <- (log(prm*pnorm*a + exp(f1)) + a*p1 - f1)/a
-} else if (pselind==f3mxind[2]) {
-  f0 <- f[pselind]
-  f1 <- f[pselind + 1]
-  p0 <- abscaug[pselind]
-  p1 <- abscaug[pselind + 1]
-  a <- (f1 - f0)/(p1 - p0)
-  p <- (log(exp(f0 + a*(zval - po)) - prm*pnorm*a) + a*x0 - f1)/a
-} else {
-  
-}
 
