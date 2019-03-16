@@ -1,4 +1,4 @@
-absc <- c(1e-10,.1,.12,.15,.25,.4,.5,1 - 1e-10)
+absc <- c(1e-10,.1,.15,.21,.25,.4,.5,1 - 1e-10)
 
 n <- 100; x <- 20;
 
@@ -8,26 +8,23 @@ fbin <- function(p){
 
 f <- sapply(absc,fbin)
 
-f3mx <- sort(f)[(length(f) - 2):length(f)]
+fmxind <- which(f==max(f))
 
-f3mxind <- which(f%in%f3mx)
+if (f[fmxind] > fbin(absc[fmxind] - 1e-5) & f[fmxind] > fbin(absc[fmxind] + 1e-5)) {
+  maxind <- 0
+} else if (f[fmxind] < fbin(absc[fmxind] + 1e-5)) {
+  maxind <- 1
+} else if (fbin(absc[fmxind] - 1e-5) > f[fmxind]) {
+  maxind <- 2
+}
 
-if (fbin(absc[f3mxind[2]] + 1e-5) > fbin(absc[f3mxind[2]])) {
-  f3mxind <- f3mxind[-1]
-} else f3mxind <- f3mxind[-3]
-
-f3mxindplus <- unique(c(f3mxind - 1,f3mxind + 1))
-absc2 <- absc[f3mxindplus]
-
+zabsc <- absc[c(fmxind - 2,fmxind - 1,fmxind,fmxind + 1) + (2 - maxind)]
 ### calculating intersection x for middle section (containing max); using Rcpp function intsct2
-zval <- intsct2(absc2,x,n)
 
-### Indices of lower and upper ranges where "step method" can be used
-lowerind <- seq(1,min(f3mxind) - 1)
-### Augmenting absc for use in sampling
-upperind <- seq(max(f3mxind) + 1,length(absc) + 1)
 
-abscaug <- unique(c(absc[lowerind],absc[f3mxind[1]],zval,absc[f3mxind[2]],absc[upperind - 1],max(absc)))
+if (maxind > 0) {
+  abscaug <- sort(unique(c(absc,intsct2(zabsc,x,n))))
+  } else abscaug <- absc
 # f3mxindaug <- unique(c(f3mxind,f3mxind + 1))
 ### "chord" function for lower hull
 flowerhull <- function(p,absc,f) {
@@ -44,28 +41,35 @@ f <- sapply(abscaug,fbin)
 ###               Upper hull
 #########################################################################################
 #########################################################################################
-fupperhull <- function(p,abscaug,f,zval) {
-  zind <- ifelse(fbin(zval + 1e-5) > fbin(zval), 0,1) ### indicator 1 if maximum after zval
+
+fupperhull <- function(p,abscaug,f,maxind,fmxind) {
+  
   k <- max(which(abscaug <= p))
-  if ((abscaug[k + 1]==zval & zind==0) | (abscaug[k + 1]<zval)){
-    fval <- exp(f[k + 1])
-  } else if (abscaug[k + 1] == zval & zind==1){
-    f0 <- f[k - 1]
-    f1 <- f[k]
-    p0 <- abscaug[k - 1]
-    p1 <- abscaug[k]
-    a <- (f1 - f0)/(p1 - p0)
-    fval <- exp(f1 + a*(p - p1))
-  } else if (abscaug[k] == zval & zind==0){
-    f0 <- f[k + 1]
-    f1 <- f[k + 2]
-    p0 <- abscaug[k + 1]
-    p1 <- abscaug[k + 2]
-    a <- (f1 - f0)/(p1 - p0)
-    fval <- exp(f0 + a*(p - p0))
-  } else if ((abscaug[k]==zval & zind==1) | (abscaug[k] > zval)){
-    fval <- exp(f[k])
-  } 
+  if (maxind > 0) {
+    zval <- abscaug[fmxind - (maxind - 1)]
+    zind <- maxind - 1 ### indicator 1 if maximum after zval
+    if ((abscaug[k + 1]==zval & zind==0) | (abscaug[k + 1]<zval)){
+      fval <- exp(f[k + 1])
+    } else if (abscaug[k + 1] == zval & zind==1){
+      f0 <- f[k - 1]
+      f1 <- f[k]
+      p0 <- abscaug[k - 1]
+      p1 <- abscaug[k]
+      a <- (f1 - f0)/(p1 - p0)
+      fval <- exp(f1 + a*(p - p1))
+    } else if (abscaug[k] == zval & zind==0){
+      f0 <- f[k + 1]
+      f1 <- f[k + 2]
+      p0 <- abscaug[k + 1]
+      p1 <- abscaug[k + 2]
+      a <- (f1 - f0)/(p1 - p0)
+      fval <- exp(f0 + a*(p - p0))
+    } else if ((abscaug[k]==zval & zind==1) | (abscaug[k] > zval)){
+      fval <- exp(f[k])
+    } 
+  } else {
+    fval <- ifelse(p < absc[fmxind], exp(f[k + 1]),exp(f[k]))
+  }
   fval
 }
 #########################################################################################
