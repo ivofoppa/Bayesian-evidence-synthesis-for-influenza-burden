@@ -18,13 +18,16 @@ if (f[fmxind] > fbin(absc[fmxind] - 1e-5) & f[fmxind] > fbin(absc[fmxind] + 1e-5
   maxind <- 2
 }
 
-zabsc <- absc[c(fmxind - 2,fmxind - 1,fmxind,fmxind + 1) + (2 - maxind)]
 ### calculating intersection x for middle section (containing max); using Rcpp function intsct2
+if (maxind==2) {
+  zabsc <- absc[c(fmxind - 2,fmxind - 1,fmxind,fmxind + 1)]
+} else {
+  zabsc <- absc[c(fmxind - 1,fmxind,fmxind + 1,fmxind + 2)]
+}
 
+zval <- intsct2(zabsc,x,n)
 
-if (maxind > 0) {
-  abscaug <- sort(unique(c(absc,intsct2(zabsc,x,n))))
-  } else abscaug <- absc
+abscaug <- sort(unique(c(absc,zval)))
 # f3mxindaug <- unique(c(f3mxind,f3mxind + 1))
 ### "chord" function for lower hull
 flowerhull <- function(p,absc,f) {
@@ -41,37 +44,33 @@ f <- sapply(abscaug,fbin)
 ###               Upper hull
 #########################################################################################
 #########################################################################################
-
-fupperhull <- function(p,abscaug,f,maxind,fmxind) {
+fupperhull <- function(p,abscaug,f,zval,maxind) {
   
-  k <- max(which(abscaug <= p))
-  if (maxind > 0) {
-    zval <- abscaug[fmxind - (maxind - 1)]
-    zind <- maxind - 1 ### indicator 1 if maximum after zval
-    if ((abscaug[k + 1]==zval & zind==0) | (abscaug[k + 1]<zval)){
-      fval <- exp(f[k + 1])
-    } else if (abscaug[k + 1] == zval & zind==1){
-      f0 <- f[k - 1]
-      f1 <- f[k]
-      p0 <- abscaug[k - 1]
-      p1 <- abscaug[k]
-      a <- (f1 - f0)/(p1 - p0)
-      fval <- exp(f1 + a*(p - p1))
-    } else if (abscaug[k] == zval & zind==0){
-      f0 <- f[k + 1]
-      f1 <- f[k + 2]
-      p0 <- abscaug[k + 1]
-      p1 <- abscaug[k + 2]
-      a <- (f1 - f0)/(p1 - p0)
-      fval <- exp(f0 + a*(p - p0))
-    } else if ((abscaug[k]==zval & zind==1) | (abscaug[k] > zval)){
-      fval <- exp(f[k])
-    } 
-  } else {
-    fval <- ifelse(p < absc[fmxind], exp(f[k + 1]),exp(f[k]))
-  }
+  k <- max(which(abscaug < p))
+  zind <- ifelse(fbin(zval - 1e-5) > fbin(zval) , 1, 0)
+  if ((abscaug[k + 1]==zval & zind==0) | (abscaug[k + 1]<zval )){
+    fval <- exp(f[k + 1])
+  } else if (abscaug[k + 1] == zval & zind==1 & maxind!=0){
+    f0 <- f[k - 1]
+    f1 <- f[k]
+    p0 <- abscaug[k - 1]
+    p1 <- abscaug[k]
+    a <- (f1 - f0)/(p1 - p0)
+    fval <- exp(f1 + a*(p - p1))
+  } else if (abscaug[k] == zval & zind==0 & maxind!=0){
+    f0 <- f[k + 1]
+    f1 <- f[k + 2]
+    p0 <- abscaug[k + 1]
+    p1 <- abscaug[k + 2]
+    a <- (f1 - f0)/(p1 - p0)
+    fval <- exp(f0 + a*(p - p0))
+  } else if ((abscaug[k]==zval & zind==1) | (abscaug[k + 1]==zval & zind==1 & maxind==0) | 
+             (abscaug[k]==zval & zind==0 & maxind==0) | (abscaug[k] > zval)) {
+    fval <- exp(f[k])
+  } 
   fval
 }
+
 #########################################################################################
 #########################################################################################
 ###     Setting up the probabilities per "segment"
