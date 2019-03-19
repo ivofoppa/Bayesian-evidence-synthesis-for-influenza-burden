@@ -3,7 +3,7 @@ absc <- c(1e-10,.1,.15,.21,.25,.4,.5,1 - 1e-10)
 n <- 100; x <- 20;
 
 fbin <- function(p){
-  dbinom(x,n,p,log = T)
+  dbinom(x,n,p,log = T)*dbeta(p,.5,.5)
 }
 
 f <- sapply(absc,fbin)
@@ -151,9 +151,16 @@ fpsample <- function(abscaug,lvec,f,zval,maxind) {
 ###  Drawing samples from posterior    ##################################################
 #########################################################################################
 #########################################################################################
-absc <- c(1e-10,.1,.15,.21,.25,.4,.5,1 - 1e-10)
+# absc <- c(1e-10,.1,.15,.21,.25,.4,.5,1 - 1e-10)
+absc <- c(1e-10,.15,.25,.4,.5,.55,.6,.7,.81 - 1e-10)
+# absc <- c(1e-10,.005,.01,.03,.05,.25,.4,.5,1 - 1e-10)
 
-n <- 100; x <- 20;
+# n <- 100; x <- 20;
+# n <- 100; x <- 5;
+n <- 100; x <- 50;
+fbin <- function(p){
+  dbinom(x,n,p,log = T)*dbeta(p,.5,.5)
+}
 
 fbin <- function(p){
   dbinom(x,n,p,log = T)
@@ -186,6 +193,7 @@ f <- sapply(abscaug,fbin)
 lvec <- fliksum(abscaug,f,zval,maxind)
 
 nsim <- 10000
+nsim <- 1000
 probls <- NULL 
 
 while (length(probls) < nsim) {
