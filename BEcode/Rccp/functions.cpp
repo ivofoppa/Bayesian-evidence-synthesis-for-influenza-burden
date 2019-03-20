@@ -11,6 +11,7 @@ using namespace Rcpp;
   //   http://adv-r.had.co.nz/Rcpp.html
 //   http://gallery.rcpp.org/
   //
+  // [[Rcpp::plugins("cpp11")]]
   // [[Rcpp::export]]
 NumericVector intsct2(NumericVector absc, int x, int n){
   double p, f1, f2, f3, f4, p1,p2,p3,p4,a, b ;
