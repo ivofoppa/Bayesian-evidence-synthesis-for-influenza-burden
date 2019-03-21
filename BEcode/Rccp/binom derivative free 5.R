@@ -1,3 +1,7 @@
+library(Rcpp)
+setwd('C:/Users/vor1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/BEcode/Rccp')
+
+sourceCpp('functions.cpp')
 absc <- c(1e-10,.1,.15,.21,.25,.4,.5,1 - 1e-10)
 
 n <- 100; x <- 20;
@@ -50,7 +54,7 @@ f <- sapply(abscaug,fbin)
 fupperhull <- function(p,abscaug,f,zval,maxind) {
   
   k <- max(which(abscaug < p))
-  zind <- ifelse(fbin(zval - 1e-5) > fbin(zval) , 1, 0)
+  zind <- ifelse(fbin(max(zval - 1e-5,zval/2)) > fbin(zval) , 1, 0)
   if ((abscaug[k + 1]==zval & zind==0) | (abscaug[k + 1]<zval )){
     fval <- exp(f[k + 1])
   } else if (abscaug[k + 1] == zval & zind==1 & maxind!=0){
@@ -82,7 +86,7 @@ fupperhull <- function(p,abscaug,f,zval,maxind) {
 fliksum <- function(abscaug,f,zval,maxind) {
   lvec <- NULL
   
-  zind <- ifelse(fbin(zval - 1e-5) > fbin(zval) , 1, 0)
+  zind <- ifelse(fbin(max(zval - 1e-5,zval/2)) > fbin(zval) , 1, 0)
   
   for (k in seq_along(abscaug[-1])) {
     
@@ -116,7 +120,7 @@ lvec <- fliksum(abscaug,f,zval,maxind)
 ###    Sampling a p from cummulative distribution
 #########################################################################################
 fpsample <- function(abscaug,lvec,f,zval,maxind) {
-  zind <- ifelse(fbin(zval + 1e-5) > fbin(zval), 0,1) ### indicator 1 if maximum after zval
+  zind <- ifelse(fbin(max(zval - 1e-5,zval/2)) > fbin(zval) , 1, 0)
   
   pvec <- lvec/sum(lvec)
   pveccum <- c(0,cumsum(pvec))
@@ -146,89 +150,3 @@ fpsample <- function(abscaug,lvec,f,zval,maxind) {
   } 
   pout
 }
-#########################################################################################
-#########################################################################################
-###  Drawing samples from posterior    ##################################################
-#########################################################################################
-#########################################################################################
-absc <- c(1e-10,.1,.15,.21,.25,.4,.5,1 - 1e-10)
-
-n <- 100; x <- 20;
-
-fbin <- function(p){
-  dbinom(x,n,p,log = T)
-}
-
-f <- sapply(absc,fbin)
-
-fmxind <- which(f==max(f))
-
-if (f[fmxind] > fbin(absc[fmxind] - 1e-5) & f[fmxind] > fbin(absc[fmxind] + 1e-5)) {
-  maxind <- 0
-} else if (f[fmxind] < fbin(absc[fmxind] + 1e-5)) {
-  maxind <- 1
-} else if (fbin(absc[fmxind] - 1e-5) > f[fmxind]) {
-  maxind <- 2
-}
-
-### calculating intersection x for middle section (containing max); using Rcpp function intsct2
-if (maxind==2) {
-  zabsc <- absc[c(fmxind - 2,fmxind - 1,fmxind,fmxind + 1)]
-} else {
-  zabsc <- absc[c(fmxind - 1,fmxind,fmxind + 1,fmxind + 2)]
-}
-
-zval <- intsct2(zabsc,x,n)
-
-abscaug <- sort(unique(c(absc,zval)))
-
-f <- sapply(abscaug,fbin)
-lvec <- fliksum(abscaug,f,zval,maxind)
-
-nsim <- 10000
-probls <- NULL 
-
-while (length(probls) < nsim) {
-  psample <- fpsample(abscaug,lvec,f,zval,maxind)
-  aran <- runif(1)
-  lhull <- flowerhull(psample,abscaug,f)
-  uhull <- fupperhull(psample,abscaug,f,zval,maxind)
-  if (aran < lhull/uhull) {
-    probls <- c(probls,psample)
-  } else {
-    aratio <- exp(fbin(psample))/uhull
-    if (aran < aratio) {
-      probls <- c(probls,psample)
-    } else {
-      abscaug <- unique(sort(round(c(abscaug,psample),digits = 8)))
-      f <- sapply(abscaug,fbin)
-      
-      fmxind <- which(f==max(f))
-      
-      if (f[fmxind] > fbin(abscaug[fmxind] - 1e-10) & f[fmxind] > fbin(abscaug[fmxind] + 1e-10)) {
-        maxind <- 0
-      } else if (f[fmxind] < fbin(abscaug[fmxind] + 1e-5)) {
-        maxind <- 1
-      } else if (fbin(abscaug[fmxind] - 1e-5) > f[fmxind]) {
-        maxind <- 2
-      }
-      
-      ### calculating intersection x for middle section (containing max); using Rcpp function intsct2
-      if (maxind==2) {
-        zabsc <- abscaug[c(fmxind - 2,fmxind - 1,fmxind,fmxind + 1)]
-      } else {
-        zabsc <- abscaug[c(fmxind - 1,fmxind,fmxind + 1,fmxind + 2)]
-      }
-      
-      zval <- intsct2(zabsc,x,n)
-      
-      abscaug <- sort(unique(c(abscaug,zval)))
-      f <- sapply(abscaug,fbin)
-      lvec <- fliksum(abscaug,f,zval,maxind)
-    }
-  }
-}
-
-mean(probls)
-hist(probls)
-
