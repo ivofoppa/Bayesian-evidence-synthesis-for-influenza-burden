@@ -1,0 +1,2 @@
+\select@language {english}
+\beamer@sectionintoc {1}{Background}{2}{0}{1}
