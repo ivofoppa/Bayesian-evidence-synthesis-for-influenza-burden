@@ -84,7 +84,7 @@ yls <- sapply(ls,fbin)
 lhls <- sapply(ls, function(p) flowerhull(p,abscaug,f))/(sum(exp(yls))*dx)
 
 muhls <- max(uhls)
-setwd('C:/Users/vor1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/BEcode/Rccp/Graphics')
+setwd('C:/Users/VOR1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/BEwriteup/Graphics')
 
 file.pdf <- paste0('adaptation_sr',1,'.pdf')
 pdf(file.pdf,paper='USr') 
@@ -95,9 +95,10 @@ lines(ls,uhls,col = 'red')
 dev.off()
 
 adaptn <- 2
+adlist <- c(1:5,10,20,50,75,100,1000)
 
 probls <- NULL
-while (adaptn < 50) {
+while (adaptn <= 1000) {
   psample <- fpsample(abscaug,lvec,f,zval,maxind)
   aran <- runif(1)
   lhull <- flowerhull(psample,abscaug,f)
@@ -160,7 +161,9 @@ while (adaptn < 50) {
           zabsc <- abscaug[c(fmxind - 1,fmxind,fmxind + 1,fmxind + 2)]
         }
       }
-      zval <- intsct2(zabsc,x,n)
+      
+      if (adaptn%in%adlist) {
+        zval <- intsct2(zabsc,x,n)
       
       abscaug <- sort(unique(c(abscaug,zval)))
       f <- sapply(abscaug,fbin)
@@ -172,8 +175,7 @@ while (adaptn < 50) {
       
       lhls <- sapply(ls, function(p) flowerhull(p,abscaug,f))/(sum(exp(yls))*dx)
       
-      muhls <- max(uhls)
-      setwd('C:/Users/vor1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/BEcode/Rccp/Graphics')
+      setwd('C:/Users/VOR1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/BEwriteup/Graphics')
       
       file.pdf <- paste0('adaptation_sr',adaptn,'.pdf')
       pdf(file.pdf,paper='USr') 
@@ -182,6 +184,7 @@ while (adaptn < 50) {
       lines(ls,lhls,col = 'blue')
       lines(ls,uhls,col = 'red')
       dev.off()
+      }
       adaptn <- adaptn + 1
     }
   }

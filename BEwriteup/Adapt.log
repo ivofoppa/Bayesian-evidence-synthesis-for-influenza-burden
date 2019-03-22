@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6350 64-bit) (preloaded format=pdflatex 2017.8.28)  21 MAR 2019 21:34
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6350 64-bit) (preloaded format=pdflatex 2017.8.28)  22 MAR 2019 15:08
 entering extended mode
 **./Adapt.tex
 (Adapt.tex
@@ -957,24 +957,42 @@ Package pdftex.def Info: Graphics/adaptation_sr20.pdf used on input line 22.
  [7
 
  <./Graphics/adaptation_sr20.pdf>]
-<Graphics/adaptation_sr30.pdf, id=233, 794.97pt x 614.295pt>
-File: Graphics/adaptation_sr30.pdf Graphic file (type pdf)
+<Graphics/adaptation_sr50.pdf, id=233, 794.97pt x 614.295pt>
+File: Graphics/adaptation_sr50.pdf Graphic file (type pdf)
 
-<use Graphics/adaptation_sr30.pdf>
-Package pdftex.def Info: Graphics/adaptation_sr30.pdf used on input line 22.
+<use Graphics/adaptation_sr50.pdf>
+Package pdftex.def Info: Graphics/adaptation_sr50.pdf used on input line 22.
 (pdftex.def)             Requested size: 307.28987pt x 237.45569pt.
  [8
 
- <./Graphics/adaptation_sr30.pdf>]
-<Graphics/adaptation_sr49.pdf, id=264, 794.97pt x 614.295pt>
-File: Graphics/adaptation_sr49.pdf Graphic file (type pdf)
+ <./Graphics/adaptation_sr50.pdf>]
+<Graphics/adaptation_sr75.pdf, id=264, 794.97pt x 614.295pt>
+File: Graphics/adaptation_sr75.pdf Graphic file (type pdf)
 
-<use Graphics/adaptation_sr49.pdf>
-Package pdftex.def Info: Graphics/adaptation_sr49.pdf used on input line 22.
+<use Graphics/adaptation_sr75.pdf>
+Package pdftex.def Info: Graphics/adaptation_sr75.pdf used on input line 22.
 (pdftex.def)             Requested size: 307.28987pt x 237.45569pt.
  [9
 
- <./Graphics/adaptation_sr49.pdf>]
+ <./Graphics/adaptation_sr75.pdf>]
+<Graphics/adaptation_sr100.pdf, id=295, 794.97pt x 614.295pt>
+File: Graphics/adaptation_sr100.pdf Graphic file (type pdf)
+
+<use Graphics/adaptation_sr100.pdf>
+Package pdftex.def Info: Graphics/adaptation_sr100.pdf used on input line 22.
+(pdftex.def)             Requested size: 307.28987pt x 237.45569pt.
+ [10
+
+ <./Graphics/adaptation_sr100.pdf>]
+<Graphics/adaptation_sr1000.pdf, id=325, 794.97pt x 614.295pt>
+File: Graphics/adaptation_sr1000.pdf Graphic file (type pdf)
+
+<use Graphics/adaptation_sr1000.pdf>
+Package pdftex.def Info: Graphics/adaptation_sr1000.pdf used on input line 22.
+(pdftex.def)             Requested size: 307.28987pt x 237.45569pt.
+ [11
+
+ <./Graphics/adaptation_sr1000.pdf>]
 \tf@nav=\write6
 \openout6 = `Adapt.nav'.
 
@@ -994,22 +1012,17 @@ Package rerunfilecheck Info: File `Adapt.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 16998 strings out of 493323
- 325673 string characters out of 3139069
- 393266 words of memory out of 3000000
- 20128 multiletter control sequences out of 15000+200000
+ 16934 strings out of 493323
+ 325390 string characters out of 3139069
+ 393311 words of memory out of 3000000
+ 20060 multiletter control sequences out of 15000+200000
  4845 words of font info for 18 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
  56i,14n,55p,796b,643s stack positions out of 5000i,500n,10000p,200000b,50000s
-pdfTeX warning (dest): name{Navigation10} has been referenced but does not ex
-ist, replaced by a fixed one
 
-pdfTeX warning (dest): name{Navigation49} has been referenced but does not exis
-t, replaced by a fixed one
-
-Output written on Adapt.pdf (9 pages, 540120 bytes).
+Output written on Adapt.pdf (11 pages, 652067 bytes).
 PDF statistics:
- 303 PDF objects out of 1000 (max. 8388607)
- 21 named destinations out of 1000 (max. 500000)
- 88 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 363 PDF objects out of 1000 (max. 8388607)
+ 23 named destinations out of 1000 (max. 500000)
+ 98 words of extra memory for PDF output out of 10000 (max. 10000000)
 
