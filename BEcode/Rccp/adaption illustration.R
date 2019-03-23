@@ -161,31 +161,37 @@ while (adaptn <= 1000) {
           zabsc <- abscaug[c(fmxind - 1,fmxind,fmxind + 1,fmxind + 2)]
         }
       }
-      
-      if (adaptn%in%adlist) {
-        zval <- intsct2(zabsc,x,n)
+      zval <- intsct2(zabsc,x,n)
       
       abscaug <- sort(unique(c(abscaug,zval)))
       f <- sapply(abscaug,fbin)
       lvec <- fliksum(abscaug,f,zval,maxind)
       
-      uhls <- sapply(ls, function(p) fupperhull(p,abscaug,f,zval,maxind))/(sum(exp(yls))*dx)
-      # uhls <- sapply(ls, function(p) fupperhull2(p,abscaug,f,zval,maxind))
-      yls <- sapply(ls,fbin)
-      
-      lhls <- sapply(ls, function(p) flowerhull(p,abscaug,f))/(sum(exp(yls))*dx)
-      
-      setwd('C:/Users/VOR1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/BEwriteup/Graphics')
-      
-      file.pdf <- paste0('adaptation_sr',adaptn,'.pdf')
-      pdf(file.pdf,paper='USr') 
-      plot(ls,exp(yls)/(sum(exp(yls))*dx),type = 'l',xlim=c(0,.4),ylim = c(0,muhls),xlab = 'p',ylab = '')
-      # plot(ls,exp(yls),type = 'l',xlim=c(.2,.8),ylim = c(0,.2))
-      lines(ls,lhls,col = 'blue')
-      lines(ls,uhls,col = 'red')
-      dev.off()
+      if (adaptn%in%adlist) {
+        zval <- intsct2(zabsc,x,n)
+        
+        abscaug <- sort(unique(c(abscaug,zval)))
+        f <- sapply(abscaug,fbin)
+        lvec <- fliksum(abscaug,f,zval,maxind)
+        
+        uhls <- sapply(ls, function(p) fupperhull(p,abscaug,f,zval,maxind))/(sum(exp(yls))*dx)
+        # uhls <- sapply(ls, function(p) fupperhull2(p,abscaug,f,zval,maxind))
+        yls <- sapply(ls,fbin)
+        
+        lhls <- sapply(ls, function(p) flowerhull(p,abscaug,f))/(sum(exp(yls))*dx)
+        
+        setwd('C:/Users/VOR1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/BEwriteup/Graphics')
+        
+        file.pdf <- paste0('adaptation_sr',adaptn,'.pdf')
+        pdf(file.pdf,paper='USr') 
+        plot(ls,exp(yls)/(sum(exp(yls))*dx),type = 'l',xlim=c(0,.4),ylim = c(0,muhls),xlab = 'p',ylab = '')
+        # plot(ls,exp(yls),type = 'l',xlim=c(.2,.8),ylim = c(0,.2))
+        lines(ls,lhls,col = 'blue')
+        lines(ls,uhls,col = 'red')
+        dev.off()
       }
       adaptn <- adaptn + 1
     }
   }
 }
+
