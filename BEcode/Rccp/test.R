@@ -1,3 +1,6 @@
+setwd('C:/Users/vor1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/BEcode/Rccp')
+source('binom derivative free 5.R')
+
 dx <- 0.0001
 ls <- seq(0.0001,.999999999,dx)
 # ls <- seq(0.2,.7,dx)
@@ -10,8 +13,8 @@ yls <- sapply(ls,fbin)
 lhls <- sapply(ls, function(p) flowerhull(p,abscaug,f))/(sum(exp(yls))*dx)
 
 
-plot(ls,exp(yls)/(sum(exp(yls))*dx),type = 'l',xlim=c(0,.6),ylim = c(0,max(uhls)))
-# plot(ls,exp(yls),type = 'l',xlim=c(.2,.8),ylim = c(0,.2))
+plot(ls,exp(yls)/(sum(exp(yls))*dx),type = 'l',xlim=c(0,.8),ylim = c(0,max(uhls)))
+# plot(ls,exp(yls)/(sum(exp(yls))*dx),type = 'l',xlim=c(0,.15),ylim = c(0,max(uhls)))
 
 lines(ls,lhls,col = 'blue')
 lines(ls,uhls,col = 'red')
