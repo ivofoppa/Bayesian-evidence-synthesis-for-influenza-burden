@@ -1,5 +1,5 @@
-setwd('C:/Users/vor1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/BEcode/Rccp')
-source('binom derivative free 5.R')
+setwd('C:/Users/vor1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/BEcode/Samplers')
+# source('binom derivative free.R')
 
 dx <- 0.0001
 ls <- seq(0.0001,.999999999,dx)

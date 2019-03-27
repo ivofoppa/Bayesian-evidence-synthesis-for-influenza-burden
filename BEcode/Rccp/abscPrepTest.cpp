@@ -31,9 +31,9 @@ NumericVector abscPrep(NumericVector & absc, NumericVector & f, int x, int n ){
   
   //* calculating intersection x for middle section (containing max); using Rcpp function intsct2
   if  (maxind==2 ) {
-    if (fmxind == 0) {
+    if (fmxind < 2) {
       
-      while (fmxind == 0) {
+      while (fmxind < 2) {
         minp = pow(10,minpexp) ;
         pintv = absc[1] - minp ;
         absc.erase(0) ;
@@ -42,7 +42,7 @@ NumericVector abscPrep(NumericVector & absc, NumericVector & f, int x, int n ){
         absc.insert(absc.begin(), minp + abscinc) ;
         
         NumericVector fnew = (R::dbinom(x,n,absc[0],true)) ;
-        for (int i=1 ; i++; i < absc.size()) {
+        for (int i=1 ; i < absc.size() ; i++) {
           fnew.push_back(R::dbinom(x,n,absc[i],true)) ;
         }
         fmxind = which_max(fnew) ;
@@ -56,24 +56,35 @@ NumericVector abscPrep(NumericVector & absc, NumericVector & f, int x, int n ){
         absc.push_back(absc[absc.size() - 1] + abscinc) ;
         
         NumericVector fnew = (R::dbinom(x,n,absc[0],true)) ;
-        for (int i=1 ; i++; i < absc.size()) {
+        for (int i=1; i < absc.size() ; i++) {
           fnew.push_back(R::dbinom(x,n,absc[i],true)) ;
         }
         fmxind = which_max(fnew) ;
       }
     }
+    for (int i=0 ; i < 3 ; i++) {
+      zabsc[0] = absc[fxmind - 2 + i] ;
+    }
   } else {
-    if (fmxind > 0 && fmxind < (absc.size() - 1)) {
-      zabsc <- absc[c(fmxind - 1,fmxind,fmxind + 1,fmxind + 2)]
-    } else if (fmxind == 1) {
-      while (fmxind==1) {
-        absc <- sort(unique(c(seq(absc[1],absc[2],length.out = 3),absc)))
-        f <- sapply(absc,fbin)
-        fmxind <- which(f==max(f))
+    
+    if (fmxind == 0) {
+      while (fmxind==0) {
+        minp = pow(10,minpexp) ;
+        pintv = absc[1] - minp ;
+        absc.erase(0) ;
+        abscinc = pintv/2 ;
+        absc.insert(absc.begin(), minp) ;
+        absc.insert(absc.begin(), minp + abscinc) ;
+        
+        NumericVector fnew = (R::dbinom(x,n,absc[0],true)) ;
+        for (int i=1 ; i < absc.size() ; i++) {
+          fnew.push_back(R::dbinom(x,n,absc[i],true)) ;
+        }
+        fmxind = which_max(fnew) ;
+        minpexp = minpexp*2 ;
       }
-      zabsc <- absc[c(fmxind - 1,fmxind,fmxind + 1,fmxind + 2)]
-    } else if (fmxind > (length(absc) - 2)) {
-      while (fmxind > (length(absc) - 2)) {
+    } else if (fmxind > (absc.size() - 3)) {
+      while (fmxind > (absc.size() - 3)) {
         absc <- sort(unique(c(seq(tail(absc,2)[1],tail(absc,1),length.out = 4),absc)))
         f <- sapply(absc,fbin)
         fmxind <- which(f==max(f))
