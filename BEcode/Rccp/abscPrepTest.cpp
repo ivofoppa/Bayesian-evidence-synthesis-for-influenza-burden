@@ -16,7 +16,7 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 NumericVector abscPrep(NumericVector & absc, NumericVector & f, int x, int n ){
   int maxind = -99, fmxind = which_max(f), minpexp = -5 ;
-  NumericVector zabsc(4) ;
+  NumericVector zabsc(4), fnew(0) ;
   double arg1 = std::max(absc[fmxind] - 1e-9,0.) ;
   double arg2 = std::min(absc[fmxind] + 1e-9,1.) ;
   double minp = 0, pintv = 0, abscinc = 0 ;
@@ -34,49 +34,44 @@ NumericVector abscPrep(NumericVector & absc, NumericVector & f, int x, int n ){
     if (fmxind < 2) {
       
       while (fmxind < 2) {
-        minp = pow(10,minpexp) ;
+        minp = absc[0];
         pintv = absc[1] - minp ;
-        absc.erase(0) ;
         abscinc = pintv/2 ;
-        absc.insert(absc.begin(), minp) ;
-        absc.insert(absc.begin(), minp + abscinc) ;
-        
-        NumericVector fnew = (R::dbinom(x,n,absc[0],true)) ;
+        absc.insert(1, minp + abscinc) ;
+
+        fnew = (R::dbinom(x,n,absc[0],true)) ;
         for (int i=1 ; i < absc.size() ; i++) {
           fnew.push_back(R::dbinom(x,n,absc[i],true)) ;
         }
         fmxind = which_max(fnew) ;
-        minpexp = minpexp*2 ;
       }
     } else if (fmxind==(absc.size() - 1)) {
       while (fmxind==(absc.size() - 1)) {
-        pintv = 1 - absc[absc.size() - 1] ;
+        pintv =  absc[absc.size() - 1] - absc[absc.size() - 2];
         abscinc = pintv/2 ;
-        absc.push_back(absc[absc.size() - 1] + abscinc) ;
-        absc.push_back(absc[absc.size() - 1] + abscinc) ;
-        
-        NumericVector fnew = (R::dbinom(x,n,absc[0],true)) ;
+        absc.insert(absc.size() - 2, absc[absc.size() - 2] + abscinc) ;
+
+        fnew = (R::dbinom(x,n,absc[0],true)) ;
         for (int i=1; i < absc.size() ; i++) {
           fnew.push_back(R::dbinom(x,n,absc[i],true)) ;
         }
         fmxind = which_max(fnew) ;
       }
     }
+    
     for (int i=0 ; i < 3 ; i++) {
-      zabsc[0] = absc[fxmind - 2 + i] ;
+      zabsc[i] = absc[(fmxind - 2 + i)] ;
     }
   } else {
     
     if (fmxind == 0) {
       while (fmxind==0) {
-        minp = pow(10,minpexp) ;
+        minp = absc[0] ;
         pintv = absc[1] - minp ;
-        absc.erase(0) ;
         abscinc = pintv/2 ;
-        absc.insert(absc.begin(), minp) ;
-        absc.insert(absc.begin(), minp + abscinc) ;
-        
-        NumericVector fnew = (R::dbinom(x,n,absc[0],true)) ;
+        absc.insert(1, absc[1] + abscinc) ;
+
+        fnew = (R::dbinom(x,n,absc[0],true)) ;
         for (int i=1 ; i < absc.size() ; i++) {
           fnew.push_back(R::dbinom(x,n,absc[i],true)) ;
         }
