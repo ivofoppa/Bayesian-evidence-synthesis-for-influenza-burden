@@ -85,12 +85,3 @@ NumericVector abscPrep(NumericVector & absc, int x, int n ){
   }
   return absc ;
 } 
-
-/*** R
-absc <- c(0,0.02,.05,.1,.15,.21,.25,.3,.4,.5,.6,.7,.8,.9,1)
-
-x <- 95 ; n <- 100
-
-abscPrep(absc,x,n)
-  */
-

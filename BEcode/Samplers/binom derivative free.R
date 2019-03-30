@@ -2,6 +2,8 @@ library(Rcpp)
 setwd('C:/Users/vor1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/BEcode/Samplers')
 
 sourceCpp('intsct2.cpp')
+sourceCpp('abscPrep.cpp')
+sourceCpp('zabsc.cpp')
 absc <- c(0,1e-10,.1,.15,.21,.25,.4,.5,1 - 1e-10,1)
 
 n <- 100; x <- 20;
