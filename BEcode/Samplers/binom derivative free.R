@@ -1,26 +1,24 @@
-library(Rcpp)
 setwd('C:/Users/vor1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/BEcode/Samplers')
 
-sourceCpp('intsct2.cpp')
-sourceCpp('abscPrep.cpp')
-sourceCpp('zabsc.cpp')
-absc <- c(0,1e-10,.1,.15,.21,.25,.4,.5,1 - 1e-10,1)
+source('functions.R')
 
-n <- 100; x <- 20;
+absc <- c(0,.1,.15,.21,.25,.4,.5,1)
 
-fbin <- function(p){
+n <- 100; x <- 1;
+
+fdist <- function(p){
   dbinom(x,n,p,log = T)
 }
 
-f <- sapply(absc,fbin)
+f <- sapply(absc,fdist)
 
 fmxind <- which(f==max(f))
 
-if (f[fmxind] > fbin(absc[fmxind] - 1e-5) & f[fmxind] > fbin(absc[fmxind] + 1e-5)) {
+if (f[fmxind] > fdist(absc[fmxind] - 1e-5) & f[fmxind] > fdist(absc[fmxind] + 1e-5)) {
   maxind <- 0
-} else if (f[fmxind] < fbin(absc[fmxind] + 1e-5)) {
+} else if (f[fmxind] < fdist(absc[fmxind] + 1e-5)) {
   maxind <- 1
-} else if (fbin(absc[fmxind] - 1e-5) > f[fmxind]) {
+} else if (fdist(absc[fmxind] - 1e-5) > f[fmxind]) {
   maxind <- 2
 }
 
@@ -47,7 +45,7 @@ flowerhull <- function(p,absc,f) {
   } else 0
 }
 
-f <- sapply(abscaug,fbin)
+f <- sapply(abscaug,fdist)
 #########################################################################################
 #########################################################################################
 ###               Upper hull
@@ -56,7 +54,7 @@ f <- sapply(abscaug,fbin)
 fupperhull <- function(p,abscaug,f,zval,maxind) {
   
   k <- max(which(abscaug < p))
-  zind <- ifelse(fbin(max(zval - 1e-5,zval/2)) > fbin(zval) , 1, 0)
+  zind <- ifelse(fdist(max(zval - 1e-5,zval/2)) > fdist(zval) , 1, 0)
   if ((abscaug[k + 1]==zval & zind==0) | (abscaug[k + 1]<zval )){
     fval <- exp(f[k + 1])
   } else if (abscaug[k + 1] == zval & zind==1 & maxind!=0){
@@ -88,7 +86,7 @@ fupperhull <- function(p,abscaug,f,zval,maxind) {
 fliksum <- function(abscaug,f,zval,maxind) {
   lvec <- NULL
   
-  zind <- ifelse(fbin(max(zval - 1e-5,zval/2)) > fbin(zval) , 1, 0)
+  zind <- ifelse(fdist(max(zval - 1e-5,zval/2)) > fdist(zval) , 1, 0)
   
   for (k in seq_along(abscaug[-1])) {
     
@@ -122,7 +120,7 @@ lvec <- fliksum(abscaug,f,zval,maxind)
 ###    Sampling a p from cummulative distribution
 #########################################################################################
 fpsample <- function(abscaug,lvec,f,zval,maxind) {
-  zind <- ifelse(fbin(max(zval - 1e-5,zval/2)) > fbin(zval) , 1, 0)
+  zind <- ifelse(fdist(max(zval - 1e-5,zval/2)) > fdist(zval) , 1, 0)
   
   pvec <- lvec/sum(lvec)
   pveccum <- c(0,cumsum(pvec))

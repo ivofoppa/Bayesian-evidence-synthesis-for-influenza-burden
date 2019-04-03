@@ -12,7 +12,7 @@ using namespace Rcpp;
 //
 
 // [[Rcpp::export]]
-NumericVector zabsc(NumericVector & absc, int x, int n ){
+NumericVector zabscbinomp(NumericVector & absc, int x, int n ){
   double arg1 = 0, arg2 = 0 ;
   
   int fmxind = 0, maxind = 0 ;

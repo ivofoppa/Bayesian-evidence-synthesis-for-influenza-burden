@@ -13,7 +13,7 @@ using namespace Rcpp;
 //
 // [[Rcpp::plugins("cpp11")]]
 // [[Rcpp::export]]
-NumericVector intsct2(NumericVector absc, int x, int n){
+NumericVector intsctbinomp(NumericVector absc, int x, int n){
   double p, f1, f2, f3, f4, p1,p2,p3,p4,a, b ;
   NumericVector out(absc.length() - 3) ;
   for (int i=0 ; i < out.length() ; i++) {

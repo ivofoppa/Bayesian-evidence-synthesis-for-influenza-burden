@@ -17,10 +17,6 @@ absc <- abscPrep(absc,x,n)
 zabsc <- zabsc(absc,x,n)
 zval <- intsct2(zabsc,x,n)
 
-fbin <- function(p){
-  dbinom(x,n,p,log = T)
-}
-
 absc <- unique(sort(c(absc,zval)))
 
 f <- sapply(absc,fbin)
