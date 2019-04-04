@@ -48,11 +48,3 @@ double intsct(NumericVector zabsc, IntegerVector & parms, std::string & dist){
   
   return p ;
 }
-/***R
-parms <- c(10,100)
-dist <- "binom"
-absc <- c(.2,.3)
-absc <- abscPrep(absc,parms,dist)
-zabsc <- zabscPrep(absc,parms,dist)
-intsct(zabsc,parms,dist)
-*/
