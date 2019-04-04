@@ -13,25 +13,27 @@ using namespace Rcpp;
 //
 
 // [[Rcpp::export]]
-double flowerhull(double p, DataFrame df, IntegerVector & parms) {
-  double f0,f1,lh ;
+DataFrame fabscaug(DataFrame df, IntegerVector & parms, std::string dist, double zval) {
   int selind = 0 ;
   NumericVector absc = df[0], f = df[1] ;
   
+  absc.push_back(zval) ;
+  absc = unique(absc) ;
+  absc.sort() ;
+
   for (int i = 0 ; i < absc.size() ; i++ ) {
-    if (absc[i] < p) {
+    if (absc[i] <= zval) {
       selind = i ;
     }
   }
   
-  double xcap = p - absc[selind] ;
-  f0 = f[selind] ;
-  f1 = f[selind + 1] ;
-  
-  if (!std::isinf(f[selind])) {
-    lh = exp(f0 + (f1 - f0)/(absc[selind + 1] - absc[selind]) * xcap) ;
-  } else {
-    lh = 0 ;
-  }
-  return lh ;
+  if (dist=="binom") {  
+    int x = parms[0] ;
+    int n = parms[1] ;
+    f.insert(selind,R::dbinom(x,n,zval,true)) ;
+  } else if (dist=="Poi") {  
+    int x = parms[0] ;
+    f.insert(selind,R::dpois(x,zval,true)) ;
+   }
+  return DataFrame::create(_["absc"] = absc,_["f"] = f) ;
 }

@@ -18,9 +18,24 @@ NumericVector zabsc2(NumericVector & absc, int x, int n ){
 } 
 
 /***R
-n <- 100
-x <- 1
-
-absc <- c(0,0.02,.05,.1,.15,.21,.25,.4,.5,.6,.7,.8,.9,1)
-  zabsc2(absc,x,n) 
-*/
+parms <- c(10,100)
+  dist <- "Poi"
+dist <- "binom"
+absc <- c(.05,.1,.15,.21,.25,.4,.5,.6,.7,.8,.9)
+  
+  df <- abscPrep(absc,parms,dist)
+  
+  maxind <- maxindC(df,parms,dist)
+  
+  zabsc <- zabscPrep(df,parms,dist,maxind)
+  
+  zval <- intsct(zabsc,parms, dist)
+  
+  f0 <- sapply(df[,1],function(p) dbinom(10,100,p,log = T))
+  
+  fabscaug(df,parms,dist,zval)
+  
+  flowerhull(.2,df,parms)
+  
+  f[4] > dbinom(1,100,.0125,log = T)
+  */

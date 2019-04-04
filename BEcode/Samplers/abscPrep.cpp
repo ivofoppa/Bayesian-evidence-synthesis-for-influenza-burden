@@ -14,13 +14,13 @@ using namespace Rcpp;
   //
   // [[Rcpp::plugins("cpp11")]]
 // [[Rcpp::export]]
-NumericVector abscPrep(NumericVector & absc, IntegerVector & parms, std::string & dist ){
+DataFrame abscPrep(NumericVector & absc, IntegerVector & parms, std::string & dist ){
   int maxind = 0, fmxind = 0 ;
   NumericVector f ;
   double arg1 = std::max(absc[fmxind] - 1e-9,0.) ;
   double arg2 = std::min(absc[fmxind] + 1e-9,1.) ;
   double minp = 0, pintv = 0, abscinc = 0, newabsc = 0 ;
-  
+
   absc.sort() ;
   absc = absc[(absc >=0) & (absc <= 1)] ;
   
@@ -171,13 +171,12 @@ NumericVector abscPrep(NumericVector & absc, IntegerVector & parms, std::string 
       absc2.push_back(absc[i]);
     } 
   }
-    return absc2 ;
-} 
-/***R
-parms <- c(1,100)
-  dist <- "Poi"
-dist <- "binom"
-absc <- c(.05,.1,.15,.21,.25,.4,.5,.6,.7,.8,.9)
-  
-  abscPrep(absc,parms,dist) 
-  */
+  NumericVector f2 ;
+  for (int i=0 ; i < absc.size() ; i++){
+    if (f[i] > -50 || i==0 || i==(absc.size() - 1)) {
+      f2.push_back(f[i]);
+    } 
+  }
+  DataFrame df = DataFrame::create( Named("absc")=absc2, Named("f")=f2 ) ;
+  return df;
+}
