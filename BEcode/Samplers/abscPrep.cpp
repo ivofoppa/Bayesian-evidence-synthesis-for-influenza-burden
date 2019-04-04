@@ -173,3 +173,11 @@ NumericVector abscPrep(NumericVector & absc, IntegerVector & parms, std::string 
   }
     return absc2 ;
 } 
+/***R
+parms <- c(1,100)
+  dist <- "Poi"
+dist <- "binom"
+absc <- c(.05,.1,.15,.21,.25,.4,.5,.6,.7,.8,.9)
+  
+  abscPrep(absc,parms,dist) 
+  */

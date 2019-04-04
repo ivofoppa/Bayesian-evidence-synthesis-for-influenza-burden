@@ -12,7 +12,7 @@ using namespace Rcpp;
 //
 
 // [[Rcpp::export]]
-NumericVector zabsc(NumericVector & absc, IntegerVector & parms, std::string & dist ){
+NumericVector zabscPrep(NumericVector & absc, IntegerVector & parms, std::string & dist ){
   double arg1 = 0, arg2 = 0 ;
   
   int fmxind = 0, maxind = 0 ;
@@ -72,16 +72,3 @@ NumericVector zabsc(NumericVector & absc, IntegerVector & parms, std::string & d
   }
   return zabsc ;
 } 
-/***R
-absc <- c(0,0.02,.05,.1,.15,.21,.25,.4,.5,.6,.7,.8,.9,1)
-
-parms <- c(1,100)
-
-dist <- "binom"
-dist <- "Poi"
-
-absc <- abscPrep(absc,parms,dist)
-
-  zabsc(absc,parms,dist) 
-  
-*/
