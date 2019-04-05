@@ -2,9 +2,11 @@ setwd('C:/Users/vor1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-
 
 source('functions.R')
 
-absc <- c(0,.1,.15,.21,.25,.4,.5,1)
+parms <- c(10,100)
+dist <- "binom"
+absc <- c(.05,.1,.15,.21,.25,.4,.5,.6,.7,.8,.9)
 
-n <- 100; x <- 1;
+n <- parms[2]; x <- parms[1];
 
 fdist <- function(p){
   dbinom(x,n,p,log = T)
@@ -22,14 +24,14 @@ if (f[fmxind] > fdist(absc[fmxind] - 1e-5) & f[fmxind] > fdist(absc[fmxind] + 1e
   maxind <- 2
 }
 
-### calculating intersection x for middle section (containing max); using Rcpp function intsct2
+### calculating intersection x for middle section (containing max); using Rcpp function intsct
 if (maxind==2) {
   zabsc <- absc[c(fmxind - 2,fmxind - 1,fmxind,fmxind + 1)]
 } else {
   zabsc <- absc[c(fmxind - 1,fmxind,fmxind + 1,fmxind + 2)]
 }
 
-zval <- intsct2(zabsc,x,n)
+zval <- intsct(zabsc,parms,dist)
 
 abscaug <- sort(unique(c(absc,zval)))
 #########################################################################################

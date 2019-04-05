@@ -17,7 +17,7 @@ NumericVector fliksum(DataFrame df, IntegerVector & parms, std::string dist, dou
   double f0,f1,p0,p1,a ;
   NumericVector absc = df[0], f = df[1], lvec ;
   
-  for (int k = 1 ; k < absc.size() ; k++) {
+  for (int k = 0 ; k < (absc.size() - 1) ; k++) {
     
     if ((absc[k + 1]==zval && zind==0) || (absc[k + 1] < zval )) {
       lvec.push_back(exp(f[k + 1])*(absc[k + 1] - absc[k])) ;

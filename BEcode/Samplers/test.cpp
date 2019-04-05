@@ -11,9 +11,9 @@ using namespace Rcpp;
 //   http://gallery.rcpp.org/
 //
 // [[Rcpp::export]]
-NumericVector zabsc2(NumericVector & absc, int x, int n ){
-  Function f("zabsc") ;
-  NumericVector zabsc = f(absc,x,n) ;
+NumericVector zabsc2(DataFrame df, IntegerVector parms, std::string dist,int maxind ){
+  Function zabsPrep("zabscPrep") ;
+  NumericVector zabsc = zabsPrep(df,parms,dist,maxind) ;
   return zabsc ;
 } 
 
@@ -31,13 +31,15 @@ absc <- c(.05,.1,.15,.21,.25,.4,.5,.6,.7,.8,.9)
   
   zval <- intsct(zabsc,parms, dist)
   
-  zind <- fzind(df,parms,dist,zval)
-  
   df <- fabscaug(df,parms,dist,zval)
   
-  flowerhull(.2,df,parms)
-  fupperhull(.2,df,parms,dist,zval,maxind,zind )
+  zind <- fzind(df,parms,dist,zval)
+  
+    
+  # flowerhull(.2,df,parms)
+  # fupperhull(.2,df,parms,dist,zval,maxind,zind )
   lvec <- fliksum(df, parms, dist, zval, maxind,zind)
+  fpsample(df, parms, dist, zval, maxind,zind,lvec)
   
   f[4] > dbinom(1,100,.0125,log = T)
   */
