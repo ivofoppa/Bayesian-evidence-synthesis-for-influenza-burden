@@ -13,32 +13,11 @@ using namespace Rcpp;
 //
 
 // [[Rcpp::export]]
-double fupperhull(double p, DataFrame df, IntegerVector & parms, std::string dist, double zval, int maxind) {
-  double f0,f1,uh = 0,arg,p0,p1,a ;
-  int selind = 0, zind = 0 ;
+double fupperhull(double p, DataFrame df, IntegerVector & parms, std::string dist, double zval, int maxind, int zind) {
+  double f0,f1,uh = 0,p0,p1,a ;
+  int selind = 0 ;
   NumericVector absc = df[0], f = df[1] ;
   
-  arg = std::max(zval - 1e-9,zval/2) ;
-  
-  if (dist=="binom") {  
-    int x = parms[0] ;
-    int n = parms[1] ;
-    
-    if (R::dbinom(x,n,arg,true) > R::dbinom(x,n,zval,true)) {
-      zind = 1 ;
-    } else {
-      zind = 0 ;
-    }
-  } else if (dist=="Poi") {  
-    
-    int x = parms[0] ;
-    
-    if (R::dpois(x,arg,true) > R::dpois(x,zval,true)) {
-      zind = 1 ;
-    } else {
-      zind = 0 ;
-    }
-  }
   for (int i = 0 ; i < absc.size() ; i++ ) {
     if (absc[i] < p) {
       selind = i ;
