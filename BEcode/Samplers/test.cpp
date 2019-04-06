@@ -12,8 +12,8 @@ using namespace Rcpp;
 //
 // [[Rcpp::export]]
 NumericVector zabsc2(DataFrame df, IntegerVector parms, std::string dist,int maxind ){
-  Function zabsPrep("zabscPrep") ;
-  NumericVector zabsc = zabsPrep(df,parms,dist,maxind) ;
+  Function f("zabscPrep") ;
+  NumericVector zabsc = f(df,parms,dist,maxind) ;
   return zabsc ;
 } 
 
@@ -41,5 +41,5 @@ absc <- c(.05,.1,.15,.21,.25,.4,.5,.6,.7,.8,.9)
   lvec <- fliksum(df, parms, dist, zval, maxind,zind)
   fpsample(df, parms, dist, zval, maxind,zind,lvec)
   
-  f[4] > dbinom(1,100,.0125,log = T)
+  zabsc2(df,parms,dist,maxind)
   */

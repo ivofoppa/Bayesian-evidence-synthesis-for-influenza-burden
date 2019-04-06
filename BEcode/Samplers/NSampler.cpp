@@ -14,13 +14,18 @@ using namespace Rcpp;
 // [[Rcpp::plugins("cpp11")]]
 // [[Rcpp::export]]
 int binomnSampler(NumericVector parms2){
-  int x = parms2[0], p = parms2[1], ntest0 = round(x/p), ntest = 0, outn = 0;
-  double ptest0 = R::dbinom(x,ntest0,p,true), ptest = 0 ;
-  IntegerVector nvec = IntegerVector::create(ntest0) ;
-  NumericVector pvec = NumericVector::create(exp(ptest0)) ;
+  int ntest0 = 0, ntest = 0, outn = 0;
+  double x = parms2[0], p = parms2[1], ptest0 =0, ptest = 0 ;
+  IntegerVector nvec ;
+  NumericVector pvec ;
   
+  ptest0 = R::dbinom(x,ntest0,p,true) ;
+  ntest0 = round(x/p) ;
   ntest = ntest0 + 1 ;
   ptest = R::dbinom(x,ntest,p,true) ;
+  
+  pvec = NumericVector::create(exp(ptest0)) ;
+  nvec = IntegerVector::create(ntest0) ;
   
   while (ptest > -50) {
     nvec.push_back(ntest) ;
