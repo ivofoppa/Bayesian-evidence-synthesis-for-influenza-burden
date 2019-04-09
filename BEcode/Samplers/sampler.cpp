@@ -381,23 +381,7 @@ NumericVector samples(NumericVector & absc, NumericVector & parms, std::string d
   }
   return parmsmplvec ;
 }
-
-
 // You can include R code blocks in C++ files processed with sourceCpp
 // (useful for testing and development). The R code will be automatically 
 // run after the compilation.
 //
-
-/*** R
-parms <- c(10,100)
-dist <- "Poi"
-dist <- "binom"
-absc <- c(.05,.1,.15,.21,.25,.4,.5,.6,.7,.8,.9)
-
-start_time <- Sys.time()
-sls <- samples(absc,parms,dist,10000,.75)
-end_time <- Sys.time()
-end_time - start_time
-hist(sls,100,xlim = c(0,.3),freq = F)
-lines(ls,yls*100,col = 'red')
-*/

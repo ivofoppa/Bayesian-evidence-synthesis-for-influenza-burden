@@ -1,0 +1,148 @@
+\documentclass{article}[12pt]
+\usepackage{amsmath,amssymb,authblk,bm,bm,caption,graphicx,hyperref,lscape,mathrsfs,setspace,subcaption,tabularx,tkz-graph,upgreek,url}
+\usetikzlibrary{shapes.geometric}
+\usepackage[letterpaper, margin=2.5cm]{geometry}
+\usepackage[backend=biber,style=numeric,isbn=false,sorting=none,giveninits=true,terseinits=true]{biblatex}
+\DeclareNameAlias{default}{last-first}
+%\doublespacing
+%\graphicspath{{ORgraphics/}}
+\newcommand{\la}{\leftarrow}
+\newcommand{\ra}{\rightarrow}
+%\usepackage{draftwatermark}
+\newcommand{\footremember}[2]{%
+	\footnote{#2}
+	\newcounter{#1}
+	\setcounter{#1}{\value{footnote}}
+}
+\newcommand{\footrecall}[1]{%
+	\footnotemark[\value{#1}]%
+}
+
+\newcommand{\absdiv}[1]{%
+	\par\addvspace{.5\baselineskip}% adjust to suit
+	\noindent\textbf{#1}\quad\ignorespaces
+}
+
+\renewcommand*{\revsdnamepunct}{}
+
+\makeatletter
+\renewbibmacro*{name:last-first}[4]{%
+	\ifuseprefix
+	{\usebibmacro{name:delim}{#3#1}%
+		\usebibmacro{name:hook}{#3#1}%
+		\ifblank{#3}{}{%
+			\ifcapital
+			{\mkbibnameprefix{\MakeCapital{#3}}\isdot}
+			{\mkbibnameprefix{#3}\isdot}%
+			\ifpunctmark{'}{}{\bibnamedelimc}}%
+		\mkbibnamelast{#1}\isdot
+		\ifblank{#4}{}{\bibnamedelimd\mkbibnameaffix{#4}\isdot}%
+		%      \ifblank{#2}{}{\addcomma\bibnamedelimd\mkbibnamefirst{#2}\isdot}}% DELETED
+		\ifblank{#2}{}{\bibnamedelimd\mkbibnamefirst{#2}\isdot}}% NEW
+	{\usebibmacro{name:delim}{#1}%
+		\usebibmacro{name:hook}{#1}%
+		\mkbibnamelast{#1}\isdot
+		\ifblank{#4}{}{\bibnamedelimd\mkbibnameaffix{#4}\isdot}%
+		%      \ifblank{#2#3}{}{\addcomma}% DELETED
+		\ifblank{#2}{}{\bibnamedelimd\mkbibnamefirst{#2}\isdot}%
+		\ifblank{#3}{}{\bibnamedelimd\mkbibnameprefix{#3}\isdot}}}
+\makeatother
+
+
+%\SetWatermarkText{Confidential}
+%\SetWatermarkScale{5}
+% Sets the default location of pictures\fvset{fontsize=\normalsize} % The font size of all verbatim text can be changed here
+%
+\DeclareMathOperator{\Ex}{\mathbb{E}}% expected value
+\DeclareMathOperator{\Poi}{\operatorname{Poi}}
+%
+\addbibresource{biblio.bib}
+\title{MCMC for Influenza Burden Estimation from Hospitalization Surveillance data} 
+%
+\author[1,2,*]{Ivo M Foppa}
+%
+\author[2]{\ldots}
+\affil[1]{Battelle Memorial Institute, Atlanta, Georgia, USA}
+\affil[2]{Influenza Division, Centers for Disease Control and Prevention, 1600 Clifton Road NE, Atlanta, 30333 Georgia, USA}
+\affil[*]{Corresponding Author, Influenza Division, Centers for Disease Control and Prevention, 1600 Clifton Road NE, MS A-20, Atlanta, 30333 Georgia, USA, \nolinkurl{vor1@cdc.gov}}
+\date{}
+%
+%----------------------------------------------------------------------------------------
+\begin{document}
+	{\let\newpage\relax\maketitle}	
+	\maketitle%
+	%
+	\subsection*{Data} 
+	%
+\begin{enumerate}
+	\item $N$: Total FluSurv-NET (FSN) population (given stratum, e.g. age group, state, etc.)
+	\item $M$: Total US population 
+	\item $n_H$: Number of observed influenza hospitalizations with non-lethal outcome
+	\item $n_D$: Observed influenza deaths
+	\item $t_{kj}$
+	\item $\rho_{k}$: Prior dist. for test sensitivities (PCR, rapid; mean, SD)
+\end{enumerate}
+	%
+\subsection*{Parameters to be sampled, partial likelihoods $L$} 
+\subsubsection*{$m_H$: True number of influenza hospitalizations (non-letal) in FSN population, unobserved}
+%
+\begin{equation}
+\label{eq:m_H}
+L(m_H|\ldots) \propto \frac{e^{-\lambda_H \; N} (\lambda_H \; N)^{m_H}}{m_H!}\times \binom{m_H}{n_H} \tau_0^{n_H} (1 - \tau_0)^{(m_H - n_H)},
+\end{equation}
+%
+where the ``detection probability'' in those with non-lethal outcomes is 
+$t_0 = \phi_0 \sum_{j} \pi_{0j} \sigma_{0j}$; definitions of $\phi_0, \pi_{0j},\text{ and } \sigma_{0j}$ as given below.
+%
+\subsubsection*{$\lambda_H$: Hospitalization rate}
+%
+\begin{equation}
+\label{eq:lam_H}
+L(\lambda_H)|\ldots) \propto \frac{e^{-\lambda_H \; N} (\lambda_H \; N)^{m_H}}{m_H!}\times
+\end{equation}
+%
+\subsubsection*{$m_D$: total number of influenza deaths deaths in FSN population}
+%
+%
+\begin{equation}
+\label{eq:m_D}
+L(m_D|\ldots) \propto \frac{e^{-\lambda_D\;\epsilon  \; N} (\lambda_D\;\epsilon  \; N)^{m_D}}{m_D!}\times \binom{m_D}{n_D} \tau_1^{n_D} (1 - \tau_1)^{(m_D - n_D)},
+\end{equation}
+%
+%
+\subsubsection*{$\lambda_D$: Influenza mortality rate}
+%
+\begin{equation}
+\label{eq:lam_D}
+L(\lambda_D|\ldots) \propto \frac{e^{-\lambda_D\;\epsilon  \; N} (\lambda_D\;\epsilon  \; N}{m_D!},
+\end{equation}
+%
+\subsubsection*{$\epsilon$: Outside-hospital death proportion}
+%
+\begin{equation}
+\label{eq:p_osh}
+L(m_D|\ldots) \propto \frac{e^{-\lambda_D\;\epsilon  \; N} (\lambda_D\;\epsilon  \; N)^{m_D}}{m_D!}
+\end{equation}
+%
+\subsubsection*{$\phi_0$: True influenza-positivity rate, in non lethal outcomes)}
+%
+\begin{equation}
+\label{eq:phi_0}
+L(\phi_0|\ldots) \propto \binom{m_H}{n_H} \left(\phi_0 \sum_{j} \pi_{0j} \sigma_{0j}\right)^{n_H} (1 - \phi_0 \sum_{j} \pi_{0j} \sigma_{0j})^{(m_H - n_H)} \times
+\binom{above}{below}
+\end{equation}
+%
+
+\subsubsection*{$\pi_{kj}$: Testing probabilities in non-lethal outcomes, by test type}
+%
+\begin{equation}
+\label{eq:pi_kj}
+L(\pi_{0j}|\ldots) \propto \frac{e^{-\lambda_H \; N} (\lambda_H \; N)^{m_H}}{m_H!}\times \binom{m_H}{n_H} \tau_0^{n_H} (1 - \tau_0)^{(m_H - n_H)},
+\end{equation}
+%
+	
+\subsubsection*{$g_{kj}$} Unobserved number of influenza positives, by outcome $k$ and test type $j$
+\subsubsection*{$\sigma_{kj}$} Test sensitivity, by outcome $k$ and test type $j$
+%
+%	\printbibliography
+\end{document} 
