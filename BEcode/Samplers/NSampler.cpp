@@ -12,65 +12,268 @@ using namespace Rcpp;
 //   http://gallery.rcpp.org/
 //
 // [[Rcpp::plugins("cpp11")]]
-// [[Rcpp::export]]
-int binomnSampler(NumericVector parms2){
-  int ntest0 = 0, ntest = 0, outn = 0;
-  double x = parms2[0], p = parms2[1], ptest0 =0, ptest = 0 ;
-  IntegerVector nvec ;
-  NumericVector pvec ;
+
+double fnbin(double n, NumericVector parms2){
+  double x = parms2[0], p = parms2[1] ;
+  double f = R::dbinom(x,n,p,false) ;
+  return f ;
+} 
+
+
+double fxbin(double x, NumericVector parms2){
+  double n = parms2[0], p = parms2[1] ;
+  double f = R::dbinom(x,n,p,false) ;
+  return f ;
+} 
+
+double fxpoi(double x, NumericVector parms2){
+  double r = parms2[0] ;
+  double f = R::dpois(x,r,false) ;
+  return f ;
+} 
+// parms2 = (lambda,Nhosp,p)
+double fxpoinbin(double n, NumericVector parms2){
+  double r = parms2[0], p = parms2[2] ;
+  int x = parms2[1] ;
+  double f = R::dpois(x,r,false) * R::dbinom(x,n,p,false) ;
+  return f ;
+} 
+
+double fndist(double pr, NumericVector parms2, std::string dist){
+  double fv = 0 ;
+  if (dist=="binomn") {
+    fv = fnbin(pr,parms2) ;
+  } else if (dist=="binomx") {
+    fv = fxbin(pr,parms2) ;
+  } else if (dist=="Poi") {
+    fv = fxpoi(pr,parms2) ;
+  }else if (dist=="Poibinomn") {
+    fv = fxpoinbin(pr,parms2) ;
+  }
+  return fv ;
+} 
+
+DataFrame xbinpdf(NumericVector parms2){
+  double p = parms2[1] ;
+  int n = parms2[0], x0 = round(n * p) ;
   
-  ptest0 = R::dbinom(x,ntest0,p,true) ;
-  ntest0 = round(x/p) ;
-  ntest = ntest0 + 1 ;
-  ptest = R::dbinom(x,ntest,p,true) ;
+  IntegerVector xvec = IntegerVector::create(x0) ;
+  NumericVector fvec = NumericVector::create(fxbin(x0,parms2)) ;
   
-  pvec = NumericVector::create(exp(ptest0)) ;
-  nvec = IntegerVector::create(ntest0) ;
+  DataFrame df ;
   
-  while (ptest > -50) {
-    nvec.push_back(ntest) ;
-    pvec.push_back(exp(ptest)) ;
-    ntest++ ;
-    ptest = R::dbinom(x,ntest,p,true) ;
+  int xtest = x0 + 1 ;
+  double ftest = fxbin(xtest,parms2) ;
+  
+  while (ftest > 1e-10) {
+    xvec.push_back(xtest) ;
+    fvec.push_back(ftest) ;
+    xtest++ ;
+    ftest = fxbin(xtest,parms2) ;
   }
   
-  ntest = ntest0 - 1 ;
-  ptest= R::dbinom(x,ntest,p,true) ;
+  xtest = x0 - 1 ;
+  ftest = fxbin(xtest,parms2) ;
   
-  while (ptest > -50 && ntest >= x) {
+  while (ftest > 1e-10 && xtest <= n) {
+    xvec.push_front(xtest);
+    fvec.push_front(ftest) ;
+    xtest-- ;
+    ftest = fxbin(xtest,parms2) ;
+  }
+  
+  int xsz = xvec.size();
+  double ftotal = 0;
+  for(int i = 0 ; i < xsz ; ++i) {
+    ftotal += fvec[i];
+  }
+  
+  for(int i = 0 ; i < xsz ; ++i) {
+    fvec[i] /= ftotal ;
+  }
+  
+  df = DataFrame::create( Named("x")=xvec, Named("p")=fvec ) ;
+  return df ;
+} 
+
+DataFrame nbinpdf(NumericVector parms2){
+  double p = parms2[1] ;
+  int x = parms2[0], n0 = round(x / p) ;
+  
+  IntegerVector nvec = IntegerVector::create(n0) ;
+  NumericVector fvec = NumericVector::create(fnbin(n0,parms2)) ;
+  
+  DataFrame df ;
+  
+  int ntest = n0 + 1 ;
+  double ftest = fnbin(ntest,parms2) ;
+  
+  while (ftest > 1e-10) {
+    nvec.push_back(ntest) ;
+    fvec.push_back(ftest) ;
+    ntest++ ;
+    ftest = fnbin(ntest,parms2) ;
+  }
+  
+  ntest = n0 - 1 ;
+  ftest = fnbin(ntest,parms2) ;
+  
+  while (ftest > 1e-10 && ntest >= x ) {
     nvec.push_front(ntest);
-    pvec.push_front(exp(ptest)) ;
+    fvec.push_front(ftest) ;
     ntest-- ;
-    ptest = R::dbinom(x,ntest,p,true) ;
+    ftest = fnbin(ntest,parms2) ;
   }
   
   int nsz = nvec.size();
-  double total = 0;
+  double ftotal = 0;
   for(int i = 0 ; i < nsz ; ++i) {
-    total += pvec[i];
+    ftotal += fvec[i];
   }
   
   for(int i = 0 ; i < nsz ; ++i) {
-    pvec[i] /= total ;
+    fvec[i] /= ftotal ;
+  }
+  df = DataFrame::create( Named("n")=nvec, Named("p")=fvec ) ;
+  return df ;
+} 
+
+DataFrame xpoipdf(NumericVector parms2){
+  double r = parms2[0] ;
+  int x0 = round(r) ;
+  
+  NumericVector fvec(0) ;
+  IntegerVector xvec(0) ;
+  
+  DataFrame df ;
+  
+  int xtest = x0 + 1 ;
+  double ftest = fxpoi(xtest,parms2) ;
+  
+  while (ftest > 1e-10) {
+    xvec.push_back(xtest) ;
+    fvec.push_back(ftest) ;
+    xtest++ ;
+    ftest = fxpoi(xtest,parms2) ;
   }
   
-  double uran =  R::runif(0,1) ;
-  
-  double psum = 0 ;
-  int selint = 1; 
-  int i = 0 ;
-  while (selint == 1) {
-    psum += pvec[i] ;
-    if (psum >=  uran) {
-      selint = 0 ;
+  if (x0 > 0) {
+    xtest = x0 - 1 ;
+    ftest = fxpoi(xtest,parms2) ;
+    
+    while (ftest > 1e-10 && xtest >= 0) {
+      xvec.push_front(xtest);
+      fvec.push_front(ftest) ;
+      xtest-- ;
+      ftest = fxpoi(xtest,parms2) ;
     }
-    i++ ;
+  }
+  int xsz = xvec.size();
+  double ftotal = 0;
+  for(int i = 0 ; i < xsz ; ++i) {
+    ftotal += fvec[i];
   }
   
-  outn = nvec[i - 2] ;
-  return outn ;
+  for(int i = 0 ; i < xsz ; ++i) {
+    fvec[i] /= ftotal ;
+  }
+  
+  df = DataFrame::create( Named("x")=xvec, Named("p")=fvec ) ;
+  return df ;
+} 
+
+DataFrame xpoinbinompdf(NumericVector parms2){
+  double r = parms2[0] ;
+  int x0 = round(r) ;
+  
+  NumericVector fvec(0) ;
+  IntegerVector xvec(0) ;
+  
+  DataFrame df ;
+  
+  int xtest = x0 + 1 ;
+  double ftest = fxpoi(xtest,parms2) ;
+  
+  while (ftest > 1e-10) {
+    xvec.push_back(xtest) ;
+    fvec.push_back(ftest) ;
+    xtest++ ;
+    ftest = fxpoi(xtest,parms2) ;
+  }
+  
+  if (x0 > 0) {
+    xtest = x0 - 1 ;
+    ftest = fxpoi(xtest,parms2) ;
+    
+    while (ftest > 1e-10 && xtest >= 0) {
+      xvec.push_front(xtest);
+      fvec.push_front(ftest) ;
+      xtest-- ;
+      ftest = fxpoi(xtest,parms2) ;
+    }
+  }
+  int xsz = xvec.size();
+  double ftotal = 0;
+  for(int i = 0 ; i < xsz ; ++i) {
+    ftotal += fvec[i];
+  }
+  
+  for(int i = 0 ; i < xsz ; ++i) {
+    fvec[i] /= ftotal ;
+  }
+  
+  df = DataFrame::create( Named("x")=xvec, Named("p")=fvec ) ;
+  return df ;
+} 
+
+DataFrame npdf(NumericVector parms2, std::string dist){
+  DataFrame df ;
+    if (dist=="binomn") {
+    df = nbinpdf(parms2) ;
+  } else if (dist=="binomx") {
+    df = xbinpdf(parms2) ;
+  } else if (dist=="Poi") {
+    df = xpoipdf(parms2) ;
+  }
+  return df ;
+} 
+
+// [[Rcpp::export]]
+IntegerVector nSampler(NumericVector & parms2,std::string dist, int nsims){
+  
+  DataFrame df = npdf(parms2, dist) ;
+  IntegerVector nvec = df[0], outvec ;
+  NumericVector fvec = df[1] ;
+  double uran, fsum ;
+  int outn ;
+  
+  int selint ;
+  
+  while (outvec.size() < nsims ) {
+    uran =  R::runif(0,1) ;
+    
+    fsum = 0 ;
+    selint = 1; 
+    int i = 0 ;
+    while (selint == 1) {
+      fsum += fvec[i] ;
+      if (fsum >=  uran) {
+        selint = 0 ;
+      }
+      i++ ;
+    }
+    
+    outn = nvec[i - 2] ;
+    outvec.push_back(outn) ;
+  }
+  return outvec ;
 }
-/***R
-parms <- c(10,.2)
-binomnSampler(parms)
-*/
+/*** R
+parms <- c(100,.2)
+  dist <- "Poi"
+dist <- "binomx"
+
+nSampler(parms,dist,10)
+  hist(sls,100,xlim = c(0,.3),freq = F)
+  lines(ls,yls*100,col = 'red')
+  */

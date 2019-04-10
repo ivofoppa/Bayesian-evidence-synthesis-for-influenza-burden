@@ -28,7 +28,7 @@ double fxbin(double x, NumericVector parms2){
 
 double fxpoi(double x, NumericVector parms2){
   double r = parms2[0] ;
-  double f = R::dpois(x,r,false) ;
+  double f = R::dpois(x,r,false)*R::dgamma(r,.001,.001,false);
   return f ;
 } 
 // parms2 = (lambda,Nhosp,p)
@@ -269,15 +269,11 @@ IntegerVector nSampler(NumericVector & parms2,std::string dist, int nsims){
   return outvec ;
 }
 /*** R
-parms <- c(100,)
+parms <- c(100,.2)
   dist <- "Poi"
-dist <- "binom"
-absc <- c(.05,.1,.15,.21,.25,.4,.5,.6,.7,.8,.9)
-  
-  start_time <- Sys.time()
-  sls <- samples(absc,parms,dist,10000,.75)
-  end_time <- Sys.time()
-  end_time - start_time
+dist <- "binomx"
+
+nSampler(parms,dist,10)
   hist(sls,100,xlim = c(0,.3),freq = F)
   lines(ls,yls*100,col = 'red')
   */
