@@ -395,7 +395,7 @@ dist <- "binom"
 absc <- c(.05,.1,.15,.21,.25,.4,.5,.6,.7,.8,.9)
 
 start_time <- Sys.time()
-sls <- samples(absc,parms,dist,10000,.75)
+sls <- samples(absc,parms,dist,100,.75)
 end_time <- Sys.time()
 end_time - start_time
 hist(sls,100,xlim = c(0,.3),freq = F)
