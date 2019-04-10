@@ -139,7 +139,7 @@ variables <- c('USfluhosp','USfludeath')
 nadapt <- 10000
 niter <- 10000
 
-model.file <- 'BE differential test types rates.txt'
+model.file <- 'BE differential test types rates simplified 3.txt'
 setwd(paste0(bfolder,'BEmodels'))
 
 j.model <- jags.model(file=model.file,data=data, inits=inits, n.adapt=nadapt, n.chains=3)

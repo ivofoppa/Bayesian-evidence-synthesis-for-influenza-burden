@@ -83,39 +83,41 @@
 	\item $\rho_{k}$: Prior dist. for test sensitivities (PCR, rapid; mean, SD)
 \end{enumerate}
 	%
-\subsection*{Parameters to be sampled, fully conditional likelihoods $L$} 
+\subsection*{Parameters to be sampled, fully conditional likelihoods $L$}
+The prior distribution of a parameter, $\Theta$ is denoted as $\eta_\Theta(\theta)$ or $\eta(\theta)$.
+%
 \subsubsection*{$\bm{m_H}$: True number of influenza hospitalizations (non-letal) in FSN population, unobserved}
 %
 \begin{equation}
 \label{eq:m_H}
-L(m_H|\ldots) \propto \frac{e^{-\lambda_H \; N} (\lambda_H \; N)^{m_H}}{m_H!}\times \binom{m_H}{n_H} \tau_0^{n_H} (1 - \tau_0)^{(m_H - n_H)},
+L(m_H|\ldots) \propto \frac{e^{-\lambda_H \; N} (\lambda_H \; N)^{m_H}}{m_H!}\times \binom{m_H}{n_H} \tau_0^{n_H} (1 - \tau_0)^{m_H - n_H} \times \eta(m_H),
 \end{equation}
 %
 where the ``detection probability'' in those with non-lethal outcomes is 
-$t_0 = \phi_0 \sum_{j} \pi_{0j} \sigma_{0j}$; definitions of $\phi_0, \pi_{0j},\text{ and } \sigma_{0j}$ as given below.
+$\tau_0 = \phi_0 \sum_{j} \pi_{0j} \sigma_{0j}$; definitions of $\phi_0, \pi_{0j},\text{ and } \sigma_{0j}$ as given below.
 %
-\subsubsection*{$\bm{\lambda_H}$: Influenza hospitalization rate, non-lethal outcome}
-%
-\begin{equation}
-\label{eq:lam_H}
-L(\lambda_H)|\ldots) \propto \frac{e^{-\lambda_H \; N} (\lambda_H \; N)^{m_H}}{m_H!}\times
-\end{equation}
-%
-\subsubsection*{$\bm{\lambda_D}$: Influenza hospitalization rate, lethal outcome}
-%
-\begin{equation}
-\label{eq:lam_D}
-L(\lambda_D|\ldots) \propto \frac{e^{-\lambda_D\;\epsilon  \; N} (\lambda_D\;\epsilon  \; N}{m_D!},
-\end{equation}
-%
-\subsubsection*{$\bm{m_D}$: total number of influenza deaths deaths in FSN population}
+\subsubsection*{$\bm{m_D}$: total number of influenza hospitalizations (lethal) in FSN population, unobserved}
 %
 %
 \begin{equation}
 \label{eq:m_D}
-L(m_D|\ldots) \propto \frac{e^{-\lambda_D\;\epsilon  \; N} (\lambda_D\;\epsilon  \; N)^{m_D}}{m_D!}\times \binom{m_D}{n_D} \tau_1^{n_D} (1 - \tau_1)^{(m_D - n_D)},
+L(\lambda_D|\ldots) \propto \frac{e^{-\lambda_D\;\epsilon  \; N} (\lambda_D\;\epsilon  \; N}{m_D!} \times \eta(m_D),
 \end{equation}
 %
+%
+\subsubsection*{$\bm{\lambda_H}$: Hospitalization rate, non-lethal outcome}
+%
+\begin{equation}
+\label{eq:lam_H}
+L(\lambda_H)|\ldots) \propto \frac{e^{-\lambda_H \; N} (\lambda_H \; N)^{m_H}}{m_H!}
+\end{equation}
+%
+\subsubsection*{$\bm{\lambda_D}$: Influenza mortality rate}
+%
+\begin{equation}
+\label{eq:lam_D}
+L(\lambda_D|\ldots) \propto e^{-\lambda_D}\;\lambda_D ,
+\end{equation}
 %
 \subsubsection*{$\bm{\epsilon}$: Outside-hospital death proportion}
 %
@@ -126,11 +128,14 @@ L(m_D|\ldots) \propto \frac{e^{-\lambda_D\;\epsilon  \; N} (\lambda_D\;\epsilon 
 %
 \subsubsection*{$\bm{\phi_0}$: True influenza-positivity rate, in non lethal outcomes)}
 %
-\begin{equation}
+\begin{align}
+\nonumber
+L(\phi_0|\ldots) &\propto \binom{m_H}{n_H} \left(\phi_0 \sum_{j} \pi_{0j} \sigma_{0j}\right)^{n_H} (1 - \phi_0 \sum_{j} \pi_{0j} \sigma_{0j})^{m_H - n_H} \times
+\prod_j\;\binom{t_{0j}}{g_{0j}} \phi_0^{g_{0j}} \;(1 - \phi_0)^{t_{0j} - g_{0j}} \\
 \label{eq:phi_0}
-L(\phi_0|\ldots) \propto \binom{m_H}{n_H} \left(\phi_0 \sum_{j} \pi_{0j} \sigma_{0j}\right)^{n_H} (1 - \phi_0 \sum_{j} \pi_{0j} \sigma_{0j})^{m_H - n_H} \times
-\binom{above}{below}
-\end{equation}
+ &\propto \phi_0^{n_H} \left(1 - \phi_0 \sum_{j} \pi_{0j} \sigma_{0j}\right)^{m_H - n_H} \times
+ \phi_0^{\sum_j g_{0j}} \;(1 - \phi_0)^{\sum_j t_{0j} - g_{0j}} 
+\end{align}
 %
 
 \subsubsection*{$\bm{\pi_{0j}}$: Testing probabilities in non-lethal outcomes, by test type}
@@ -141,7 +146,7 @@ L(\pi_{0j}|\ldots) \propto \frac{e^{-\lambda_H \; N} (\lambda_H \; N)^{m_H}}{m_H
 \end{equation}
 %
 	
-\subsubsection*{$g_{kj}$} Unobserved number of influenza positives, by outcome $k$ and test type $j$
+\subsubsection*{$\bm{g_{kj}}$} Unobserved number of influenza positives, by outcome $k$ and test type $j$
 \subsubsection*{$\sigma_{kj}$} Test sensitivity, by outcome $k$ and test type $j$
 %
 %	\printbibliography

@@ -28,7 +28,7 @@ model {
     ptest[k,1] <- ptest10[k]/ptot[k]
     ptest[k,2] <- ptest20[k]/ptot[k]
     ptest[k,3] <- ptest30[k]/ptot[k]
-    ptest[k,4] <- ptest4 0[k]/ptot[k]
+    ptest[k,4] <- ptest40[k]/ptot[k]
       
     pflu[k] ~ dunif(0,1)
       
