@@ -79,12 +79,12 @@
 	\item $M$: Total US population 
 	\item $n_H$: Number of observed influenza hospitalizations with non-lethal outcome
 	\item $n_D$: Observed influenza deaths
-	\item $t_{kj}$
+	\item $t_{kj}$: Numbers tested by outcome and test type (1: PCR, 2: Rapid, 3: Other, 4: No test)
 	\item $\rho_{k}$: Prior dist. for test sensitivities (PCR, rapid; mean, SD)
 \end{enumerate}
 	%
-\subsection*{Parameters to be sampled, partial likelihoods $L$} 
-\subsubsection*{$m_H$: True number of influenza hospitalizations (non-letal) in FSN population, unobserved}
+\subsection*{Parameters to be sampled, fully conditional likelihoods $L$} 
+\subsubsection*{$\bm{m_H}$: True number of influenza hospitalizations (non-letal) in FSN population, unobserved}
 %
 \begin{equation}
 \label{eq:m_H}
@@ -94,14 +94,14 @@ L(m_H|\ldots) \propto \frac{e^{-\lambda_H \; N} (\lambda_H \; N)^{m_H}}{m_H!}\ti
 where the ``detection probability'' in those with non-lethal outcomes is 
 $t_0 = \phi_0 \sum_{j} \pi_{0j} \sigma_{0j}$; definitions of $\phi_0, \pi_{0j},\text{ and } \sigma_{0j}$ as given below.
 %
-\subsubsection*{$\lambda_H$: Hospitalization rate}
+\subsubsection*{$\bm{\lambda_H}$: Hospitalization rate}
 %
 \begin{equation}
 \label{eq:lam_H}
 L(\lambda_H)|\ldots) \propto \frac{e^{-\lambda_H \; N} (\lambda_H \; N)^{m_H}}{m_H!}\times
 \end{equation}
 %
-\subsubsection*{$m_D$: total number of influenza deaths deaths in FSN population}
+\subsubsection*{$\bm{m_D}$: total number of influenza deaths deaths in FSN population}
 %
 %
 \begin{equation}
@@ -110,30 +110,30 @@ L(m_D|\ldots) \propto \frac{e^{-\lambda_D\;\epsilon  \; N} (\lambda_D\;\epsilon 
 \end{equation}
 %
 %
-\subsubsection*{$\lambda_D$: Influenza mortality rate}
+\subsubsection*{$\bm{\lambda_D}$: Influenza mortality rate}
 %
 \begin{equation}
 \label{eq:lam_D}
 L(\lambda_D|\ldots) \propto \frac{e^{-\lambda_D\;\epsilon  \; N} (\lambda_D\;\epsilon  \; N}{m_D!},
 \end{equation}
 %
-\subsubsection*{$\epsilon$: Outside-hospital death proportion}
+\subsubsection*{$\bm{\epsilon}$: Outside-hospital death proportion}
 %
 \begin{equation}
 \label{eq:p_osh}
 L(m_D|\ldots) \propto \frac{e^{-\lambda_D\;\epsilon  \; N} (\lambda_D\;\epsilon  \; N)^{m_D}}{m_D!}
 \end{equation}
 %
-\subsubsection*{$\phi_0$: True influenza-positivity rate, in non lethal outcomes)}
+\subsubsection*{$\bm{\phi_0}$: True influenza-positivity rate, in non lethal outcomes)}
 %
 \begin{equation}
 \label{eq:phi_0}
-L(\phi_0|\ldots) \propto \binom{m_H}{n_H} \left(\phi_0 \sum_{j} \pi_{0j} \sigma_{0j}\right)^{n_H} (1 - \phi_0 \sum_{j} \pi_{0j} \sigma_{0j})^{(m_H - n_H)} \times
+L(\phi_0|\ldots) \propto \binom{m_H}{n_H} \left(\phi_0 \sum_{j} \pi_{0j} \sigma_{0j}\right)^{n_H} (1 - \phi_0 \sum_{j} \pi_{0j} \sigma_{0j})^{m_H - n_H} \times
 \binom{above}{below}
 \end{equation}
 %
 
-\subsubsection*{$\pi_{kj}$: Testing probabilities in non-lethal outcomes, by test type}
+\subsubsection*{$\bm{\pi_{0j}}$: Testing probabilities in non-lethal outcomes, by test type}
 %
 \begin{equation}
 \label{eq:pi_kj}
