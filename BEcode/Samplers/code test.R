@@ -1,7 +1,10 @@
 parms <- c(10,100)
 dist <- "Poi"
 dist <- "binom"
-absc <- c(.05,.1,.15,.21,.25,.4,.5,.6,.7,.8,.9)
+absc <- c(.05,.15,.8,.9)
+
+abscPrep(absc,parms,dist)
+
 
 sls <- samples(absc,parms,dist,10000,.75)
 
