@@ -122,6 +122,12 @@ DataFrame abscPrep(NumericVector & absc, NumericVector & parms, std::string & di
       f2.push_back(f[i]);
     } 
   }
+  
+  IntegerVector randsel ;
+  
+  for (int i = 0 ; i < 5 ; i++) {
+    randsel.push_back(rand()%((user - userBeg))
+  }
   DataFrame df = DataFrame::create( Named("absc")=absc2, Named("f")=f2 ) ;
   return df;
 }
