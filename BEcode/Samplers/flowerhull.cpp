@@ -19,7 +19,7 @@ double flowerhull(double p, DataFrame df, IntegerVector & parms) {
   NumericVector absc = df[0], f = df[1] ;
   
   for (int i = 0 ; i < absc.size() ; i++ ) {
-    if (absc[i] < p) {
+    if (absc[i] <= p) {
       selind = i ;
     }
   }

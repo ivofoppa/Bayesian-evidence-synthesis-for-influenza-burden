@@ -13,7 +13,7 @@ using namespace Rcpp;
 //
 
 // [[Rcpp::export]]
-DataFrame fabscaug(DataFrame df, IntegerVector & parms, std::string dist, double zval) {
+NumericVector fabscaug(DataFrame df, IntegerVector & parms, std::string dist, double zval) {
   int selind = 0 ;
   NumericVector absc = df[0], f = df[1] ;
   
@@ -36,5 +36,5 @@ DataFrame fabscaug(DataFrame df, IntegerVector & parms, std::string dist, double
     int x = parms[0] ;
     f.insert(selind,R::dpois(x,zval,true)) ;
    }
-  return DataFrame::create(_["absc"] = absc,_["f"] = f) ;
+  return absc ;
 }
