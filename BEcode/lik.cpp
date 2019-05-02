@@ -14,16 +14,19 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 double lik(double pr, List & parms, std::string liktype) {
   double L = 999 ;
-  if (liktype=="ptestp") {
+  if (liktype=="ptest") {
     NumericVector ptest = parms["ptest"], ntot = parms["ntot"], sens = parm["sens"], pvec ;
-    IntegerVector  ttest = parms["ttest"] ;
+    IntegerVector  ttest = parms["ttest"];
+    int ind = parms["ind"] ;
+    
+    ptest[ind-1] = int (pr) ;
     
     for (int k=0 ; k < sens.size() ; k++) {
       pvec.push_back(sens[k] * ptest[k]) ;
     }
     
     double p2 = sum(pvec) ;
-    int ind = parms["ind"], x1 = ttest[ind-1], N1 =  ;
+    int x1 = ttest[ind-1], N1 = ntot[ind-1] ;
     L = R::dbinom(x1,N,pr,0) ;
   } else if (liktype=="binomN") {
     int x = parms["x"];
