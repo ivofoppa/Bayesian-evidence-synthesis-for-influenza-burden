@@ -11,7 +11,7 @@ agecatlist <- list(list(c(0,5),'<5'),
 ### Age specific estimates from Millman et al. EID 2015, 21 (9):
 cipcrlist <- list(c(95.0,82,98.7),c(95.0,82,98.7),c(94.1,81.1,98.7),c(94.1,81.1,98.7),c(86.1,79.6,92.7))
 cirapidlist <- list(c(66.7,61.3,71.7),c(66.7,61.3,71.7),c(53.9,47.8,59.8),c(53.9,47.8,59.8),c(20.1,8.8,41.4))
-# agecat <- 5
+# agcat <- 5
 for (agcat in 1:5){
   ### Make sure data set is not attached yet; if it is, detach it ...
   if (exists('ag'))

@@ -11,10 +11,11 @@ model {
   rfludeath ~ dunif(0,10)
 
   for (k in 1:2){
+    ## pt[k] is the prob. of influenza to be detected, as a function of testing prob. und sensitivity (by outcome)
     ## The three sensitivities, test probs and flu risks correspond to the 3 diff. tests;
     ## the 4th flu risk and 'test prob' represents those not tested
       
-    pt[k] <- (pflu[k]*ptest[k,1]*sens[k,1] + pflu[k]*ptest[k,2]*sens[k,2] + pflu[k]*ptest[k,3]*sens[k,3])/(pflu[k]*ptest[k,1] + pflu[k]*ptest[k,2] + pflu[k]*ptest[k,3] + pflu[k]*ptest[k,4])
+    pt[k] <- ptest[k,1]*sens[k,1] + ptest[k,2]*sens[k,2] + ptest[k,3]*sens[k,3]
       
     nttype[k,] ~ dmulti(ptest[k,1:4],ntot[k])   ### Observed testing freqs
       
