@@ -25,12 +25,20 @@ double lik(double pr, List & parms, std::string liktype) {
       pvec.push_back(sens[k] * ptest[k]) ;
     }
     
-    double p2 = sum(pvec) ;
+    double pt = sum(pvec) ;
     int x1 = ttest[ind-1], N1 = ntot[ind-1] ;
-    L = R::dbinom(x1,N,pr,0) ;
-  } else if (liktype=="binomN") {
+    pvec = NumericVector::create() ;
+    double pmultinom = 1;
+    for (int k = 0; k < ptest.size() ; k++) {
+      pmultinom *= pow(ptest[k],ttest[k]) ;
+    }
+    L = R::dbinom(x1,N,pr,0) * pmultinom ;
+
+      } else if (liktype=="binomN") {
     int x = parms["x"];
+        
     double p = parms["p"] ;
+    
     L = R::dbinom(x,pr,p,0) ;
   }
   return L ;
