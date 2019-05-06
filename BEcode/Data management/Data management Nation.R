@@ -7,7 +7,7 @@ agecatlist <- list(list(c(0,4),'<5'),
                    list(c(5,17),'5 to 17'),
                    list(c(18,49),'18-49'),
                    list(c(50,64),'50-64'),
-                   list(c(65,120),'65+'))
+                   list(c(65,110),'65+'))
 
 ### Age specific estimates from Millman et al. EID 2015, 21 (9):
 cipcrlist <- list(c(95.0,82,98.7),c(95.0,82,98.7),c(94.1,81.1,98.7),c(94.1,81.1,98.7),c(86.1,79.6,92.7))
@@ -26,9 +26,9 @@ for (i in 1:5){
   {detach(seldata)}
 }
 
-agcat <- 4
-
-agecatls <- agecatlist[[agcat]]
+# agcat <- 4
+# 
+# agecatls <- agecatlist[[agcat]]
 #########################################################################################
 ###  Defining influenza seasons #########################################################
 #########################################################################################
@@ -43,7 +43,7 @@ setwd(paste0(bfolder,'BEdata'))
 mmwrdat0<-read.table("mmwrweeks.txt",header=T)
 mmwrdat<-mmwrdat0[which((mmwrdat0$wyear==fromyr&mmwrdat0$week>=fromwk)|(mmwrdat0$wyear>fromyr&mmwrdat0$wyear<toyr)|(mmwrdat0$wyear==toyr&mmwrdat0$week<=towk)),]
 
-DVDun <- mmwrdat$dvdweek
+DVD <- mmwrdat$dvdweek
 
 N <- length(mmwrdat$dvdweek)
 seasbeg <- which(mmwrdat$week==fromwk)
@@ -52,7 +52,7 @@ time <- (1:N)/N
 
 seaslist <- list()
 for (seas in 1:nseas){
-  seaslist[[seas]] <- c(max(seasbeg[seas],3),min(seasend[seas],N))
+  seaslist[[seas]] <- c(DVD[seasbeg[seas]],DVD[seasend[seas]])
 }
 #########################################################################################
 ###  FluSurv-NET data set ###############################################################
@@ -60,7 +60,7 @@ for (seas in 1:nseas){
 ### Data managment for detection multiplier
 setwd(paste0(bfolder,'BEdata'))
 
-dataset <- data.frame(read.csv('20181214_1415burden_bysite.csv'))
+dataset <- data.frame(read.csv('20181214_1415burden_bysite_simple.csv'))
 
 ### Changing vars into simple values
 for (k in 1:length(dataset[1,])) {
@@ -70,8 +70,93 @@ for (k in 1:length(dataset[1,])) {
 DateHosp <- as.Date(dataset$DateHosp,"%m/%d/%Y")
 dataset$DateHosp <- DateHosp
 
-statels <- unique(dataset$State)
-seaslabls <- sapply(1:7, function(s) paste0(10 + s-1,10 + s))
+mmwrdat0$mmwrstrt <- as.Date(mmwrdat0$mmwrstrt,"%m/%d/%Y")
+mmwrdat0$mmwrend <- as.Date(mmwrdat0$mmwrend,"%m/%d/%Y")
+
+DVD <- sapply(DateHosp, function(d) mmwrdat0$dvdweek[which(mmwrdat0$mmwrstrt<=d & mmwrdat0$mmwrend >=d)])
+dataset$DVD <- DVD
+### selecting relevant time period
+selind <- which(dataset$DVD>=as.numeric(paste0(fromyr,fromwk)) & dataset$DVD <= as.numeric(paste0(toyr,towk)))
+dataset <- dataset[selind,]
+
+seaslabls <- sapply(1:6, function(s) paste0(10 + s-1,10 + s))
+
+### modified season: 1,...,6
+season2 <- dataset$season
+for (k in 1:6) {
+  selind <- which(dataset$DVD >= seaslist[[k]][1] & dataset$DVD <= seaslist[[k]][2])
+  season2[selind] <- k
+}
+### Defining agecat
+agecat <- dataset$Age
+for (ag in 1:5) {
+  selind <- whin(dataset$Age %in% c(agecatlist[[ag]][[1]][1]:agecatlist[[ag]][[1]][2]))
+  agecat[selind] <- round(ag)
+}
+dataset$agecat <- agecat
+
+
+dataset$season <- season2
+
+TestTyperec <- sapply(dataset$TestType, function(t) ifelse(t==1,1,ifelse(t==2,2,ifelse(t%in%3:6,3,0))))
+dataset$TestTyperec <- as.vector(TestTyperec)
+
+datasetcum <- NULL
+
+for (seas in 1:6) {
+  for (ag in 1:5) {
+ ## died
+    selseasagind1 <- which(dataset$agecat==ag & 
+                             dataset$season==seas & dataset$Died==1)
+    datasetagseas1 <- dataset[selseasagind1,]
+    if (length(selseasagind1) > 0) {
+      for (tt in 1:3) {
+        numtest1 <- length(which(datasetagseas1$TestedFlu==1 &
+                                   datasetagseas1$TestTyperec==tt, datasetagseas1$TestResult==1))
+        numtest0 <- length(which(datasetagseas1$TestedFlu==1 &
+                                   datasetagseas1$TestTyperec==tt, datasetagseas1$TestResult!=1))
+        
+        el1 <- c(seas,ag,died=1,TestdFlu=1,TestType=tt,TestResult=1,freq=numtest1)
+        el0 <- c(seas,ag,died=1,TestdFlu=1,TestType=tt,TestResult=0,freq=numtest0)
+        datasetcum <- rbind(datasetcum,el1,el0,deparse.level = 0)
+      }
+    } else {
+      el1 <- c(seas,ag,died=1,TestdFlu=1,TestType=tt,TestResult=1,freq=0)
+      el0 <- c(seas,ag,died=1,TestdFlu=1,TestType=tt,TestResult=0,freq=0)
+      datasetcum <- rbind(datasetcum,el1,el0,deparse.level = 0)
+    }
+    num <- length(which(datasetagseas1$TestedFlu!=1))
+    el <- c(seas,ag,died=died,TestdFlu=0,TestType=0,TestResult=0,freq=num)
+    datasetcum <- rbind(datasetcum,el,deparse.level = 0)
+    ##did not die
+    selseasagind0 <- which(dataset$agecat==ag & 
+                             dataset$season==seas & dataset$Died!=1)
+    datasetagseas0 <- dataset[selseasagdind0,]
+    if (length(selseasagind1) > 0) {
+      for (tt in 1:3) {
+        numtest1 <- length(which(datasetagseas0$TestedFlu==1 &
+                                   datasetagseas0$TestTyperec==tt, datasetagseas0$TestResult==1))
+        numtest0 <- length(which(datasetagseas0$TestedFlu==1 & 
+                                   datasetagseas0$TestTyperec==tt, datasetagseas0$TestResult!=1))
+        
+        el1 <- c(seas,ag,died=0,TestdFlu=1,TestType=tt,TestResult=1,freq=numtest1)
+        el0 <- c(seas,ag,died=0,TestdFlu=1,TestType=tt,TestResult=0,freq=numtest0)
+        datasetcum <- rbind(datasetcum,el1,el0,deparse.level = 0)
+      } 
+    } else {
+        el1 <- c(seas,ag,died=1,TestdFlu=1,TestType=tt,TestResult=1,freq=0)
+        el0 <- c(seas,ag,died=1,TestdFlu=1,TestType=tt,TestResult=0,freq=0)
+        datasetcum <- rbind(datasetcum,el1,el0,deparse.level = 0)
+    }
+    
+    num <- length(which(datasetagseas0$TestedFlu!=1))
+    el <- c(seas,ag,died=died,TestdFlu=0,TestType=0,TestResult=0,freq=num)
+    datasetcum <- rbind(datasetcum,el,deparse.level = 0)
+    
+  }
+}
+datasetcum <- data.frame(datasetcum)
+colnames(datasetcum) <- c('season','ag','died','TestFlu','TestType','TestResult','freq')
 #########################################################################################
 ### NCHS data set: Weekly mortality by age group, week, diagnostic group and ############
 ### place of death for proportion deaths outside the hospital                ############
@@ -86,7 +171,7 @@ for (k in 1:length(dataset2[1,])) {
   dataset2[,k] <- as.vector(dataset2[,k])
 }
 ###  Creating a season variable #########################################################
-seasvar <- NULL
+seasvar <- dataset2$DVD*0
 for (seas in 1:nseas){
   seaslim <- seaslist[[seas]]
   seasselind <- which(dataset2$DVD %in% DVDun[seaslim[1]:seaslim[2]])
@@ -108,7 +193,6 @@ for (seas in 1:nseas){
   }
 }
 
-
 for (col in c(1:5)){
   dataset2cum[,col] <- as.numeric(dataset2cum[,col])
 }
@@ -126,19 +210,14 @@ for (s in 1:7){
   seas <- seaslabls[[s]]
   xlsFile <- paste0('NCHS ',seas,' population estimates.xls')
   popfile <- read_excel(xlsFile, sheet = 1)
-  for (st in statels){
-    for (ag in 1:5){
-      aglim <- agecatlist[[ag]][[1]]
-      stpopselind <- which(substr(ls,1,2)==st)
-      if (length(stpopselind) > 1){
-        stpopdat <- cbind(popfile$age, rowSums(popfile[,stpopselind]),deparse.level = 0)
-      } else stpopdat <- cbind(popfile$age, popfile[,stpopselind],deparse.level = 0)
-      agpopselind <- which(stpopdat[,1] >= aglim[1] & stpopdat[,1] <= aglim[2])
-      agpop <- sum(stpopdat[agpopselind,2])
-      
-    }
+  for (ag in 1:5){
+    aglim <- agecatlist[[ag]][[1]]
+      popdat <- cbind(popfile$age, rowSums(popfile[,stpopselind]),deparse.level = 0)
+    } else stpopdat <- cbind(popfile$age, popfile[,stpopselind],deparse.level = 0)
+    agpopselind <- which(stpopdat[,1] >= aglim[1] & stpopdat[,1] <= aglim[2])
+    agpop <- sum(stpopdat[agpopselind,2])
+    
   }
-  
 }
 
 #########################################################################################
