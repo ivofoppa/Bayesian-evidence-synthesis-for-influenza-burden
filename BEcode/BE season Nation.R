@@ -10,35 +10,26 @@ agecatlist <- list(list(c(0,4),'<5'),
                    list(c(65,120),'65+'))
 
 ### Load data 
-infname <- 'FluSURV-NET_burden.RData'
+infname <- 'FluSURV-NET.RData'
 setwd(paste0(bfolder,'BEdata'))
 load(infname)
-nseas <- 5
-#########################################################################################
-###  The following only needed for US pop data; when doing national analysis  ###########
-#########################################################################################
-# inputdata <- read.csv('Burden inputs All Ages.csv',header = T)
-# agcatls <- unique(agls)
-# agls <- as.vector(inputdata$ag)
-# agls2 <- sapply(agls, function(ag) which(agcatls==ag))
-# agls2 <- as.vector(unlist(agls2))
-# inputdata$ag <- agls2
+nseas <- 6
 #########################################################################################
 #########################################################################################
 ###  FluSurv-NET data set ###############################################################
 ###  Subsetting by site and age group ###################################################
 #########################################################################################
-###  FluSurvdata,sensdata,agseaspop,oshdat
+###  FSNdata,sensdata,agseaspop,oshdat
 agcat <- 5
 
-selind1 <- which(FluSurvdata$ag==agcat)
-FluSurvdatasel <- FluSurvdata[selind1,]
+selind1 <- which(FSNdata$agecat==agcat)
+FSNdatasel <- FSNdata[selind1,]
 
-selind2 <- which(agseaspop$ag==agcat)
-agseaspopsel <- agseaspop[selind2,]
+selind2 <- which(popdata$agecat==agcat)
+agpopsel <- popdata[selind2,]
 
-selind3 <- which(oshdat$ag==agcat)
-oshdatsel <- oshdat[selind3,]
+selind3 <- which(OSHdata$agecat==agcat)
+oshdatsel <- OSHdata[selind3,]
 
 sensdatasel <- list(sensdata[[1]][[agcat]],sensdata[[2]][[agcat]])
 
@@ -49,33 +40,37 @@ ntotarr <- array(0,dim = c(2,nseas))
 testposarr <- array(0,dim = c(2,3,nseas))
 poshls <- NULL
 
-FSNfluhosptotls <- NULL
+FSNfluhospls <- NULL
 FSNfludeathls <- NULL
-
+#########################################################################################
+###  Note: These calcuations for outcome P&I   ##########################################
+#########################################################################################
 for (seas in 1:nseas){
   nttype <- array(0,dim = c(2,4))
   ntot <- c(0,0)
-  fluhosp <- 0
-  fludeath <- 0
   testpos <- array(0,dim = c(2,3))
   for (d in c(0,1)){
-    selind2 <- which(FluSurvdatasel$died==d & FluSurvdatasel$season==seas)
-    ds <- FluSurvdatasel[selind2,]
-    nttype[d+1,1] <- length(which(ds$TestedFlu==1 & ds$TestType==1)) # PCR
-    nttype[d+1,2] <- length(which(ds$TestedFlu==1 & ds$TestType==2)) # RIDT
-    nttype[d+1,3] <- length(which(ds$TestedFlu==1 & ds$TestType==3)) # Other/unknown
-    nttype[d+1,4] <- length(which(ds$TestedFlu!=1)) # not tested
+    selind2 <- which(FSNdatasel$died==d & FSNdatasel$season==seas)
+    ds <- FSNdatasel[selind2,]
+    nttype[d+1,1] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==1)]) # PCR
+    nttype[d+1,2] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==2)]) # RIDT
+    nttype[d+1,3] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==3)]) # Other/unknown
+    nttype[d+1,4] <- sum(ds$freq[which(ds$TestedFlu!=1)]) # not tested
     
     ntot[d+1] <- nttype[d+1,1] + nttype[d+1,2] + nttype[d+1,3] + nttype[d+1,4]
-    fluhosp <- fluhosp + length(ds$died)
-    fludeath <- fludeath + d*length(ds$died)
     
-    testpos[d+1,1] <- length(which(ds$TestedFlu==1 & ds$TestType==1 & ds$TestResult==1)) # PCR
-    testpos[d+1,2] <- length(which(ds$TestedFlu==1 & ds$TestType==2 & ds$TestResult==1)) # Other/unknown
-    testpos[d+1,3] <- length(which(ds$TestedFlu==1 & ds$TestType==3 & ds$TestResult==1)) # Other/unknown
-
+    testpos[d+1,1] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==1 & ds$TestResult==1)]) # PCR
+    testpos[d+1,2] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==2 & ds$TestResult==1)]) # Other/unknown
+    testpos[d+1,3] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==3 & ds$TestResult==1)]) # Other/unknown
+  if (d==0) {
+    fluhosp <- sum(ds$freq)
+    }
+    if (d==1) {
+      fludeath <- sum(ds$freq)
+    }
   }
-  FSNfluhosptotls[seas] <- fluhosp
+  
+  FSNfluhospls[seas] <- fluhosp
   FSNfludeathls[seas] <- fludeath
   #########################################################################################
   ###  nttype according to all hosp/died system ###########################################
@@ -93,11 +88,11 @@ for (seas in 1:nseas){
   selind4 <- which(oshdatsel$season==seas)
   ds <- oshdatsel[selind4,]
   
-  poshls[seas] <- sum(ds$freq[which(ds$osh==1)])/(sum(ds$freq))
+  poshls[seas] <- sum(ds$pi[which(ds$osh==1)])/(sum(ds$pi))
   
 }
 
-FSNfluhospls <- FSNfluhosptotls - FSNfludeathls ## Non-fatal flu hosp.s
+FSNfluhosptotls <- FSNfluhospls + FSNfludeathls ## Non-fatal flu hosp.s
 #########################################################################################
 #########################################################################################
 #########################################################################################
@@ -112,27 +107,28 @@ cirapid <- sensdatasel[[2]]/100
 selograpidest <- ((log(cirapid[3]) - log(cirapid[1])) + (log(cirapid[1]) - log(cirapid[2])))/2/1.96
 lrapidsens <- c(log(cirapid[1]),selograpidest)
 
-FSNpopls <- agseaspopsel[1:5,4]
+FSNpopls <- agpopsel[1:nseas,4]
+USpopls  <- agpopsel[1:nseas,3]
 
-data <- list('FSNfluhospls'=FSNfluhospls,'FSNpopls'=FSNpopls, 'Npop' = USpop,
+data <- list('FSNfluhospls'=FSNfluhospls,'FSNpopls'=FSNpopls, 'USpopls' = USpopls,
                'poshls'=poshls,'FSNfludeathls'=FSNfludeathls,
                'nttypearr'=nttypearr,'testposarr'=testposarr,'pcrsens'=pcrsens,
-             'lrapidsens'=lrapidsens,'ntotarr'=ntotarr)
+             'lrapidsens'=lrapidsens,'ntotarr'=ntotarr,'nseas'=nseas)
 
-ptesttot <- t(sapply(1:2, function(k) sapply(1:5, function(s) sum(nttypearr[k,,s]))))
+ptesttot <- t(sapply(1:2, function(k) sapply(1:nseas, function(s) sum(nttypearr[k,,s]))))
 
-ptestarr10init <- nttypearr[,1,]/ptesttot
-ptestarr20init <- nttypearr[,2,]/ptesttot
-ptestarr30init <- nttypearr[,3,]/ptesttot
-ptestarr40init <- nttypearr[,4,]/ptesttot
+ptestarr10init <- nttypearr[,1,1:nseas]/ptesttot
+ptestarr20init <- nttypearr[,2,1:nseas]/ptesttot
+ptestarr30init <- nttypearr[,3,1:nseas]/ptesttot
+ptestarr40init <- nttypearr[,4,1:nseas]/ptesttot
 
-sens1arrinit <- sapply(1:5, function(s) c(pcrsens[1],pcrsens[1]))
-logsens2arrinit <- sapply(1:5, function(s) c(lrapidsens[1],lrapidsens[1]))
-sens3arrinit <- sapply(1:5, function(s) c(.4,.4))
+sens1arrinit <- sapply(1:nseas, function(s) c(pcrsens[1],pcrsens[1]))
+logsens2arrinit <- sapply(1:nseas, function(s) c(lrapidsens[1],lrapidsens[1]))
+sens3arrinit <- sapply(1:nseas, function(s) c(.4,.4))
 
-sensarrinit <- array(0,dim = c(2,3,5))
+sensarrinit <- array(0,dim = c(2,3,nseas))
 
-for (seas in 1:5) {
+for (seas in 1:nseas) {
   for (k in 1:2){
     sensarrinit[k,1,seas] <- sens1arrinit[k,seas]
     sensarrinit[k,2,seas] <- exp(logsens2arrinit[k,seas])
@@ -144,7 +140,7 @@ fluposarrinit <- round(testposarr/sensarrinit)
 
 for (k in 1:2) {
   for (t in 1:3) {
-    for (seas in 1:5) {
+    for (seas in 1:nseas) {
       if (fluposarrinit[k,t,seas] > nttypearr[k,t,seas]) {
         fluposarrinit[k,t,seas] <- nttypearr[k,t,seas]
       }
@@ -154,12 +150,11 @@ for (k in 1:2) {
 
 
 ## Add one to ensure non-zero denominator
-pfluarrinit <- sapply(1:nseas, function(s) sapply(c(testposarr[,1,s]/sens1arrinit[,s] + testposarr[,2,s]/exp(logsens2arrinit[,s]) + 
-                                                      testposarr[,3,s]/sens3arrinit[,s])/rowSums(nttypearr[,1:3,s]+1),
-                   function(x) ifelse(x > .5,min(x,.95),max(x,.1))))
-
 rfluhosplsinit <- FSNfluhospls /FSNpopls*3
-rfludeathlsinit <- FSNfludeathls/FSNpopls/(1 - poshls )
+rfludeathlsinit <- FSNfludeathls/FSNpopls/(1 - poshls)
+
+USfludeathlsinit <- rfludeathlsinit*USpopls
+USfluhosplsinit <- rfluhosplsinit*USpopls
 
 inits <- function(){
   list(
@@ -169,14 +164,13 @@ inits <- function(){
     ptestarr20 = ptestarr20init,
     ptestarr30 = ptestarr30init,
     ptestarr40 = ptestarr40init,
-    pfluarr = pfluarrinit,
     fluposarr = fluposarrinit,
     sens1arr = sens1arrinit,
     logsens2arr = logsens2arrinit,
     sens3arr = sens3arrinit
   )}
 
-variables <- c('rfluhospls')
+variables <- c('USfluhospls')
 # variables <- c('pt')
   # variables <- c('pt')
   
@@ -190,7 +184,7 @@ setwd(paste0(bfolder,'BEmodels'))
 j.model <- jags.model(file=model.file,data=data, inits=inits, n.adapt=nadapt, n.chains=3)
 j.samples<-coda.samples(j.model, variable.names=variables, n.iter=niter, thin = 5) 
 
-  summary(j.samples)
+summary(j.samples)
   
   codals <- rbind(j.samples[[1]],j.samples[[2]],j.samples[[3]],deparse.level=0)
   codalsdiffsimpl <- data.frame(codals)

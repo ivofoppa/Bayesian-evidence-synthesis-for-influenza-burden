@@ -12,6 +12,7 @@ agecatlist <- list(list(c(0,4),'<5'),
 ### Age specific estimates from Millman et al. EID 2015, 21 (9):
 cipcrlist <- list(c(95.0,82,98.7),c(95.0,82,98.7),c(94.1,81.1,98.7),c(94.1,81.1,98.7),c(86.1,79.6,92.7))
 cirapidlist <- list(c(66.7,61.3,71.7),c(66.7,61.3,71.7),c(53.9,47.8,59.8),c(53.9,47.8,59.8),c(20.1,8.8,41.4))
+sensdata <- list(cipcrlist,cirapidlist)
 #########################################################################################
 ### Reading-in data set and making sure DateHosp is actually data variable  #############
 #########################################################################################
@@ -63,8 +64,8 @@ setwd(paste0(bfolder,'BEdata'))
 dataset <- data.frame(read.csv('20181214_1415burden_bysite_simple.csv'))
 
 ### Changing vars into simple values
-for (k in 1:length(dataset[1,])) {
-  dataset[,k] <- as.vector(dataset[,k])
+for (k in 4:length(dataset[1,])) {
+  dataset[,k] <- as.integer(as.vector(dataset[,k]))
 }
 
 DateHosp <- as.Date(dataset$DateHosp,"%m/%d/%Y")
@@ -87,16 +88,14 @@ for (k in 1:6) {
   selind <- which(dataset$DVD >= seaslist[[k]][1] & dataset$DVD <= seaslist[[k]][2])
   season2[selind] <- k
 }
+dataset$season <- season2
 ### Defining agecat
 agecat <- dataset$Age
 for (ag in 1:5) {
-  selind <- whin(dataset$Age %in% c(agecatlist[[ag]][[1]][1]:agecatlist[[ag]][[1]][2]))
+  selind <- which(dataset$Age %in% c(agecatlist[[ag]][[1]][1]:agecatlist[[ag]][[1]][2]))
   agecat[selind] <- round(ag)
 }
 dataset$agecat <- agecat
-
-
-dataset$season <- season2
 
 TestTyperec <- sapply(dataset$TestType, function(t) ifelse(t==1,1,ifelse(t==2,2,ifelse(t%in%3:6,3,0))))
 dataset$TestTyperec <- as.vector(TestTyperec)
@@ -112,51 +111,50 @@ for (seas in 1:6) {
     if (length(selseasagind1) > 0) {
       for (tt in 1:3) {
         numtest1 <- length(which(datasetagseas1$TestedFlu==1 &
-                                   datasetagseas1$TestTyperec==tt, datasetagseas1$TestResult==1))
+                                   datasetagseas1$TestTyperec==tt & datasetagseas1$TestResult==1))
         numtest0 <- length(which(datasetagseas1$TestedFlu==1 &
-                                   datasetagseas1$TestTyperec==tt, datasetagseas1$TestResult!=1))
+                                   datasetagseas1$TestTyperec==tt & datasetagseas1$TestResult!=1))
         
-        el1 <- c(seas,ag,died=1,TestdFlu=1,TestType=tt,TestResult=1,freq=numtest1)
-        el0 <- c(seas,ag,died=1,TestdFlu=1,TestType=tt,TestResult=0,freq=numtest0)
+        el1 <- c(seas,ag,1,1,tt,1,numtest1)
+        el0 <- c(seas,ag,1,1,tt,0,numtest0)
         datasetcum <- rbind(datasetcum,el1,el0,deparse.level = 0)
       }
     } else {
-      el1 <- c(seas,ag,died=1,TestdFlu=1,TestType=tt,TestResult=1,freq=0)
-      el0 <- c(seas,ag,died=1,TestdFlu=1,TestType=tt,TestResult=0,freq=0)
+      el1 <- c(seas,ag,1,1,tt,1,0)
+      el0 <- c(seas,ag,1,1,tt,0,0)
       datasetcum <- rbind(datasetcum,el1,el0,deparse.level = 0)
     }
     num <- length(which(datasetagseas1$TestedFlu!=1))
-    el <- c(seas,ag,died=died,TestdFlu=0,TestType=0,TestResult=0,freq=num)
+    el <- c(seas,ag,1,0,0,0,num)
     datasetcum <- rbind(datasetcum,el,deparse.level = 0)
     ##did not die
     selseasagind0 <- which(dataset$agecat==ag & 
                              dataset$season==seas & dataset$Died!=1)
-    datasetagseas0 <- dataset[selseasagdind0,]
+    datasetagseas0 <- dataset[selseasagind0,]
     if (length(selseasagind1) > 0) {
       for (tt in 1:3) {
         numtest1 <- length(which(datasetagseas0$TestedFlu==1 &
-                                   datasetagseas0$TestTyperec==tt, datasetagseas0$TestResult==1))
+                                   datasetagseas0$TestTyperec==tt & datasetagseas0$TestResult==1))
         numtest0 <- length(which(datasetagseas0$TestedFlu==1 & 
-                                   datasetagseas0$TestTyperec==tt, datasetagseas0$TestResult!=1))
+                                   datasetagseas0$TestTyperec==tt & datasetagseas0$TestResult!=1))
         
-        el1 <- c(seas,ag,died=0,TestdFlu=1,TestType=tt,TestResult=1,freq=numtest1)
-        el0 <- c(seas,ag,died=0,TestdFlu=1,TestType=tt,TestResult=0,freq=numtest0)
+        el1 <- c(seas,ag,0,1,tt,1,numtest1)
+        el0 <- c(seas,ag,0,1,tt,0,numtest0)
         datasetcum <- rbind(datasetcum,el1,el0,deparse.level = 0)
       } 
     } else {
-        el1 <- c(seas,ag,died=1,TestdFlu=1,TestType=tt,TestResult=1,freq=0)
-        el0 <- c(seas,ag,died=1,TestdFlu=1,TestType=tt,TestResult=0,freq=0)
+        el1 <- c(seas,ag,0,1,tt,1,0)
+        el0 <- c(seas,ag,0,1,tt,0,0)
         datasetcum <- rbind(datasetcum,el1,el0,deparse.level = 0)
     }
     
     num <- length(which(datasetagseas0$TestedFlu!=1))
-    el <- c(seas,ag,died=died,TestdFlu=0,TestType=0,TestResult=0,freq=num)
+    el <- c(seas,ag,0,0,0,0,num)
     datasetcum <- rbind(datasetcum,el,deparse.level = 0)
-    
   }
 }
-datasetcum <- data.frame(datasetcum)
-colnames(datasetcum) <- c('season','ag','died','TestFlu','TestType','TestResult','freq')
+colnames(datasetcum) <- c('season','agecat','died','TestedFlu','TestType','TestResult','freq')
+FSNdata <- data.frame(datasetcum)
 #########################################################################################
 ### NCHS data set: Weekly mortality by age group, week, diagnostic group and ############
 ### place of death for proportion deaths outside the hospital                ############
@@ -171,10 +169,11 @@ for (k in 1:length(dataset2[1,])) {
   dataset2[,k] <- as.vector(dataset2[,k])
 }
 ###  Creating a season variable #########################################################
+DVDun <- unique(DVD)
 seasvar <- dataset2$DVD*0
 for (seas in 1:nseas){
   seaslim <- seaslist[[seas]]
-  seasselind <- which(dataset2$DVD %in% DVDun[seaslim[1]:seaslim[2]])
+  seasselind <- which(dataset2$DVD %in% c(seaslim[1]:seaslim[2]))
   seasvar[seasselind] <- seas
 }
 
@@ -196,34 +195,23 @@ for (seas in 1:nseas){
 for (col in c(1:5)){
   dataset2cum[,col] <- as.numeric(dataset2cum[,col])
 }
-colnames(dataset2cum) <- c('season','ag','rcu','pi','osh')
-dataset2cum <- data.frame(dataset2cum)
+colnames(dataset2cum) <- c('season','agecat','rcu','pi','osh')
+OSHdata <- data.frame(dataset2cum)
 #########################################################################################
 ###  Reading-in denominator data ########################################################
 #########################################################################################
-library(readxl)
 # 
-dataset2cum$pop <- dataset2cum$rcu*0
 
-
-for (s in 1:7){
-  seas <- seaslabls[[s]]
-  xlsFile <- paste0('NCHS ',seas,' population estimates.xls')
-  popfile <- read_excel(xlsFile, sheet = 1)
-  for (ag in 1:5){
-    aglim <- agecatlist[[ag]][[1]]
-      popdat <- cbind(popfile$age, rowSums(popfile[,stpopselind]),deparse.level = 0)
-    } else stpopdat <- cbind(popfile$age, popfile[,stpopselind],deparse.level = 0)
-    agpopselind <- which(stpopdat[,1] >= aglim[1] & stpopdat[,1] <= aglim[2])
-    agpop <- sum(stpopdat[agpopselind,2])
-    
-  }
-}
+popdata <- read.csv("FSNpop.csv")
 
 #########################################################################################
 setwd(paste0(bfolder,'BEdata'))
-outfname <- 'OSHdeath_2010-2016,FluSURV-NET.csv'
-write.csv(dataset2cum,file = outfname,quote = F)
+outfname <- 'FluSURV-NET.Rdata'
+save(FSNdata,OSHdata,popdata,sensdata,file = outfname)
 #########################################################################################
 #########################################################################################
 #########################################################################################
+bfolder <- 'C:/Users/VOR1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/'
+setwd(paste0(bfolder,'BEdata'))
+infname <- 'FluSURV-NET.Rdata'
+load(infname)
