@@ -1,0 +1,61 @@
+\scalebox{3}{
+	\begin {tikzpicture}[>= stealth,scale=2.2]
+	
+	\node (N)  at (0.5,1.5) {$N$};
+	\node (lamH)  at (0,1.5) {$\lambda_H$};
+    \node (lamD) at (1,1.5) {$\lambda_D$};
+	\node (nH) at (0,1) {$n_H$};
+	\node (nHast)[rectangle,draw] at (0,.5) {$n^\ast_H$};%observed
+	\node (nD) at (1,1) {$n_D$};
+	\node (nDast)[rectangle,draw] at (1,.5) {$n^\ast_D$};%observed
+	
+	\node(A2a) at (0,.75) {} ;
+	\node(A2b) at (1,.75) {} ;
+	
+	\node(pi) at (1.5,.75) {$\pi$} ; %proportion deaths ish
+	\node(D)[rectangle,draw] at (2,1) {$D$} ; %all deaths NCHS
+	\node(DH)[rectangle,draw] at (2,.5) {$D_H$} ; %all deaths NCHS
+	\node(A3) at (2,.75) {} ;
+
+
+	\node (pt) at (.5,.75) {$p_k$}; %prob. detection
+	\node (phi) at (1.,0) {$\phi_{k,t}$}; % test dist 
+	\node (T)[rectangle,draw] at (.5,0) {$T_{k,t}$}; % observed, # number tests
+	\node (sens) at (0,0) {$\sigma_{k,t}$}; % test sens
+	\node (rho)[ellipse,inner sep=0.5pt,draw] at (-.5,.25) {$\rho_{k,t}$}; % prior for sens 
+	
+	\node (pf) at (0,-.25) {$f_k$}; % true flupos
+	\node (nF)[rectangle,draw] at (.5,-.5) {$F_{k,t}$}; %observed flu positives
+
+
+	\draw[->](N) edge (nH);
+	\draw[->](N) edge (nD);
+
+	\draw[->](lamH) edge (nH);
+	\draw[->](lamD) edge (nD);
+	\draw[->](nH) edge (nHast);
+\draw[->](nD) edge (nDast);
+\draw[->] (pt) edge (A2a);
+\draw[->] (pt) edge (A2b);
+
+\draw[->] (pi) edge (A2b);
+\draw[->] (pi) edge (A3);
+\draw[->] (D) edge (DH);
+
+\draw[->] (rho) edge (sens) ;
+\draw[->] (sens) edge (pt) ;
+\draw[->] (phi) edge (pt) ;
+
+\draw[->] (T) edge (nF) ;
+
+	\node(A4) at (.5,-.25) {} ;
+\draw[->] (pf) edge (A4) ;
+\draw[->] (phi) edge (T) ;
+\draw[->] (sens) edge (A4) ;
+
+
+	\end {tikzpicture}
+}
+%	\draw[->](lamH) edge [out=300,in=180] (nH);
+
+%	\draw[->,line width=.8pt,color=red](nH) edge (nHast);

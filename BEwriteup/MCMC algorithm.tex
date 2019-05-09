@@ -1,5 +1,6 @@
 \documentclass{article}[12pt]
-\usepackage{amsmath,amssymb,authblk,bm,bm,caption,graphicx,hyperref,lscape,mathrsfs,setspace,subcaption,tabularx,tkz-graph,upgreek,url}
+\usepackage{amsmath,amssymb,authblk,bm,bm,caption,graphicx,hyperref,lscape,mathrsfs,setspace,subcaption,tabularx,
+	tkz-graph,upgreek,url}
 \usetikzlibrary{shapes.geometric}
 \usepackage[letterpaper, margin=2.5cm]{geometry}
 \usepackage[backend=biber,style=numeric,isbn=false,sorting=none,giveninits=true,terseinits=true]{biblatex}
@@ -57,92 +58,44 @@
 \DeclareMathOperator{\Poi}{\operatorname{Poi}}
 %
 \addbibresource{biblio.bib}
-\title{MCMC for Influenza Burden Estimation from Hospitalization Surveillance data} 
+\title{Bayesian Evidence Synthesis for Influenza Burden Estimation from Hospitalization Surveillance data} 
 %
 \author[1,2,*]{Ivo M Foppa}
 %
-\author[2]{\ldots}
-\affil[1]{Battelle Memorial Institute, Atlanta, Georgia, USA}
-\affil[2]{Influenza Division, Centers for Disease Control and Prevention, 1600 Clifton Road NE, Atlanta, 30333 Georgia, USA}
-\affil[*]{Corresponding Author, Influenza Division, Centers for Disease Control and Prevention, 1600 Clifton Road NE, MS A-20, Atlanta, 30333 Georgia, USA, \nolinkurl{vor1@cdc.gov}}
-\date{}
+\date{May 10, 2019}
 %
 %----------------------------------------------------------------------------------------
 \begin{document}
 	{\let\newpage\relax\maketitle}	
 	\maketitle%
 	%
-	\subsection*{Data} 
+	\subsection*{Notation} 
 	%
 \begin{enumerate}
-	\item $N$: Total FluSurv-NET (FSN) population (given stratum, e.g. age group, state, etc.)
-	\item $M$: Total US population 
-	\item $n_H$: Number of observed influenza hospitalizations with non-lethal outcome
-	\item $n_D$: Observed influenza deaths
-	\item $t_{kj}$: Numbers tested by outcome and test type (1: PCR, 2: Rapid, 3: Other, 4: No test)
-	\item $\rho_{k}$: Prior dist. for test sensitivities (PCR, rapid; mean, SD)
+	\item $N$: Total FluSurv-NET (FSN) population (given stratum, e.g. age group etc.)
+\item $n_H$: Number of total (observed and unobserved) influenza hospitalizations with non-lethal outcome
+\item \textbf{$n^\ast_{H}$: Number of observed influenza hospitalizations with non-lethal outcome}
+\item $\lambda_H$: Rate of non-lethal flu hospitalizations per population
+\item $n_D$: Total (observed and unobserved) influenza deaths
+\item\textbf{ $n^\ast_D$: Observed influenza deaths}
+\item $\lambda_D$: Rate of lethal flu hospitalizations per population
+\item $p_{k}$: Probability influenza-associated outcomes ($k=0$: non-lethal, $k=1$: lethal) that are correctly attributed to influenza
+\item\textbf{ $T_{k,j}$: Numbers tested by outcome and test type (1: PCR, 2: Rapid, 3: Other, 4: No test)}
+\item \textbf{$\rho_{k}$: Prior dist. for test sensitivities (PCR, rapid; mean, SD) by outcome}
+\item $\phi$: Proportion of deaths inside hospital
+\item $D$: Total NCHS deaths (per syndromic cause and stratum)
+\item $D_H$: NCHS deaths inside hospital (per syndromic cause and stratum)
 \end{enumerate}
 	%
-\subsection*{Parameters to be sampled, fully conditional likelihoods $L$} 
-\subsubsection*{$\bm{m_H}$: True number of influenza hospitalizations (non-letal) in FSN population, unobserved}
 %
-\begin{equation}
-\label{eq:m_H}
-L(m_H|\ldots) \propto \frac{e^{-\lambda_H \; N} (\lambda_H \; N)^{m_H}}{m_H!}\times \binom{m_H}{n_H} \tau_0^{n_H} (1 - \tau_0)^{(m_H - n_H)},
-\end{equation}
-%
-where the ``detection probability'' in those with non-lethal outcomes is 
-$t_0 = \phi_0 \sum_{j} \pi_{0j} \sigma_{0j}$; definitions of $\phi_0, \pi_{0j},\text{ and } \sigma_{0j}$ as given below.
-%
-\subsubsection*{$\bm{\lambda_H}$: Influenza hospitalization rate, non-lethal outcome}
-%
-\begin{equation}
-\label{eq:lam_H}
-L(\lambda_H)|\ldots) \propto \frac{e^{-\lambda_H \; N} (\lambda_H \; N)^{m_H}}{m_H!}\times
-\end{equation}
-%
-\subsubsection*{$\bm{\lambda_D}$: Influenza hospitalization rate, lethal outcome}
-%
-\begin{equation}
-\label{eq:lam_D}
-L(\lambda_D|\ldots) \propto \frac{e^{-\lambda_D\;\epsilon  \; N} (\lambda_D\;\epsilon  \; N}{m_D!},
-\end{equation}
-%
-\subsubsection*{$\bm{m_D}$: total number of influenza deaths deaths in FSN population}
-%
-%
-\begin{equation}
-\label{eq:m_D}
-L(m_D|\ldots) \propto \frac{e^{-\lambda_D\;\epsilon  \; N} (\lambda_D\;\epsilon  \; N)^{m_D}}{m_D!}\times \binom{m_D}{n_D} \tau_1^{n_D} (1 - \tau_1)^{(m_D - n_D)},
-\end{equation}
-%
-%
-\subsubsection*{$\bm{\epsilon}$: Outside-hospital death proportion}
-%
-\begin{equation}
-\label{eq:p_osh}
-L(m_D|\ldots) \propto \frac{e^{-\lambda_D\;\epsilon  \; N} (\lambda_D\;\epsilon  \; N)^{m_D}}{m_D!}
-\end{equation}
-%
-\subsubsection*{$\bm{\phi_0}$: True influenza-positivity rate, in non lethal outcomes)}
-%
-\begin{equation}
-\label{eq:phi_0}
-L(\phi_0|\ldots) \propto \binom{m_H}{n_H} \left(\phi_0 \sum_{j} \pi_{0j} \sigma_{0j}\right)^{n_H} (1 - \phi_0 \sum_{j} \pi_{0j} \sigma_{0j})^{m_H - n_H} \times
-\binom{above}{below}
-\end{equation}
+\begin{figure}[h]
+	\centering
+	\resizebox{.5\textwidth}{!}{
+		\input{Figure_1.tikz}}
+	\caption{Model structure. Rectangles represent data, the ellipse represents an informative prior. Vague priors were omitted.}
+	\label{fig2}
+\end{figure}
 %
 
-\subsubsection*{$\bm{\pi_{0j}}$: Testing probabilities in non-lethal outcomes, by test type}
-%
-\begin{equation}
-\label{eq:pi_kj}
-L(\pi_{0j}|\ldots) \propto \frac{e^{-\lambda_H \; N} (\lambda_H \; N)^{m_H}}{m_H!}\times \binom{m_H}{n_H} \tau_0^{n_H} (1 - \tau_0)^{(m_H - n_H)},
-\end{equation}
-%
-	
-\subsubsection*{$g_{kj}$} Unobserved number of influenza positives, by outcome $k$ and test type $j$
-\subsubsection*{$\sigma_{kj}$} Test sensitivity, by outcome $k$ and test type $j$
-%
 %	\printbibliography
 \end{document} 
