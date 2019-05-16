@@ -154,10 +154,11 @@ for (seas in 1:6) {
   }
 }
 colnames(datasetcum) <- c('season','agecat','died','TestedFlu','TestType','TestResult','freq')
-FSNtestdata <- data.frame(datasetcum)
+FSNcumtestdata <- data.frame(datasetcum)
 #########################################################################################
 ### FSN data by outcome (fatal, non-fatal)   ############################################
 #########################################################################################
+setwd(paste0(bfolder,'BEdata'))
 FSNfname <- "foppa_14MAY19.csv"
 FSNdata <- read.csv(FSNfname)
 agecatls <- unique(FSNdata$Age)
@@ -188,19 +189,19 @@ for (seas in seasls) {
 }
 FSNdata <- FSNdata[,c("Season","State","agecat","outcome","Count")]
 FSNdata$state <- as.vector(FSNdata$state)
-colnames(FSNdata) <- c("season","state","agecat","outcome","freq")
+colnames(FSNdata) <- c("season","state","agecat","died","freq")
 
 agls <- unique(FSNdata$agecat)
-ocls <- unique(FSNdata$outcome)
+dls <- unique(FSNdata$died)
 seasls <- unique(FSNdata$season)
 statels <- unique(FSNdata$state)
 
 dataarr <- NULL
 for (seas in seasls) {
   for (ag in agls) {
-    for (oc in ocls) {
-      selind <- which(FSNdata$season==seas & FSNdata$agecat==ag & FSNdata$outcome==oc)
-      row <- c(season=seas,agecat=ag,outcome=oc,freq=sum(FSNdata$freq[selind]))
+    for (d in dls) {
+      selind <- which(FSNdata$season==seas & FSNdata$agecat==ag & FSNdata$died==d)
+      row <- c(season=seas,agecat=ag,died=d,freq=sum(FSNdata$freq[selind]))
       dataarr <- rbind(dataarr,row,deparse.level = 0)
     }
   }
@@ -248,7 +249,7 @@ for (col in c(1:5)){
   dataset2cum[,col] <- as.numeric(dataset2cum[,col])
 }
 colnames(dataset2cum) <- c('season','agecat','rcu','pi','osh')
-OSHdata <- data.frame(dataset2cum)
+OSHcumdata <- data.frame(dataset2cum)
 #########################################################################################
 ###  Reading-in denominator data ########################################################
 #########################################################################################
@@ -259,7 +260,7 @@ popdata <- read.csv("FSNpop.csv")
 #########################################################################################
 setwd(paste0(bfolder,'BEdata'))
 outfname <- 'FluSURV-NET.Rdata'
-save(FSNtestdata,FSNcumdata,OSHdata,popdata,sensdata,file = outfname)
+save(FSNcumtestdata,FSNcumdata,OSHcumdata,popdata,sensdata,file = outfname)
 #########################################################################################
 #########################################################################################
 #########################################################################################

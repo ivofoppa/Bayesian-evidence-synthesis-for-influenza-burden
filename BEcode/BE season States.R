@@ -13,7 +13,7 @@ agecatlist <- list(list(c(0,4),'<5'),
 infname <- 'FluSURV-NET-states.RData'
 setwd(paste0(bfolder,'BEdata'))
 load(infname)
-# nseas <- 6
+nseas <- 6
 #########################################################################################
 #########################################################################################
 ###  FluSurv-NET data set ###############################################################
@@ -25,8 +25,11 @@ sensdatasel <- list(sensdata[[1]][[agcat]],sensdata[[2]][[agcat]])
 agecatls <- agecatlist[[agcat]]
 
 selind2 <- which(FSNpopdata$agecat==agcat)
-agpopsel <- popdata[selind2,]
+agpopsel <- FSNpopdata[selind2,]
 
+#########################################################################################
+###  Analyses by state ##################################################################
+#########################################################################################
 st <- "CA"
 
 selind1 <- which(FSNtestdata$agecat==agcat & FSNtestdata$state==st)
@@ -38,14 +41,15 @@ oshdatsel <- OSHdata[selind3,]
 selind4 <- which(FSNdata$agecat==agcat & FSNdata$state==st)
 FSNdatasel <- FSNdata[selind4,]
 
+FSNfluhospls <- FSNdatasel$freq[which(FSNdatasel$died==0 & FSNdatasel$season <= nseas)]
+FSNfludeathls <- FSNdatasel$freq[which(FSNdatasel$died==1 & FSNdatasel$season <= nseas)]
+
+dls <- unique(FSNtestdatasel$died)
+
 nttypearr <- array(0,dim = c(2,4,nseas))
 ntotarr <- array(0,dim = c(2,nseas))
 testposarr <- array(0,dim = c(2,3,nseas))
 poshls <- NULL
-
-FSNfluhospls <- NULL
-FSNfludeathls <- NULL
-dls <- unique(FSNtestdatasel$died)
 #########################################################################################
 ###  Note: These calcuations for outcome P&I   ##########################################
 #########################################################################################
@@ -55,9 +59,9 @@ for (seas in 1:nseas){
   testpos <- array(0,dim = c(2,3))
   for (d in dls){
     selind2 <- which(FSNtestdatasel$died==d & FSNtestdatasel$season==seas)
-    selind2b <- which(FSNcumdatasel$outcome==d & FSNcumdatasel$season==seas)
+    selind2b <- which(FSNtestdatasel$outcome==d & FSNtestdatasel$season==seas)
     ds <- FSNtestdatasel[selind2,]
-    dsb <- FSNcumdatasel[selind2b,]
+    dsb <- FSNtestdatasel[selind2b,]
     nttype[d+1,1] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==1)]) # PCR
     nttype[d+1,2] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==2)]) # RIDT
     nttype[d+1,3] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==3)]) # Other/unknown
@@ -68,16 +72,7 @@ for (seas in 1:nseas){
     testpos[d+1,1] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==1 & ds$TestResult==1)]) # PCR
     testpos[d+1,2] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==2 & ds$TestResult==1)]) # Other/unknown
     testpos[d+1,3] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==3 & ds$TestResult==1)]) # Other/unknown
-    if (d==0) {
-      fluhosp <- sum(dsb$freq)
-    }
-    if (d==1) {
-      fludeath <- sum(dsb$freq)
-    }
   }
-  
-  FSNfluhospls[seas] <- fluhosp
-  FSNfludeathls[seas] <- fludeath
   #########################################################################################
   ###  nttype according to all hosp/died system ###########################################
   #########################################################################################
@@ -155,7 +150,7 @@ for (k in 1:2) {
 
 
 ## Add one to ensure non-zero denominator
-rfluhosplsinit <- FSNfluhospls *3
+rfluhosplsinit <- FSNfluhospls *3.
 rfludeathlsinit <- FSNfludeathls/(1 - poshls)
 
 pfluarrinit <- array(0,dim=c(2,nseas))
@@ -178,8 +173,8 @@ inits <- function(){
     sens3arr = sens3arrinit
   )}
 
-variables <- c('fludeathls')
-variables <- c('fluhospls')
+# variables <- c('fludeathls')
+variables <- c('fluhospls','fludeathls')
 # variables <- c('pt')
   # variables <- c('pt')
   

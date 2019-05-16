@@ -22,8 +22,8 @@ nseas <- 6
 ###  FSNdata,sensdata,agseaspop,oshdat
 agcat <- 5
 
-selind1 <- which(FSNtestdata$agecat==agcat)
-FSNtestdatasel <- FSNtestdata[selind1,]
+selind1 <- which(FSNcumtestdata$agecat==agcat)
+FSNcumtestdatasel <- FSNcumtestdata[selind1,]
 
 selind2 <- which(popdata$agecat==agcat)
 agpopsel <- popdata[selind2,]
@@ -43,8 +43,8 @@ ntotarr <- array(0,dim = c(2,nseas))
 testposarr <- array(0,dim = c(2,3,nseas))
 poshls <- NULL
 
-FSNfluhospls <- NULL
-FSNfludeathls <- NULL
+FSNfluhospls <- FSNcumdatasel$freq[which(FSNcumdatasel$died==0 & FSNcumdatasel$season <= nseas)]
+FSNfludeathls <- FSNcumdatasel$freq[which(FSNcumdatasel$died==1 & FSNcumdatasel$season <= nseas)]
 #########################################################################################
 ###  Note: These calcuations for outcome P&I   ##########################################
 #########################################################################################
@@ -53,9 +53,9 @@ for (seas in 1:nseas){
   ntot <- c(0,0)
   testpos <- array(0,dim = c(2,3))
   for (d in c(0,1)){
-    selind2 <- which(FSNtestdatasel$died==d & FSNtestdatasel$season==seas)
+    selind2 <- which(FSNcumtestdatasel$died==d & FSNcumtestdatasel$season==seas)
     selind2b <- which(FSNcumdatasel$outcome==d & FSNcumdatasel$season==seas)
-    ds <- FSNtestdatasel[selind2,]
+    ds <- FSNcumtestdatasel[selind2,]
     dsb <- FSNcumdatasel[selind2b,]
     nttype[d+1,1] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==1)]) # PCR
     nttype[d+1,2] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==2)]) # RIDT
@@ -67,16 +67,8 @@ for (seas in 1:nseas){
     testpos[d+1,1] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==1 & ds$TestResult==1)]) # PCR
     testpos[d+1,2] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==2 & ds$TestResult==1)]) # Other/unknown
     testpos[d+1,3] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==3 & ds$TestResult==1)]) # Other/unknown
-    if (d==0) {
-      fluhosp <- sum(dsb$freq)
-    }
-    if (d==1) {
-      fludeath <- sum(dsb$freq)
-    }
   }
   
-  FSNfluhospls[seas] <- fluhosp
-  FSNfludeathls[seas] <- fludeath
   #########################################################################################
   ###  nttype according to all hosp/died system ###########################################
   #########################################################################################
@@ -175,8 +167,8 @@ inits <- function(){
     sens3arr = sens3arrinit
   )}
 
-variables <- c('USfludeathls')
-variables <- c('USfluhospls')
+variables <- c('USfludeathls','USfluhospls')
+# variables <- c('USfluhospls')
 # variables <- c('pt')
   # variables <- c('pt')
   
