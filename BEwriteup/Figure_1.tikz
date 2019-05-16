@@ -1,19 +1,19 @@
 \scalebox{3}{
 	\begin {tikzpicture}[>= stealth,scale=2.2]
 	
-	\node (N)  at (0.5,1.5) {$N$};
+	\node (N)[rectangle,draw]  at (0.5,1.5) {$N$};
 	\node (lamH)  at (0,1.5) {$\lambda_H$};
     \node (lamD) at (1,1.5) {$\lambda_D$};
-	\node (nH) at (0,1) {$n_H$};
+	\node (nH)[circle,draw] at (0,1) {$n_H$};
 	\node (nHast)[rectangle,draw] at (0,.5) {$n^\ast_H$};%observed
-	\node (nD) at (1,1) {$n_D$};
+	\node (nD)[circle,draw] at (1,1) {$n_D$};
 	\node (nDast)[rectangle,draw] at (1,.5) {$n^\ast_D$};%observed
 	
 	\node(A2a) at (0,.75) {} ;
 	\node(A2b) at (1,.75) {} ;
 	
 	\node(pi) at (1.5,.75) {$\pi$} ; %proportion deaths ish
-	\node(D)[rectangle,draw] at (2,1) {$D$} ; %all deaths NCHS
+	\node(D)[rectangle,draw] at (2,1) {$D_T$} ; %all deaths NCHS
 	\node(DH)[rectangle,draw] at (2,.5) {$D_H$} ; %all deaths NCHS
 	\node(A3) at (2,.75) {} ;
 

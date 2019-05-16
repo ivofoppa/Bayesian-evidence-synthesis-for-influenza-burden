@@ -100,41 +100,60 @@ dataset$agecat <- agecat
 TestTyperec <- sapply(dataset$TestType, function(t) ifelse(t==1,1,ifelse(t==2,2,ifelse(t%in%3:6,3,0))))
 dataset$TestTyperec <- as.vector(TestTyperec)
 
-dataset$Died[which(dataset$Died==1)] <- 1
-dataset$Died[which(dataset$Died!=1 | is.na(dataset$Died))] <- 0
-
 datasetcum <- NULL
 
 statels <- as.vector(unique(dataset$State))
-dls <- unique(dataset$Died)
 
 for (st in statels) {
   for (seas in 1:6) {
     for (ag in 1:5) {
-      for (d in dls) {
-        selseasagind1 <- which(dataset$State==st & dataset$agecat==ag & 
-                                 dataset$season==seas & dataset$Died==d)
-        datasetagseas1 <- dataset[selseasagind1,]
-        if (length(selseasagind1) > 0) {
-          for (tt in 1:3) {
-            numtest1 <- length(which(datasetagseas1$TestedFlu==1 &
-                                       datasetagseas1$TestTyperec==tt & datasetagseas1$TestResult==1))
-            numtest0 <- length(which(datasetagseas1$TestedFlu==1 &
-                                       datasetagseas1$TestTyperec==tt & datasetagseas1$TestResult!=1))
-            
-            el1 <- c(st,seas,ag,d,1,tt,1,numtest1)
-            el0 <- c(st,seas,ag,d,1,tt,0,numtest0)
-            datasetcum <- rbind(datasetcum,el1,el0,deparse.level = 0)
-          }
-        } else {
-          el1 <- c(st,seas,ag,d,1,tt,1,0)
-          el0 <- c(st,seas,ag,d,1,tt,0,0)
+      ## died
+      selseasagind1 <- which(dataset$State==st,dataset$agecat==ag & 
+                               dataset$season==seas & dataset$Died==1)
+      datasetagseas1 <- dataset[selseasagind1,]
+      if (length(selseasagind1) > 0) {
+        for (tt in 1:3) {
+          numtest1 <- length(which(datasetagseas1$TestedFlu==1 &
+                                     datasetagseas1$TestTyperec==tt & datasetagseas1$TestResult==1))
+          numtest0 <- length(which(datasetagseas1$TestedFlu==1 &
+                                     datasetagseas1$TestTyperec==tt & datasetagseas1$TestResult!=1))
+          
+          el1 <- c(st,seas,ag,1,1,tt,1,numtest1)
+          el0 <- c(st,seas,ag,1,1,tt,0,numtest0)
           datasetcum <- rbind(datasetcum,el1,el0,deparse.level = 0)
         }
-        num <- length(which(datasetagseas1$TestedFlu!=1))
-        el <- c(st,seas,ag,d,0,0,0,num)
-        datasetcum <- rbind(datasetcum,el,deparse.level = 0)
+      } else {
+        el1 <- c(st,seas,ag,1,1,tt,1,0)
+        el0 <- c(st,seas,ag,1,1,tt,0,0)
+        datasetcum <- rbind(datasetcum,el1,el0,deparse.level = 0)
       }
+      num <- length(which(datasetagseas1$TestedFlu!=1))
+      el <- c(st,seas,ag,1,0,0,0,num)
+      datasetcum <- rbind(datasetcum,el,deparse.level = 0)
+      ##did not die
+      selseasagind0 <- which(dataset$agecat==ag & 
+                               dataset$season==seas & dataset$Died!=1)
+      datasetagseas0 <- dataset[selseasagind0,]
+      if (length(selseasagind1) > 0) {
+        for (tt in 1:3) {
+          numtest1 <- length(which(datasetagseas0$TestedFlu==1 &
+                                     datasetagseas0$TestTyperec==tt & datasetagseas0$TestResult==1))
+          numtest0 <- length(which(datasetagseas0$TestedFlu==1 & 
+                                     datasetagseas0$TestTyperec==tt & datasetagseas0$TestResult!=1))
+          
+          el1 <- c(st,seas,ag,0,1,tt,1,numtest1)
+          el0 <- c(st,seas,ag,0,1,tt,0,numtest0)
+          datasetcum <- rbind(datasetcum,el1,el0,deparse.level = 0)
+        } 
+      } else {
+        el1 <- c(st,seas,ag,0,1,tt,1,0)
+        el0 <- c(st,seas,ag,0,1,tt,0,0)
+        datasetcum <- rbind(datasetcum,el1,el0,deparse.level = 0)
+      }
+      
+      num <- length(which(datasetagseas0$TestedFlu!=1))
+      el <- c(st,seas,ag,0,0,0,0,num)
+      datasetcum <- rbind(datasetcum,el,deparse.level = 0)
     }
   }
 }
@@ -142,9 +161,8 @@ for (st in statels) {
 colnames(datasetcum) <- c('state','season','agecat','died','TestedFlu','TestType','TestResult','freq')
 FSNtestdata <- data.frame(datasetcum)
 FSNtestdata$freq <- as.numeric(as.vector(FSNtestdata$freq))
-
-for (col in 2:length(colnames(FSNtestdata))) {
-  FSNtestdata[,col] <- as.numeric(as.vector(FSNtestdata[,col]))
+for (col in 2:length(colnames(datasetcum))) {
+  datasetcum[,col] <- as.numeric(datasetcum[,col])
 }
 
 #########################################################################################
@@ -159,7 +177,7 @@ for (ag in agecatls) {
   selind <- which(FSNdata$Age==ag)
   agls[selind] <- which(agecatls==ag)
 }
-FSNdata$agecat <- as.numeric(as.vector(agls))
+FSNdata$agecat <- as.numeric(agls)
 
 occatls <- unique(as.vector(FSNdata$Outcome))
 
@@ -170,7 +188,7 @@ for (oc in occatls) {
   ocls[selind] <- which(occatls==oc)
 }
 
-FSNdata$outcome <- 2 - as.numeric(as.vector(ocls))
+FSNdata$outcome <- 2 - as.numeric(ocls)
 
 seasls <- unique(FSNdata$Season)
 

@@ -56,7 +56,7 @@ for (seas in 1:nseas){
   seaslist[[seas]] <- c(DVD[seasbeg[seas]],DVD[seasend[seas]])
 }
 #########################################################################################
-###  FluSurv-NET data set ###############################################################
+###  FluSurv-NET testing data set #######################################################
 #########################################################################################
 ### Data managment for detection multiplier
 setwd(paste0(bfolder,'BEdata'))
@@ -154,7 +154,59 @@ for (seas in 1:6) {
   }
 }
 colnames(datasetcum) <- c('season','agecat','died','TestedFlu','TestType','TestResult','freq')
-FSNdata <- data.frame(datasetcum)
+FSNtestdata <- data.frame(datasetcum)
+#########################################################################################
+### FSN data by outcome (fatal, non-fatal)   ############################################
+#########################################################################################
+FSNfname <- "foppa_14MAY19.csv"
+FSNdata <- read.csv(FSNfname)
+agecatls <- unique(FSNdata$Age)
+agls <- as.vector(agecatls)
+
+for (ag in agecatls) {
+  selind <- which(FSNdata$Age==ag)
+  agls[selind] <- which(agecatls==ag)
+}
+FSNdata$agecat <- as.numeric(agls)
+
+occatls <- unique(as.vector(FSNdata$Outcome))
+
+ocls <- as.vector(FSNdata$Outcome)
+
+for (oc in occatls) {
+  selind <- which(FSNdata$Outcome==oc)
+  ocls[selind] <- which(occatls==oc)
+}
+
+FSNdata$outcome <- 2 - as.numeric(ocls)
+
+seasls <- unique(FSNdata$Season)
+
+for (seas in seasls) {
+  selind <- which(FSNdata$Season==seas)
+  FSNdata$Season[selind] <- which(seasls==seas)
+}
+FSNdata <- FSNdata[,c("Season","State","agecat","outcome","Count")]
+FSNdata$state <- as.vector(FSNdata$state)
+colnames(FSNdata) <- c("season","state","agecat","outcome","freq")
+
+agls <- unique(FSNdata$agecat)
+ocls <- unique(FSNdata$outcome)
+seasls <- unique(FSNdata$season)
+statels <- unique(FSNdata$state)
+
+dataarr <- NULL
+for (seas in seasls) {
+  for (ag in agls) {
+    for (oc in ocls) {
+      selind <- which(FSNdata$season==seas & FSNdata$agecat==ag & FSNdata$outcome==oc)
+      row <- c(season=seas,agecat=ag,outcome=oc,freq=sum(FSNdata$freq[selind]))
+      dataarr <- rbind(dataarr,row,deparse.level = 0)
+    }
+  }
+}
+
+FSNcumdata <- data.frame(dataarr)
 #########################################################################################
 ### NCHS data set: Weekly mortality by age group, week, diagnostic group and ############
 ### place of death for proportion deaths outside the hospital                ############
@@ -207,7 +259,7 @@ popdata <- read.csv("FSNpop.csv")
 #########################################################################################
 setwd(paste0(bfolder,'BEdata'))
 outfname <- 'FluSURV-NET.Rdata'
-save(FSNdata,OSHdata,popdata,sensdata,file = outfname)
+save(FSNtestdata,FSNcumdata,OSHdata,popdata,sensdata,file = outfname)
 #########################################################################################
 #########################################################################################
 #########################################################################################

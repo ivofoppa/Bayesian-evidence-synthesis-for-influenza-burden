@@ -10,10 +10,10 @@ agecatlist <- list(list(c(0,4),'<5'),
                    list(c(65,120),'65+'))
 
 ### Load data 
-infname <- 'FluSURV-NET.RData'
+infname <- 'FluSURV-NET-states.RData'
 setwd(paste0(bfolder,'BEdata'))
 load(infname)
-nseas <- 6
+# nseas <- 6
 #########################################################################################
 #########################################################################################
 ###  FluSurv-NET data set ###############################################################
@@ -21,23 +21,23 @@ nseas <- 6
 #########################################################################################
 ###  FSNdata,sensdata,agseaspop,oshdat
 agcat <- 5
+sensdatasel <- list(sensdata[[1]][[agcat]],sensdata[[2]][[agcat]])
+agecatls <- agecatlist[[agcat]]
 
-selind1 <- which(FSNtestdata$agecat==agcat)
-FSNtestdatasel <- FSNtestdata[selind1,]
-
-selind2 <- which(popdata$agecat==agcat)
+selind2 <- which(FSNpopdata$agecat==agcat)
 agpopsel <- popdata[selind2,]
 
-selind3 <- which(OSHdata$agecat==agcat)
+st <- "CA"
+
+selind1 <- which(FSNtestdata$agecat==agcat & FSNtestdata$state==st)
+FSNtestdatasel <- data.frame(FSNtestdata[selind1,])
+
+selind3 <- which(OSHdata$agecat==agcat & OSHdata$state==st)
 oshdatsel <- OSHdata[selind3,]
 
-selind4 <- which(FSNcumdata$agecat==agcat)
-FSNcumdatasel <- FSNcumdata[selind4,]
+selind4 <- which(FSNdata$agecat==agcat & FSNdata$state==st)
+FSNdatasel <- FSNdata[selind4,]
 
-sensdatasel <- list(sensdata[[1]][[agcat]],sensdata[[2]][[agcat]])
-
-agecatls <- agecatlist[[agcat]]
-  
 nttypearr <- array(0,dim = c(2,4,nseas))
 ntotarr <- array(0,dim = c(2,nseas))
 testposarr <- array(0,dim = c(2,3,nseas))
@@ -45,6 +45,7 @@ poshls <- NULL
 
 FSNfluhospls <- NULL
 FSNfludeathls <- NULL
+dls <- unique(FSNtestdatasel$died)
 #########################################################################################
 ###  Note: These calcuations for outcome P&I   ##########################################
 #########################################################################################
@@ -52,7 +53,7 @@ for (seas in 1:nseas){
   nttype <- array(0,dim = c(2,4))
   ntot <- c(0,0)
   testpos <- array(0,dim = c(2,3))
-  for (d in c(0,1)){
+  for (d in dls){
     selind2 <- which(FSNtestdatasel$died==d & FSNtestdatasel$season==seas)
     selind2b <- which(FSNcumdatasel$outcome==d & FSNcumdatasel$season==seas)
     ds <- FSNtestdatasel[selind2,]
@@ -90,11 +91,10 @@ for (seas in 1:nseas){
   testposarr[,,seas] <- testpos
   #########################################################################################
   #########################################################################################
-  selind4 <- which(oshdatsel$season==seas)
-  ds <- oshdatsel[selind4,]
+  selind5 <- which(oshdatsel$season==seas)
+  ds3 <- oshdatsel[selind5,]
   
-  poshls[seas] <- sum(ds$pi[which(ds$osh==1)])/(sum(ds$pi))
-  
+  poshls[seas] <- sum(ds3$pi[which(ds3$osh==1)])/(sum(ds3$pi))
 }
 
 FSNfluhosptotls <- FSNfluhospls + FSNfludeathls ## Non-fatal flu hosp.s
@@ -115,7 +115,7 @@ lrapidsens <- c(log(cirapid[1]),selograpidest)
 FSNpopls <- agpopsel[1:nseas,4]
 USpopls  <- agpopsel[1:nseas,3]
 
-data <- list('FSNfluhospls'=FSNfluhospls,'FSNpopls'=FSNpopls, 'USpopls' = USpopls,
+data <- list('FSNfluhospls'=FSNfluhospls,
                'poshls'=poshls,'FSNfludeathls'=FSNfludeathls,
                'nttypearr'=nttypearr,'testposarr'=testposarr,'pcrsens'=pcrsens,
              'lrapidsens'=lrapidsens,'ntotarr'=ntotarr,'nseas'=nseas)
@@ -155,11 +155,13 @@ for (k in 1:2) {
 
 
 ## Add one to ensure non-zero denominator
-rfluhosplsinit <- FSNfluhospls /FSNpopls*3
-rfludeathlsinit <- FSNfludeathls/FSNpopls/(1 - poshls)
+rfluhosplsinit <- FSNfluhospls *3
+rfludeathlsinit <- FSNfludeathls/(1 - poshls)
 
-USfludeathlsinit <- rfludeathlsinit*USpopls
-USfluhosplsinit <- rfluhosplsinit*USpopls
+pfluarrinit <- array(0,dim=c(2,nseas))
+for (seas in 1:6) {
+  pfluarrinit[,seas] <- rowSums(fluposarrinit[,,seas])/rowSums(nttypearr[,,seas])
+}
 
 inits <- function(){
   list(
@@ -170,20 +172,21 @@ inits <- function(){
     ptestarr30 = ptestarr30init,
     ptestarr40 = ptestarr40init,
     fluposarr = fluposarrinit,
+    pfluarr = pfluarrinit,
     sens1arr = sens1arrinit,
     logsens2arr = logsens2arrinit,
     sens3arr = sens3arrinit
   )}
 
-variables <- c('USfludeathls')
-variables <- c('USfluhospls')
+variables <- c('fludeathls')
+variables <- c('fluhospls')
 # variables <- c('pt')
   # variables <- c('pt')
   
 nadapt <- 10000
 niter <- 10000
 
-model.file <- 'BE season.txt'
+model.file <- 'BE season state.txt'
   
 setwd(paste0(bfolder,'BEmodels'))
   
