@@ -30,6 +30,8 @@ agpopsel <- FSNpopdata[selind2,]
 #########################################################################################
 ###  Analyses by state ##################################################################
 #########################################################################################
+statels <- unique(as.vector(FSNtestdata$state))
+
 st <- "CA"
 
 selind1 <- which(FSNtestdata$agecat==agcat & FSNtestdata$state==st)
@@ -136,6 +138,25 @@ for (seas in 1:nseas) {
   }
 }
 
+ptestarrinit <- array(0,dim = c(2,4,nseas))
+
+for (seas in 1:nseas) {
+  for (k in 1:2){
+    ptestarrinit[k,1,seas] <- ptestarr10init[k,seas]
+    ptestarrinit[k,2,seas] <- ptestarr20init[k,seas]
+    ptestarrinit[k,3,seas] <- ptestarr30init[k,seas]
+    ptestarrinit[k,4,seas] <- ptestarr40init[k,seas]
+  }
+}
+
+ptarrinit <- array(0,dim = c(2,nseas))
+
+for (seas in 1:nseas) {
+  ptarrinit[1,seas] <- sum(sensarrinit[1,,seas]*ptestarrinit[1,1:3,seas])
+  ptarrinit[2,seas] <- sum(sensarrinit[2,,seas]*ptestarrinit[2,1:3,seas])
+}
+
+
 fluposarrinit <- round(testposarr/sensarrinit)
 
 for (k in 1:2) {
@@ -150,8 +171,8 @@ for (k in 1:2) {
 
 
 ## Add one to ensure non-zero denominator
-rfluhosplsinit <- FSNfluhospls *3.
-rfludeathlsinit <- FSNfludeathls/(1 - poshls)
+rfluhosplsinit <- FSNfluhospls /(1 - ptarrinit[1,])
+rfludeathlsinit <- FSNfludeathls/(1 - poshls)/(1 - ptarrinit[2,])
 
 pfluarrinit <- array(0,dim=c(2,nseas))
 for (seas in 1:6) {
