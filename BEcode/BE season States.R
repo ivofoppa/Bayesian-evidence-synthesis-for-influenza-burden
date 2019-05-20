@@ -171,8 +171,8 @@ for (k in 1:2) {
 
 
 ## Add one to ensure non-zero denominator
-rfluhosplsinit <- FSNfluhospls /(1 - ptarrinit[1,])
-rfludeathlsinit <- FSNfludeathls/(1 - poshls)/(1 - ptarrinit[2,])
+rfluhosplsinit <- FSNfluhospls /ptarrinit[1,]
+rfludeathlsinit <- FSNfludeathls/(1 - poshls)/ptarrinit[2,]
 
 pfluarrinit <- array(0,dim=c(2,nseas))
 for (seas in 1:6) {
