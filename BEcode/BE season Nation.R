@@ -28,8 +28,8 @@ FSNcumtestdatasel <- FSNcumtestdata[selind1,]
 selind2 <- which(popdata$agecat==agcat)
 agpopsel <- popdata[selind2,]
 
-selind3 <- which(OSHdata$agecat==agcat)
-oshdatsel <- OSHdata[selind3,]
+selind3 <- which(OSHcumdata$agecat==agcat)
+oshdatsel <- OSHcumdata[selind3,]
 
 selind4 <- which(FSNcumdata$agecat==agcat)
 FSNcumdatasel <- FSNcumdata[selind4,]

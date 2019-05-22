@@ -63,51 +63,54 @@ setwd(paste0(bfolder,'BEdata'))
 
 dataset <- data.frame(read.csv('20181214_1415burden_bysite_simple.csv'))
 
+selind <- which(dataset$State%in%c("CA","CO","NM","NY","OR"))
+datasetpart <- dataset[selind,]
+
 ### Changing vars into simple values
-for (k in 4:length(dataset[1,])) {
-  dataset[,k] <- as.integer(as.vector(dataset[,k]))
+for (k in 4:length(datasetpart[1,])) {
+  datasetpart[,k] <- as.integer(as.vector(datasetpart[,k]))
 }
 
-DateHosp <- as.Date(dataset$DateHosp,"%m/%d/%Y")
-dataset$DateHosp <- DateHosp
+DateHosp <- as.Date(datasetpart$DateHosp,"%m/%d/%Y")
+datasetpart$DateHosp <- DateHosp
 
 mmwrdat0$mmwrstrt <- as.Date(mmwrdat0$mmwrstrt,"%m/%d/%Y")
 mmwrdat0$mmwrend <- as.Date(mmwrdat0$mmwrend,"%m/%d/%Y")
 
 DVD <- sapply(DateHosp, function(d) mmwrdat0$dvdweek[which(mmwrdat0$mmwrstrt<=d & mmwrdat0$mmwrend >=d)])
-dataset$DVD <- DVD
+datasetpart$DVD <- DVD
 ### selecting relevant time period
-selind <- which(dataset$DVD>=as.numeric(paste0(fromyr,fromwk)) & dataset$DVD <= as.numeric(paste0(toyr,towk)))
-dataset <- dataset[selind,]
+selind <- which(datasetpart$DVD>=as.numeric(paste0(fromyr,fromwk)) & datasetpart$DVD <= as.numeric(paste0(toyr,towk)))
+datasetpart <- datasetpart[selind,]
 
 seaslabls <- sapply(1:6, function(s) paste0(10 + s-1,10 + s))
 
 ### modified season: 1,...,6
-season2 <- dataset$season
+season2 <- datasetpart$season
 for (k in 1:6) {
-  selind <- which(dataset$DVD >= seaslist[[k]][1] & dataset$DVD <= seaslist[[k]][2])
+  selind <- which(datasetpart$DVD >= seaslist[[k]][1] & datasetpart$DVD <= seaslist[[k]][2])
   season2[selind] <- k
 }
-dataset$season <- season2
+datasetpart$season <- season2
 ### Defining agecat
-agecat <- dataset$Age
+agecat <- datasetpart$Age
 for (ag in 1:5) {
-  selind <- which(dataset$Age %in% c(agecatlist[[ag]][[1]][1]:agecatlist[[ag]][[1]][2]))
+  selind <- which(datasetpart$Age %in% c(agecatlist[[ag]][[1]][1]:agecatlist[[ag]][[1]][2]))
   agecat[selind] <- round(ag)
 }
-dataset$agecat <- agecat
+datasetpart$agecat <- agecat
 
-TestTyperec <- sapply(dataset$TestType, function(t) ifelse(t==1,1,ifelse(t==2,2,ifelse(t%in%3:6,3,0))))
-dataset$TestTyperec <- as.vector(TestTyperec)
+TestTyperec <- sapply(datasetpart$TestType, function(t) ifelse(t==1,1,ifelse(t==2,2,ifelse(t%in%3:6,3,0))))
+datasetpart$TestTyperec <- as.vector(TestTyperec)
 
 datasetcum <- NULL
 
 for (seas in 1:6) {
   for (ag in 1:5) {
  ## died
-    selseasagind1 <- which(dataset$agecat==ag & 
-                             dataset$season==seas & dataset$Died==1)
-    datasetagseas1 <- dataset[selseasagind1,]
+    selseasagind1 <- which(datasetpart$agecat==ag & 
+                             datasetpart$season==seas & datasetpart$Died==1)
+    datasetagseas1 <- datasetpart[selseasagind1,]
     if (length(selseasagind1) > 0) {
       for (tt in 1:3) {
         numtest1 <- length(which(datasetagseas1$TestedFlu==1 &
@@ -128,9 +131,9 @@ for (seas in 1:6) {
     el <- c(seas,ag,1,0,0,0,num)
     datasetcum <- rbind(datasetcum,el,deparse.level = 0)
     ##did not die
-    selseasagind0 <- which(dataset$agecat==ag & 
-                             dataset$season==seas & dataset$Died!=1)
-    datasetagseas0 <- dataset[selseasagind0,]
+    selseasagind0 <- which(datasetpart$agecat==ag & 
+                             datasetpart$season==seas & datasetpart$Died!=1)
+    datasetagseas0 <- datasetpart[selseasagind0,]
     if (length(selseasagind1) > 0) {
       for (tt in 1:3) {
         numtest1 <- length(which(datasetagseas0$TestedFlu==1 &
@@ -259,12 +262,12 @@ popdata <- read.csv("FSNpop.csv")
 
 #########################################################################################
 setwd(paste0(bfolder,'BEdata'))
-outfname <- 'FluSURV-NET.Rdata'
+outfname <- 'FluSURV-NET-Nation_part.Rdata'
 save(FSNcumtestdata,FSNcumdata,OSHcumdata,popdata,sensdata,file = outfname)
 #########################################################################################
 #########################################################################################
-#########################################################################################
-bfolder <- 'C:/Users/VOR1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/'
-setwd(paste0(bfolder,'BEdata'))
-infname <- 'FluSURV-NET.Rdata'
-load(infname)
+# #########################################################################################
+# bfolder <- 'C:/Users/VOR1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/'
+# setwd(paste0(bfolder,'BEdata'))
+# infname <- 'FluSURV-NET.Rdata'
+# load(infname)
