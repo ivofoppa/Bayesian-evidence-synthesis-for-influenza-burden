@@ -10,10 +10,10 @@ agecatlist <- list(list(c(0,4),'<5'),
                    list(c(65,120),'65+'))
 
 ### Load data 
-infname <- 'FluSURV-NET.RData'
+infname <- 'FluSURV-NET-Nation-8seas.RData'
 setwd(paste0(bfolder,'BEdata'))
 load(infname)
-nseas <- 6
+nseas <- 8
 #########################################################################################
 #########################################################################################
 ###  FluSurv-NET data set ###############################################################
