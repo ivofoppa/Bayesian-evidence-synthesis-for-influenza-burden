@@ -1,0 +1,406 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil Courier New;}{\f1\fnil\fcharset0 Calibri;}}
+{\colortbl ;\red0\green0\blue0;\red255\green255\blue255;\red0\green128\blue0;\red0\green0\blue255;\red0\green0\blue128;\red0\green128\blue128;\red128\green0\blue128;}
+{\*\generator Riched20 10.0.17134}\viewkind4\uc1 
+\pard\cf1\highlight2\f0\fs20\lang9\par
+\cf3 /* MACRO BETABIN  Version 2.2  March 2005\par
+\par
+   SUMMARY: Fits a Beta Binomial Model.\par
+\par
+   AUTHOR: Ian Wakeling - Qi Statistics\par
+           please send any comments, bug-reports to: ian@qistatistics.co.uk\par
+           Web site: {\cf0{\field{\*\fldinst{HYPERLINK www.qistatistcs.co.uk }}{\fldrslt{www.qistatistcs.co.uk\ul0\cf0}}}}\f0\fs20\par
+\par
+   REQUIREMENTS:\par
+           This macro requires SAS/BASE and SAS/STAT to be licensed on your\par
+           machine.  SAS/GRAPH is optional.  SAS version 8 or later.\par
+\par
+   METHOD: The macro makes use of the procedure NLMIXED and its facility to \par
+           perform a maximum likelihood estimation on a general function \par
+           that is defined by programming statements. Both the standard\par
+           Beta-Bimomial and the Corrected Beta-Binomial (Brockhoff 2003,\par
+           FQ&P, vol14, 405-417) models are supported.  For comparison\par
+           purposes, the procedure GENMOD is used to derive the simple\par
+           binomial model estimate.\par
+\par
+   INPUT:  A data set with one record per subject, and with two variables\par
+           indicating the number of trials and the number of successes per\par
+           subject.\par
+\par
+   OUTPUT: Estimates of the proportion of successes (with standard error),\par
+           and a test of difference of this proportion from that expected\par
+           under the null hypothesis, for both the Binomial and the Beta\par
+           Binomial Models.  For the latter estimates of the parameters\par
+           gamma and theta are provided which can be used to diagnose the\par
+           amount of extra-binomial variation that the subjects introduce.\par
+           Gamma is a useful measure of departure from the binomial model,\par
+           it is constrained to the interval 0-1 and takes a value of\par
+           zero when no extra-binomial variation is present, i.e. when the\par
+           observed proportions for all subjects are equal.\par
+\par
+    LEGAL: The BETABIN macro is (C) Ian Wakeling 2004-2005, it is free\par
+           software and may be redistributed in its original form provided\par
+           that no charge is made. This macro is provided 'as is'.  There\par
+           are no warranties, expressed or implied, as to merchantability or\par
+           fitness for a particular purpose.\par
+\par
+   CHANGES: Version 1.2 to Version 1.5\par
+            -Exit is more tidy when key variables are not found.\par
+            -Added summary table by adapting summary info from GENMOD.\par
+            -Added estimates of alpha and beta for the beta-binomial.\par
+            -Changed bounds to gamma>0 to prevent division by zero errors\par
+             for gamma=0. Added messages when gamma approaches its bounds.\par
+            -Turned off page breaks between the sections of output.\par
+            -Added option for Per Brockhoff's Corrected Beta-Binomial.\par
+\par
+            Version 1.5 to Version 1.6\par
+            -Corrected a few problems with titles.\par
+\par
+            Version 1.6 to Version 2.0\par
+            -Switched to Jian Bi's form of the pdf for the corrected\par
+             beta-binomial. (Many thanks to Jian for providing a pre-\par
+             publication version of this.)\par
+            -Fixed bug that caused data set to be kept open if an input \par
+             variable did not exist\par
+            -Added code to draw a graph of the estimated beta distribution.\par
+\par
+            Version 2.1\par
+            -Prevented attempt to draw graph if SAS/GRAPH is not installed\par
+            -Prevented unwanted output going to ODS streams other than LISTING.\par
+\par
+            Version 2.2\par
+            -In SAS Version 9 the simple binomial in GENMOD was failing since\par
+            the format of the ODS output files are changed from version 8.\par
+            The macro now has different code for different SAS versions.\par
+            -Changed graphics font to Arial, reduced font sizes a bit and \par
+            specified smaller graphics area.\par
+\par
+    USAGE: Simplest syntax would be:\par
+\par
+           %betabin(data=<dataset name>,ntrials=<var name>,nsucc=<var name>);\par
+\par
+           Note that the parameters nullprob and alpha would take on their\par
+           default settings of 0.5 and 0.05 respectively.\par
+\par
+           For data from a triangle test, where the probability of guessing\par
+           correct is one third, where the user wants to supress all printed\par
+           output and receive the beta-binomial estimates in an output\par
+           data set the syntax would be:\par
+          \par
+           %betabin(data=<input dataset>,ntrials=<var name>,nsucc=<var name>,\par
+                    nullprob=0.3333,est=<output dataset name>,print=no);\par
+\par
+*/\cf1\par
+\par
+\cf4 options\cf1  nocentre \cf4 nodate\cf1  \cf4 nonumber\cf1 ;\par
+\par
+\cf5\b %macro\cf1\b0  betabin(data=,        \cf3 /* Input SAS data set name                   */\cf1\par
+               title=BETABIN Macro,\par
+\tab\tab\tab                  \cf3 /* Title for the output                      */\cf1\par
+               ntrials=,     \cf3 /* Variable name giving number of trials     */\cf1\par
+               nsucc=,       \cf3 /* Variable name giving number of successes  */\cf1\par
+\tab\tab\tab    method=BB,    \cf3 /* +Method either BB or CBB (corrected BB)   */\cf1\par
+               nullprob=\cf6\b 0.5\cf1\b0 , \cf3 /* +Expected proportion of successes under H0*/\cf1\par
+\tab\tab\tab    alpha=\cf6\b 0.05\cf1\b0 ,   \cf3 /* +Alpha level for confidence intervals     */\cf1\par
+               binest=,      \cf3 /* +Name of data set to save simple Binomial */\cf1\par
+                             \cf3 /*  model estimate of mu                     */\cf1  \par
+               est=,         \cf3 /* +Name of data set to save Beta Binomial   */\cf1\par
+                             \cf3 /*  estimates                                */\cf1\par
+               cov=,         \cf3 /* +Name of data set to save var-cov matrix  */\cf1\par
+\tab\tab\tab                  \cf3 /*  for the Beta Binomial model parameters   */\cf1\par
+               print=yes);   \cf3 /* +Produce printed output yes/no            */\cf1  \par
+\par
+\cf3 /*  above '+' indicates an optional macro parameter */\cf1\par
+\par
+\cf4 %let\cf1  bberror=0;\par
+\cf4 %let\cf1  eprefix=ERROR in Macro BetaBin:;\par
+\par
+\cf3 /* Error checking on the mandatory parameters */\cf1\par
+\cf4 %if\cf1  \cf4 %sysfunc\cf1 (exist(&data))=\cf6\b 0\cf1\b0  \cf4 %then\cf1  \cf4 %do\cf1 ;\par
+  \cf4 %put\cf1  &eprefix Data set &data does not exist;\par
+  \cf4 %goto\cf1  bbexit;\par
+\cf4 %end\cf1 ;\par
+\cf4 %let\cf1  dsid=\cf4 %sysfunc\cf1 (open(&data));\par
+\cf4 %if\cf1  &dsid=\cf6\b 0\cf1\b0  \cf4 %then\cf1  \cf4 %do\cf1 ;\par
+  \cf4 %put\cf1  &eprefix Data set &data already in use (attempt to open failed);\par
+  \cf4 %goto\cf1  bbexit;\par
+\cf4 %end\cf1 ;\par
+\cf4 %if\cf1  \cf4 %sysfunc\cf1 (varnum(&dsid,&ntrials))=\cf6\b 0\cf1\b0  \cf4 %then\cf1  \cf4 %do\cf1 ;\par
+  \cf4 %put\cf1  &eprefix Variable &ntrials not found on the data set &data;\par
+  \cf4 %let\cf1  dsid=\cf4 %sysfunc\cf1 (close(&dsid));\par
+  \cf4 %goto\cf1  bbexit;\par
+\cf4 %end\cf1 ;\par
+\cf4 %if\cf1  \cf4 %sysfunc\cf1 (varnum(&dsid,&nsucc))=\cf6\b 0\cf1\b0  \cf4 %then\cf1  \cf4 %do\cf1 ;\par
+  \cf4 %put\cf1  &eprefix Variable &nsucc not found on the data set &data;\par
+  \cf4 %let\cf1  dsid=\cf4 %sysfunc\cf1 (close(&dsid));\par
+  \cf4 %goto\cf1  bbexit;\par
+\cf4 %end\cf1 ;\par
+\cf4 %let\cf1  dsid=\cf4 %sysfunc\cf1 (close(&dsid));\par
+\par
+\cf3 /* Error checking on the data, also total up the degrees of freedom */\cf1\par
+data _null_;\par
+  set &data end=fini;\par
+  if &nsucc>&ntrials or &nsucc<\cf6\b 0\cf1\b0  or &ntrials<\cf6\b 1\cf1\b0  then do;\par
+    put \cf7 'Invalid number of trials & successes ('\cf1  &ntrials \cf7 ','\cf1\par
+        &nsucc \cf7 ') for subject '\cf1  _n_;\par
+    call symput(\cf7 'bberror'\cf1 ,\cf7 '1'\cf1 );\par
+  end;\par
+  total+&ntrials;\par
+  tsucc+&nsucc;\par
+  if fini then do;\par
+    call symput(\cf7 'rdf'\cf1 ,trim(left(put(total-\cf6\b 2\cf1\b0 ,\cf6\b 8.0\cf1\b0 ))));\par
+\tab call symput(\cf7 'ts'\cf1 ,trim(left(put(tsucc,\cf6\b 8.0\cf1\b0 ))));\par
+  end;\par
+run;\par
+\par
+\cf4 %if\cf1  &bberror>\cf6\b 0\cf1\b0  \cf4 %then\cf1  \cf4 %do\cf1 ;\par
+  \cf4 %put\cf1  ERROR in Macro BetaBin: Check Data for errors;\par
+  \cf4 %goto\cf1  bbexit;\par
+\cf4 %end\cf1 ;\par
+\cf4 %if\cf1  &ts=\cf6\b 0\cf1\b0  \cf4 %then\cf1  \cf4 %do\cf1 ;\par
+  \cf4 %put\cf1  ERROR in Macro BetaBin: No observed successes, model fitting can not procede;\par
+  \cf4 %goto\cf1  bbexit;\par
+\cf4 %end\cf1 ;\par
+\par
+\cf3 /* Local names for the output data sets if the user has not requested them */\cf1\par
+\cf4 %if\cf1  \cf4 %length\cf1 (&binest)=\cf6\b 0\cf1\b0  \cf4 %then\cf1  \cf4 %let\cf1  binest=_binest; \cf4 %else\cf1  \cf4 %let\cf1  binest=&binest;\par
+\cf4 %if\cf1  \cf4 %length\cf1 (&est)=\cf6\b 0\cf1\b0  \cf4 %then\cf1  \cf4 %let\cf1  est=_est; \cf4 %else\cf1  \cf4 %let\cf1  est=&est;\par
+\cf4 %if\cf1  \cf4 %length\cf1 (&cov)=\cf6\b 0\cf1\b0  \cf4 %then\cf1  \cf4 %let\cf1  cov=_cov; \cf4 %else\cf1  \cf4 %let\cf1  cov=&cov;\par
+\par
+\cf3 /* get the SAS version number (taking number to left of the decimal point) */\cf1\par
+\cf4 %let\cf1  version=\cf4 %scan\cf1 (&sysver,1,.);\par
+\par
+ods exclude all;\par
+\cf4 %if\cf1  &version<\cf6\b 9\cf1\b0  \cf4 %then\cf1  \cf4 %do\cf1 ;\par
+  ods output ModelInfo=_summary ParameterEstimates=&binest;\par
+  \cf3 /* the variable names for the conf limits are dependent of SAS version */\cf1\par
+  \cf4 %let\cf1  UCL=UpperCL;\par
+  \cf4 %let\cf1  LCL=LowerCL;\par
+\cf4 %end\cf1 ; \cf4 %else\cf1  \cf4 %do\cf1 ;\par
+  \cf3 /* in SAS9 NObs is a second summary data set */\cf1\par
+  ods output ModelInfo=_summary NObs=_nobs ParameterEstimates=&binest;\par
+  \cf4 %let\cf1  UCL=UpperWaldCL;\par
+  \cf4 %let\cf1  LCL=LowerWaldCL;\par
+\cf4 %end\cf1 ;\par
+\cf3 /* fit the ordinary binomial model */\cf1\par
+proc genmod data=&data;\par
+  model &nsucc/&ntrials= / dist=bin link=id alpha=&alpha type1;\par
+run;\par
+\cf3 /* take the useful summary information from GENMOD */\cf1\par
+data _summary;\par
+  length Label1 $\cf6\b 27\cf1\b0 ;\par
+  set _summary(drop=nValue1);\par
+  if _n_ in (\cf6\b 2\cf1\b0  \cf6\b 3\cf1\b0 ) then delete;\par
+  cValue1=left(cValue1);\par
+  label Label1=\cf7 'Item'\cf1  cValue1=\cf7 'Value'\cf1 ;\par
+run;\par
+\cf4 %if\cf1  &version>\cf6\b 8\cf1\b0  \cf4 %then\cf1  \cf4 %do\cf1 ;\par
+  \cf3 /* for version 9 the numeric summary info is in a separate data set, so\par
+     merge together into something like the old version 8 summary */\cf1\par
+  data _nobs;\par
+    set _nobs(keep=Label N rename=(Label=Label1));\par
+\tab cValue1=left(put(N,\cf6\b 7.0\cf1\b0 ));\par
+\tab drop N;\par
+  run;\par
+  data _summary;\par
+    set _summary _nobs;\par
+  run;\par
+\cf4 %end\cf1 ;\par
+\par
+\cf3 /* transform the output of GENMOD into something similar to NLMIXED */\cf1\par
+data &binest;\par
+  length parameter $\cf6\b 20\cf1\b0 ;\par
+  set &binest(drop=DF rename=(chisq=tvalue probchisq=probt &UCL=Upper\par
+             &LCL=Lower));\par
+  parameter=\cf7 'mu'\cf1 ;\par
+  tvalue=sqrt(tvalue);\par
+  Alpha=&alpha;\par
+  output;\par
+  diff=Upper-estimate;\par
+  parameter=\cf7 "|mu-&nullprob|"\cf1 ; estimate=abs(estimate-&nullprob);\par
+  Upper=estimate+diff; Lower=estimate-diff;\par
+  tvalue=estimate/stderr;\par
+  probt=\cf6\b 2\cf1\b0 *(\cf6\b 1\cf1\b0 -probt(tvalue,&rdf+\cf6\b 1\cf1\b0 ));\par
+  output;\par
+  stop;\par
+  label tvalue=\cf7 't Value'\cf1  probt=\cf7 'Prob > |t|'\cf1  upper=\cf7 ' '\cf1  lower=\cf7 ' '\cf1 ;\par
+run;\par
+\par
+ods output ConvergenceStatus=_conv AdditionalEstimates=&est\par
+           CovMatAddEst=&cov;\par
+\cf4 %if\cf1  \cf4 %upcase\cf1 (&method=BB) \cf4 %then\cf1  \cf4 %do\cf1 ;\par
+  \cf3 /* Estimate parameters mu and gamma for the Beta-Binomial */\cf1\par
+  proc nlmixed data=&data fconv=\cf6\b 1E-14\cf1\b0  df=&rdf alpha=&alpha ecov cov;\par
+    parms mu=\cf6\b 0.5\cf1\b0  gamma=\cf6\b 0.5\cf1\b0 ;\par
+    bounds mu>=\cf6\b 0\cf1\b0 , mu<=\cf6\b 1\cf1\b0 , gamma>\cf6\b 0\cf1\b0 , gamma<\cf6\b 1\cf1\b0 ;\par
+    ll=\cf6\b 0\cf1\b0 ;\par
+    theta=gamma/(\cf6\b 1\cf1\b0 -gamma);\par
+    do i=\cf6\b 1\cf1\b0  to &ntrials;\par
+      if i<=&nsucc\par
+        then ll=ll+log(mu+(i-\cf6\b 1\cf1\b0 )*theta);\par
+\tab     else ll=ll+log((\cf6\b 1\cf1\b0 -mu)+(i-&nsucc-\cf6\b 1\cf1\b0 )*theta);\par
+      ll=ll-log(\cf6\b 1\cf1\b0 +(i-\cf6\b 1\cf1\b0 )*theta);\par
+    end;\par
+\tab alpha=mu/theta;\par
+\tab beta=(\cf6\b 1\cf1\b0 -mu)/theta;\par
+    model &nsucc~general(ll);\par
+    estimate \cf7 'mu'\cf1     mu;\par
+    estimate \cf7 'alpha'\cf1  alpha;\par
+    estimate \cf7 'beta'\cf1   beta;\par
+    estimate \cf7 'gamma'\cf1  gamma;\par
+    estimate \cf7 'theta'\cf1  gamma/(\cf6\b 1\cf1\b0 -gamma);\par
+    estimate \cf7 "|mu-&nullprob|"\cf1  abs(mu-&nullprob);\par
+    call symput(\cf7 'gamma'\cf1 ,trim(left(put(gamma,\cf6 best12.\cf1 ))));\par
+    call symput(\cf7 'alpha'\cf1 ,trim(left(put(alpha,\cf6 best12.\cf1 ))));\par
+    call symput(\cf7 'beta'\cf1 ,trim(left(put(beta,\cf6 best12.\cf1 ))));\par
+  run;\par
+  quit;\par
+  \cf4 %let\cf1  cutoff=0;\par
+\cf4 %end\cf1 ; \cf4 %else\cf1  \cf4 %do\cf1 ;\par
+  \cf3 /* Estimate parameters a and b for the Corrected Beta-Binomial. This uses\par
+     Jian Bi's form of the pdf which is more efficient than Brockhoff's\par
+     version that was used in version 1.6 and earlier. Have had to change\par
+     bounds to exclude zero as it is possible to get a=b=0 and then a\par
+     division by zero error from the estimate statement.\par
+  */\cf1\par
+  proc nlmixed data=&data fconv=\cf6\b 1E-14\cf1\b0  df=&rdf alpha=&alpha ecov cov;\par
+    parms a=\cf6\b 1\cf1\b0  b=\cf6\b 1\cf1\b0 ;\par
+    bounds a>\cf6\b 0\cf1\b0 , b>\cf6\b 0\cf1\b0 ;\par
+    ll=\cf6\b 0\cf1\b0 ;\par
+    sum=\cf6\b 0\cf1\b0 ;\par
+    gaba=lgamma(a+b)-lgamma(a)-lgamma(b)+\par
+         lgamma(&ntrials+\cf6\b 1\cf1\b0 )-lgamma(&nsucc+\cf6\b 1\cf1\b0 )-lgamma(&ntrials-&nsucc+\cf6\b 1\cf1\b0 );\par
+    do i=\cf6\b 0\cf1\b0  to &nsucc;\par
+      v1=lgamma(&nsucc+\cf6\b 1\cf1\b0 )-lgamma(i+\cf6\b 1\cf1\b0 )-lgamma(&nsucc-i+\cf6\b 1\cf1\b0 );\par
+\tab   v2=(&ntrials-&nsucc+i)*log(\cf6\b 1\cf1\b0 -&nullprob)+(&nsucc-i)*log(&nullprob);\par
+\tab   v3=lgamma(a+i)+lgamma(&ntrials-&nsucc+b)-lgamma(&ntrials-&nsucc+i+a+b);\par
+\tab   sum=sum+exp(gaba+v1+v2+v3);\par
+    end;\par
+\tab g=\cf6\b 1\cf1\b0 /(a+b+\cf6\b 1\cf1\b0 );\par
+\tab ll=ll+log(sum);\par
+    model &nsucc~general(ll);\par
+    estimate \cf7 'mu'\cf1  &nullprob+(\cf6\b 1\cf1\b0 -&nullprob)*a/(a+b);\par
+    estimate \cf7 'alpha'\cf1  a;\par
+    estimate \cf7 'beta'\cf1  b;\par
+\tab estimate \cf7 'gamma'\cf1  g;\par
+    estimate \cf7 'pi'\cf1  a/(a+b);\par
+    call symput(\cf7 'gamma'\cf1 ,trim(left(put(g,\cf6 best12.\cf1 ))));\par
+    call symput(\cf7 'alpha'\cf1 ,trim(left(put(a,\cf6 best12.\cf1 ))));\par
+    call symput(\cf7 'beta'\cf1 ,trim(left(put(b,\cf6 best12.\cf1 ))));\par
+  quit;\par
+  run;\par
+  \cf4 %let\cf1  cutoff=&nullprob;\par
+\cf4 %end\cf1 ;\par
+\par
+ods select all;\par
+\par
+data _null_;\par
+  set _conv;\par
+  call symput(\cf7 'status'\cf1 ,put(status,\cf6\b 1.0\cf1\b0 ));\par
+run;\par
+\par
+\cf4 %let\cf1  titfont=\cf4 %str\cf1 (h=18 pt f='Arial' color=black);\par
+\par
+\cf4 %if\cf1  &status=\cf6\b 0\cf1\b0  \cf4 %then\cf1  \cf4 %do\cf1 ;\par
+  data &est;\par
+    set &est(drop=DF);\par
+  \cf4 %if\cf1  \cf4 %upcase\cf1 (&print)=YES \cf4 %then\cf1  \cf4 %do\cf1 ;\par
+    title &titfont \cf7 "&title.: Raw Data Summary"\cf1 ;\par
+    proc print data=_summary label noobs;\par
+    run;\par
+\tab options formdlim=\cf7 ' '\cf1 ;\par
+    title &titfont \cf7 "&title.: Simple Binomial Model"\cf1 ;\par
+    proc print data=&binest label noobs;\par
+\tab   var parameter estimate stderr tvalue probt Alpha Lower Upper;\par
+    run;\par
+    \cf4 %if\cf1  &method=BB\par
+      \cf4 %then\cf1  \cf4 %do\cf1 ;\par
+        title &titfont \cf7 "&title.: Beta-Binomial Model Parameters"\cf1 ;\par
+\tab\tab\cf3 /* remove last row and col from the var-covar matrix & tidy up a bit */\cf1\par
+\tab\tab data &cov;\par
+          set &cov(drop=row cov6);\par
+\tab       if _n_<\cf6\b 6\cf1\b0 ;\par
+\tab       label cov1=\cf7 'mu'\cf1  cov2=\cf7 'alpha'\cf1  cov3=\cf7 'beta'\cf1  cov4=\cf7 'gamma'\cf1  cov5=\cf7 'theta'\cf1 ;\par
+\tab\tab run;\par
+      \cf4 %end\cf1 ; \cf4 %else\cf1  \cf4 %do\cf1 ;\par
+        title &titfont \cf7 "&title.: Corrected Beta-Binomial Model Parameters (c=&nullprob)"\cf1 ;\par
+\tab\tab data &cov;\par
+          set &cov(drop=row);\par
+\tab       label cov1=\cf7 'mu'\cf1  cov2=\cf7 'alpha'\cf1  cov3=\cf7 'beta'\cf1  cov4=\cf7 'gamma'\cf1  cov5=\cf7 'pi'\cf1 ;\par
+\tab\tab run;\par
+      \cf4 %end\cf1 ;\par
+\tab\cf4 %if\cf1  \cf4 %sysevalf\cf1 (&gamma<\cf6\b 1E-6\cf1\b0 ,boolean)\par
+      \cf4 %then\cf1  title2 \cf7 'Note: Gamma is close to zero, alpha & beta tend to infinity, solution collapses to simple binomial'\cf1 ;\par
+\tab   \cf4 %else\cf1  \cf4 %if\cf1  \cf4 %sysevalf\cf1 (&gamma>\cf6\b 0.999999\cf1\b0 ,boolean)\par
+        \cf4 %then\cf1  title2 \cf7 'Note: Gamma is close to one, alpha & beta tend to zero, estimates below are unreliable'\cf1 ;;\par
+    proc print data=&est label noobs;\par
+\tab   label label=\cf7 'parameter'\cf1 ;\par
+\tab run;\par
+\tab title &titfont \cf7 "&title.: Variance-Covariance Matrix of Estimated Parameters"\cf1 ;\par
+\tab title2;\par
+    proc print data=&cov label noobs;\par
+\tab run;\par
+  \cf4 %end\cf1 ;\par
+\par
+  \cf4 %if\cf1  \cf4 %sysprod\cf1 (graph)=\cf6\b 1\cf1\b0  \cf4 %then\cf1  \cf4 %do\cf1 ;\par
+    \cf3 /* make a graph of the beta distribution if SAS/GRAPH is installed */\cf1\par
+    data _betadist;\par
+      do p=\cf6\b 0.000001\cf1\b0 , \cf6\b 0.00001\cf1\b0 , \cf6\b 0.0001\cf1\b0 , \cf6\b 0.001\cf1\b0 , \cf6\b 0.01\cf1\b0 ,\par
+           \cf6\b 0.025\cf1\b0  to \cf6\b 0.975\cf1\b0  by \cf6\b 0.025\cf1\b0 ,\par
+           \cf6\b 0.99\cf1\b0 , \cf6\b 0.999\cf1\b0 , \cf6\b 0.9999\cf1\b0 , \cf6\b 0.99999\cf1\b0 , \cf6\b 0.999999\cf1\b0 ;\par
+        d=exp(lgamma(&alpha+&beta)-lgamma(&alpha)-lgamma(&beta)+\par
+          (&alpha-\cf6\b 1\cf1\b0 )*log(p)+(&beta-\cf6\b 1\cf1\b0 )*log(\cf6\b 1\cf1\b0 -p))/(\cf6\b 1\cf1\b0 -&cutoff);\par
+\tab     q=&cutoff+p*(\cf6\b 1\cf1\b0 -&cutoff);\par
+\tab     if d<\cf6\b 8\cf1\b0  then output;\par
+      end;\par
+      drop p;\par
+    run;\par
+\par
+    goptions ftext=\cf7 'Arial'\cf1  hsize=\cf6\b 12\cf1\b0  cm  vsize=\cf6\b 12\cf1\b0  cm;\par
+    \cf4 %if\cf1  \cf4 %upcase\cf1 (&method=BB)\par
+      \cf4 %then\cf1  title &titfont \cf7 "Beta Distribution for the Binomial Proportion"\cf1 ;\par
+      \cf4 %else\cf1  title &titfont \cf7 "Corrected Beta Distribution"\cf1 ;;\par
+\par
+    symbol1 interpol=join color=black;\par
+    proc gplot data=_betadist;\par
+        plot d * q   / frame overlay\par
+                       vaxis=axis2 haxis=axis1\par
+                       vminor=\cf6\b 1\cf1\b0  hminor=\cf6\b 1\cf1\b0\par
+                       name = \cf7 'betabin'\cf1  nolegend\par
+           description=\cf7 "Beta-Distribution for the Binomial parameter"\cf1 ;\par
+        axis1\par
+            color=black\par
+            order=(\cf6\b 0\cf1\b0  to \cf6\b 1\cf1\b0  by \cf6\b 0.1\cf1\b0 )\par
+            value=(a=\cf6\b 0\cf1\b0  r=\cf6\b 0\cf1\b0  h=\cf6\b 12\cf1\b0  pt)\par
+            label=(h=\cf6\b 16\cf1\b0  pt \cf7 "Proportion of Successes"\cf1 );\par
+        axis2\par
+            color=black\par
+            value=(a=\cf6\b 0\cf1\b0  r=\cf6\b 0\cf1\b0  h=\cf6\b 12\cf1\b0  pt)\par
+            label=(h=\cf6\b 16\cf1\b0  pt a=\cf6\b 90\cf1\b0  \cf7 "Probability Density"\cf1 );\par
+        symbol v=none;\par
+    run;\par
+    quit;\par
+  \cf4 %end\cf1 ;\par
+\cf4 %end\cf1 ; \cf4 %else\cf1\par
+  \cf4 %put\cf1  ERROR in Macro BetaBin: terminating as PROC NLMIXED failed to converge;\par
+\par
+%bbexit:\par
+\par
+proc datasets library=work nolist nodetails;\par
+  \cf4 %if\cf1  \cf4 %sysfunc\cf1 (exist(_summary)) \cf4 %then\cf1  delete _summary;;\par
+  \cf4 %if\cf1  \cf4 %sysfunc\cf1 (exist(_nobs)) \cf4 %then\cf1  delete _nobs;;\par
+  \cf4 %if\cf1  \cf4 %sysfunc\cf1 (exist(_conv)) \cf4 %then\cf1  delete _conv;;\par
+  \cf4 %if\cf1  \cf4 %sysfunc\cf1 (exist(_cov)) \cf4 %then\cf1  delete _cov;;\par
+  \cf4 %if\cf1  \cf4 %sysfunc\cf1 (exist(_binest)) \cf4 %then\cf1  delete _binest;;\par
+  \cf3 *%if %sysfunc(exist(_est)) %then delete _est;\cf1 ;\par
+  \cf4 %if\cf1  \cf4 %sysfunc\cf1 (exist(_betadist)) \cf4 %then\cf1  delete _betadist;;\par
+quit;\par
+\par
+\par
+options formdlim=\cf7 ''\cf1 ;\par
+\par
+\cf5\b %mend\cf1\b0 ;\par
+\par
+
+\pard\sa200\sl276\slmult1\cf0\highlight0\f1\fs22\par
+}
+ 
