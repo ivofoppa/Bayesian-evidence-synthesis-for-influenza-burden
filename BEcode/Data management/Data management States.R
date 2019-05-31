@@ -34,7 +34,7 @@ for (i in 1:5){
 ###  Defining influenza seasons #########################################################
 #########################################################################################
 fromyr <- 2010
-toyr <- 2016
+toyr <- 2018
 fromwk <- 40
 towk <- 39
 
@@ -147,6 +147,7 @@ for (col in 2:length(colnames(FSNtestdata))) {
   FSNtestdata[,col] <- as.numeric(as.vector(FSNtestdata[,col]))
 }
 
+FSNtestdata$state <- as.vector(FSNtestdata$state)
 #########################################################################################
 ### FSN data by outcome (fatal, non-fatal)   ############################################
 #########################################################################################
@@ -179,20 +180,27 @@ for (seas in seasls) {
   FSNdata$Season[selind] <- which(seasls==seas)
 }
 FSNdata <- FSNdata[,c("Season","State","agecat","outcome","Count")]
-FSNdata$state <- as.vector(FSNdata$state)
+
 colnames(FSNdata) <- c("season","state","agecat","died","freq")
 
+for (col in c(1,3:length(colnames(FSNdata)))) {
+  FSNdata[,col] <- as.numeric(as.vector(FSNdata[,col]))
+}
+
+FSNdata$state <- as.vector(FSNdata$state)
+
+
 agls <- unique(FSNdata$agecat)
-ocls <- unique(FSNdata$outcome)
-seasls <- unique(FSNdata$season)
+dls <- unique(FSNdata$died)
+seasls <- 1:nseas
 
 dataarr <- NULL
 for (seas in seasls) {
   for (ag in agls) {
-    for (oc in ocls) {
-      selind <- which(FSNdata$season==seas & FSNdata$agecat==ag & FSNdata$outcome==oc &
+    for (d in dls) {
+      selind <- which(FSNdata$season==seas & FSNdata$agecat==ag & FSNdata$died==d &
                         substr(FSNdata$state,1,2)=="NY")
-      row <- c(season=seas,state="NY",agecat=ag,outcome=oc,freq=sum(FSNdata$freq[selind]))
+      row <- c(season=seas,state="NY",agecat=ag,died=d,freq=sum(FSNdata$freq[selind]))
       dataarr <- rbind(dataarr,row,deparse.level = 0)
     }
   }
@@ -202,6 +210,13 @@ FSNdata <- rbind(FSNdata,dataarr,deparse.level = 0)
 FSNdata <- FSNdata[which(FSNdata$state!="NYA" & FSNdata$state!="NYR"),]
 
 FSNdata <- FSNdata[order(FSNdata$season, FSNdata$state, FSNdata$agecat, FSNdata$died),]
+
+for (col in c(1,3:length(colnames(FSNdata)))) {
+  FSNdata[,col] <- as.numeric(as.vector(FSNdata[,col]))
+}
+
+FSNdata$state <- as.vector(FSNdata$state)
+
 #########################################################################################
 ### NCHS data set: Weekly mortality by age group, week, diagnostic group and ############
 ### place of death for proportion deaths outside the hospital                ############
@@ -257,10 +272,13 @@ OSHdata$pi <- as.numeric(as.vector(OSHdata$pi))
 #########################################################################################
 #
 FSNpopdata <- read.csv("FSNpop.csv")
+for (col in 1:length(FSNpopdata[1,])) {
+  FSNpopdata[,col] <- as.numeric(as.vector(FSNpopdata[,col]))
+}
 #########################################################################################
 setwd(paste0(bfolder,'BEdata'))
 outfname <- 'FluSURV-NET-states.Rdata'
-save(FSNtestdata,FSNdata,OSHdata,FSNpopdata,sensdata,file = outfname)
+save(nseas,FSNtestdata,FSNdata,OSHdata,FSNpopdata,sensdata,file = outfname)
 #########################################################################################
 #########################################################################################
 #########################################################################################
