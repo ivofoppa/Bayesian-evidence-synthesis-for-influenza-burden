@@ -21,29 +21,28 @@ nseas <- 6
 ###  Subsetting by site and age group ###################################################
 #########################################################################################
 ###  FSNdata,sensdata,agseaspop,oshdat
-statels <- unique(as.vector(FSNtestdata$state))
+statevec <- unique(as.vector(FSNtestdata$state))
 agcat <- 5
+
+sensdatasel <- list(sensdata[[1]][[agcat]],sensdata[[2]][[agcat]])
+agecatvec <- agecatlist[[agcat]]
 
 seasoncodaList <- list()
 
 for (seas in 1:nseas) { 
   
-  stateredls <- as.vector(unlist(sapply(statels, function(st) if (sum(FSNtestdata$freq[which(FSNtestdata$state==st &  FSNtestdata$TestedFlu==1 &
+  stateredvec <- as.vector(unlist(sapply(statevec, function(st) if (sum(FSNtestdata$freq[which(FSNtestdata$state==st &  FSNtestdata$TestedFlu==1 &
                                                                                              FSNtestdata$died==1 & FSNtestdata$agecat==agcat &
                                                                                              FSNtestdata$season==seas)]) > 0) st)))
   
-  sensdatasel <- list(sensdata[[1]][[agcat]],sensdata[[2]][[agcat]])
-  agecatls <- agecatlist[[agcat]]
-  
+
   selind2 <- which(FSNpopdata$agecat==agcat)
-  agpopsel <- FSNpopdata[selind2,]
-  
   #########################################################################################
   ###  Analyses by state ##################################################################
   #########################################################################################
-  codatotls <- array(0,dim = c(6000,12))
+  codatotarr <- array(0,dim = c(6000,12))
   
-  for (st in stateredls) {
+  for (st in stateredvec) {
     selind1 <- which(FSNtestdata$agecat==agcat & FSNtestdata$state==st & FSNtestdata$season==seas)
     FSNtestdatasel <- data.frame(FSNtestdata[selind1,])
     
@@ -56,55 +55,53 @@ for (seas in 1:nseas) {
     FSNfluhosp <- FSNdatasel$freq[which(FSNdatasel$died==0)]
     FSNfludeath <- FSNdatasel$freq[which(FSNdatasel$died==1)]
     
-    dls <- unique(FSNtestdatasel$died)
+    dvec <- unique(FSNtestdatasel$died)
     
     nttypearr <- array(0,dim = c(2,4))
-    ntotls <- array(0,dim = c(2))
+    ntotvec <- array(0,dim = c(2))
     testposarr <- array(0,dim = c(2,3))
-    poshls <- NULL
+    poshvec <- NULL
     #########################################################################################
     ###  Note: These calcuations for outcome P&I   ##########################################
     #########################################################################################
-    nttype <- array(0,dim = c(2,4))
+    nttypearr <- array(0,dim = c(2,4))
     ntot <- c(0,0)
-    ### Continue here: the analysis is by season and state, so all data has to be prepared only for one season
     
-      testpos <- array(0,dim = c(2,3))
-      for (d in dls){
-        selind2 <- which(FSNtestdatasel$died==d & FSNtestdatasel$season==seas)
+    testposarr <- array(0,dim = c(2,3))
+    for (d in dvec){
+        selind2 <- which(FSNtestdatasel$died==d)
         ds <- FSNtestdatasel[selind2,]
         
-        nttype[d+1,1] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==1)]) # PCR
-        nttype[d+1,2] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==2)]) # RIDT
-        nttype[d+1,3] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==3)]) # Other/unknown
-        nttype[d+1,4] <- sum(ds$freq[which(ds$TestedFlu!=1)]) # not tested
+        nttypearr[d+1,1] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==1)]) # PCR
+        nttypearr[d+1,2] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==2)]) # RIDT
+        nttypearr[d+1,3] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==3)]) # Other/unknown
+        nttypearr[d+1,4] <- sum(ds$freq[which(ds$TestedFlu!=1)]) # not tested
         
-        ntot[d+1] <- nttype[d+1,1] + nttype[d+1,2] + nttype[d+1,3] + nttype[d+1,4]
+        ntot[d+1] <- nttypearr[d+1,1] + nttypearr[d+1,2] + nttypearr[d+1,3] + nttypearr[d+1,4]
         
-        testpos[d+1,1] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==1 & ds$TestResult==1)]) # PCR
-        testpos[d+1,2] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==2 & ds$TestResult==1)]) # Other/unknown
-        testpos[d+1,3] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==3 & ds$TestResult==1)]) # Other/unknown
+        testposarr[d+1,1] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==1 & ds$TestResult==1)]) # PCR
+        testposarr[d+1,2] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==2 & ds$TestResult==1)]) # Other/unknown
+        testposarr[d+1,3] <- sum(ds$freq[which(ds$TestedFlu==1 & ds$TestType==3 & ds$TestResult==1)]) # Other/unknown
       }
       #########################################################################################
       ###  nttype according to all hosp/died system ###########################################
       #########################################################################################
-      nttypearr[,,seas] <- nttype
-      ntotarr[,seas] <- ntot
-      
+
       #########################################################################################
       ###  testpos according to all hosp/died system ##########################################
       #########################################################################################
-      testpos[1,] <- colSums(testpos)
+    ### Continue here: the analysis is by season and state, so all data has to be prepared only for one season
+    testpos[1,] <- colSums(testpos)
       testposarr[,,seas] <- testpos
       #########################################################################################
       #########################################################################################
       selind5 <- which(oshdatsel$season==seas)
       ds3 <- oshdatsel[selind5,]
       
-      poshls[seas] <- sum(ds3$pi[which(ds3$osh==1)])/(sum(ds3$pi))
+      poshvec[seas] <- sum(ds3$pi[which(ds3$osh==1)])/(sum(ds3$pi))
     }
     
-    FSNfluhosptotls <- FSNfluhospls + FSNfludeathls ## Non-fatal flu hosp.s
+    FSNfluhosptot <- FSNfluhosp + FSNfludeath ## Non-fatal flu hosp.s
     #########################################################################################
     #########################################################################################
     #########################################################################################
@@ -119,11 +116,9 @@ for (seas in 1:nseas) {
     selograpidest <- ((log(cirapid[3]) - log(cirapid[1])) + (log(cirapid[1]) - log(cirapid[2])))/2/1.96
     lrapidsens <- c(log(cirapid[1]),selograpidest)
     
-    FSNpopls <- agpopsel[1:nseas,4]
-    USpopls  <- agpopsel[1:nseas,3]
-    
-    data <- list('FSNfluhospls'=FSNfluhospls,
-                 'poshls'=poshls,'FSNfludeathls'=FSNfludeathls,
+
+    data <- list('FSNfluhosp'=FSNfluhosp,
+                 'poshvec'=poshvec,'FSNfludeath'=FSNfludeath,
                  'nttypearr'=nttypearr,'testposarr'=testposarr,'pcrsens'=pcrsens,
                  'lrapidsens'=lrapidsens,'ntotarr'=ntotarr,'nseas'=nseas)
     
@@ -181,8 +176,8 @@ for (seas in 1:nseas) {
     
     
     ## Add one to ensure non-zero denominator
-    rfluhosplsinit <- FSNfluhospls /ptarrinit[1,]
-    rfludeathlsinit <- FSNfludeathls/(1 - poshls)/ptarrinit[2,]
+    rfluhospinit <- FSNfluhosp /ptarrinit[1,]
+    rfludeathinit <- FSNfludeath/(1 - poshls)/ptarrinit[2,]
     
     pfluarrinit <- array(0,dim=c(2,nseas))
     for (seas in 1:6) {
@@ -191,8 +186,8 @@ for (seas in 1:nseas) {
     
     inits <- function(){
       list(
-        rfluhospls = rfluhosplsinit,
-        rfludeathls = rfludeathlsinit,
+        rfluhosp = rfluhospinit,
+        rfludeath = rfludeathinit,
         ptestarr10 = ptestarr10init,
         ptestarr20 = ptestarr20init,
         ptestarr30 = ptestarr30init,
@@ -204,8 +199,8 @@ for (seas in 1:nseas) {
         sens3arr = sens3arrinit
       )}
     
-    # variables <- c('fludeathls')
-    variables <- c('fluhospls','fludeathls')
+    # variables <- c('fludeath')
+    variables <- c('fluhosp','fludeath')
     # variables <- c('pt')
     # variables <- c('pt')
     
@@ -221,10 +216,10 @@ for (seas in 1:nseas) {
     
     # summary(j.samples)
     
-    codals <- rbind(j.samples[[1]],j.samples[[2]],j.samples[[3]],deparse.level=0)
-    codatotls <- codatotls + codals
+    codaarr <- rbind(j.samples[[1]],j.samples[[2]],j.samples[[3]],deparse.level=0)
+    codatotarr <- codatotarr + codals
   }
-  seasoncodaList[[seas]] <- list(states=stateredls,codatotls)
+  seasoncodaList[[seas]] <- list(states=stateredvec,codatotls)
 }
 #########################################################################################
 #########################################################################################
