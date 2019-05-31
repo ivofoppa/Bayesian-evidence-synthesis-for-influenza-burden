@@ -1,5 +1,4 @@
 model {
-  for (seas in 1:nseas) {
     fluhospls[seas] ~ dpois(rfluhospls[seas]) ## The # of flu hosp in FSN with not fatal outcome; unobserved
     FSNfluhospls[seas] ~ dbin(ptarr[1,seas],fluhospls[seas]) ## Observed flu hosp. without fatal outcome
     
