@@ -12,25 +12,39 @@ agecatlist <- list(list(c(0,4),'<5'),
 
 seasvec <- sapply(1:7,function(y) paste0(y + 9,y + 10)) ### for reading-in NCHS data
 ### Load data 
+setwd(paste0(bfolder,'BEdata'))
+
+fname <- paste0('AgeseasoncodaList.RData')
+load(fname)
+
+USpopdata <- read.csv("USpop.csv")
 
 agcat <- 5
-setwd(paste0(bfolder,'BEdata'))
+agernge <- agecatlist[[agcat]][[1]]
+agernge[2] <- min(agernge[2],85) 
+
+FSNpopvec <- USpopvec <- NULL
+seasoncodaList <- AgeseasoncodaList[[agcat]]
+
 for (k in 1:7) {
   fname <- paste0("NCHS ",seasvec[k] ," population estimates.xls")
   dataset <- read_excel(fname)
-  assign(paste0("pop_", seasvec[k]),dataset)
+  
+  stateredvec <- seasoncodaList[[k]][["states"]]
+  FSNpop <- sum(dataset[(agernge[1]:agernge[2]) + 1,stateredvec]) ## sums over states/age ranges of relevance 
+  FSNpopvec <- c(FSNpopvec,FSNpop)  
+  
+  year <- eval(parse(text = paste0("20",substr(seasvec[k],1,2))))
+  USpop <- sum(USpopdata$pop[which(USpopdata$year==year & (USpopdata$age>=agernge[1] & USpopdata$age<=agernge[2]))])
+  USpopvec <- c(USpopvec,USpop)  
 }
 
 ### example for season 4
 seas <- 4
 
-dataset <- data.frame(eval(parse(text = paste0("pop_",seasvec[seas]))))
-agernge <- agecatlist[[agcat]][[1]]
-agernge[2] <- min(agernge[2],85) 
 
 stateredvec <- c("CA","CO") ## only example-not valid
 
-FSNpop <- sum(dataset[(agernge[1]:agernge[2]) + 1,stateredvec]) ## sums over states/age ranges of relevance 
 
 #########################################################################################
 #########################################################################################

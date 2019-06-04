@@ -1,0 +1,44 @@
+model {
+  fluhosp ~ dpois(rfluhosp) ## The # of flu hosp in FSN with not fatal outcome; unobserved
+  FSNfluhosp ~ dbin(pt,fluhosp) ## Observed flu hosp. without fatal outcome
+  
+  rfluhosp ~ dunif(0,10^6)
+  ## ptvec is the prob. of influenza to be detected, as a function of testing prob. und sensitivity (by outcome)
+  ## The three sensitivities, test probs and flu risks correspond to the 3 diff. tests;
+  ## the 4th flu risk and 'test prob' represents those not tested
+  
+  pt <- ptest[1]*sensvec[1] + ptest[2]*sensvec[2] + ptest[3]*sensvec[3]
+  
+  nttypevec[] ~ dmulti(ptest[1:4],ntot)   ### Observed testing freqs
+  
+  ## priors for testing 
+  ptest10 ~ dunif(0,1)
+  ptest20 ~ dunif(0,1)
+  ptest30 ~ dunif(0,1)
+  ptest40 ~ dunif(0,1)
+  
+  ptot <- ptest10 + ptest20 + ptest30 + ptest40
+  
+  ptest[1] <- ptest10/ptot
+  ptest[2] <- ptest20/ptot
+  ptest[3] <- ptest30/ptot
+  ptest[4] <- ptest40/ptot
+  
+  pflu ~ dunif(0,1)
+  
+  for (m in 1:3) {
+    fluposvec[m] ~ dbin(pflu,nttypevec[m]) ## actual flu pos/test type, unobserved
+    testposvec[m] ~ dbin(sensvec[m],fluposvec[m]) ## observed flu pos/test type
+  }
+  
+  ## generating a sensitvity from the given distribution
+  sens1 ~ dnorm(pcrsens[1],1/(pcrsens[2]*pcrsens[2]))
+  logsens2 ~ dnorm(lrapidsens[1],1/(lrapidsens[2]*lrapidsens[2]))I(,0)
+  sens2 <- exp(logsens2)
+  sens3 ~ dunif(0,1)
+  
+  sensvec[1] <- sens1
+  sensvec[2] <- sens2
+  sensvec[3] <- sens3
+
+}
