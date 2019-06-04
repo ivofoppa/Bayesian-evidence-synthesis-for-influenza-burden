@@ -188,3 +188,7 @@ save(AgeseasoncodaList,nseas,file = fname)
 
 #########################################################################################
 #########################################################################################
+r
+setwd(paste0(bfolder,'BEdata'))
+fname <- paste0('AgeseasoncodaList_Hosp.RData')
+load(fname)
