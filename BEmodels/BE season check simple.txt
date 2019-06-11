@@ -4,7 +4,6 @@ model {
     FSNfluhospvec[seas] ~ dbin(prob_d[seas],fluhospvec[seas]) ## Observed flu hosp. without fatal outcome
     
     rfluhospvec[seas] ~ dunif(0,10)
-    prob_d[seas] ~ dnorm(ptvec[seas],1/(ptSEvec[seas]*ptSEvec[seas]))I(0,)
     
     USfluhospvec[seas] ~ dpois(rfluhospvec[seas] * USpopvec[seas]) ## The total # of US flu hosp, non-fatal + fatal
     
