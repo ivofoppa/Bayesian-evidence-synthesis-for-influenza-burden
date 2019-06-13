@@ -10,11 +10,11 @@ agecatlist <- list(list(c(0,4),'<5'),
                    list(c(65,120),'65+'))
 
 ### Load data 
-infname <- 'FluSURV-NET-Nation-8seas.RData'
+infname <- 'FluSURV-NET-states.RData'
 setwd(paste0(bfolder,'BEdata'))
 load(infname)
-nseas <- 7
-ptname <- "20190320_Detection_probs_for Ivo_v2.csv"
+
+ptname <- "20180719_Detection_probs_bysite_SAS.csv"
 ptdata <- read.csv(ptname, header = T)
 #########################################################################################
 ###  Analysis with Normal prior for detection probability ###############################
