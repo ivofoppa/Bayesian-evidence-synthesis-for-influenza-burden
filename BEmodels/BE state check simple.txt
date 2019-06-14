@@ -1,0 +1,11 @@
+model {
+  for (state in 1:nstate) {
+    fluhospvec[state] ~ dpois(rfluhospvec[state]*FSNpopvec[state]) ## The # of flu hosp in FSN with not fatal outcome; unobserved
+    FSNfluhospvec[state] ~ dbin(prob_d[state],fluhospvec[state]) ## Observed flu hosp. without fatal outcome
+    
+    rfluhospvec[state] ~ dunif(0,10)
+    
+    USfluhospvec[state] ~ dpois(rfluhospvec[state] * USpopvec[state]) ## The total # of US flu hosp, non-fatal + fatal
+    
+  }
+}
