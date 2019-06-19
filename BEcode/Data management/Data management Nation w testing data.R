@@ -1,8 +1,11 @@
-library(R2jags)
+library(readxl)
+library(lubridate) ## for extracting months etc. from dates
 #########################################################################################
 #########################################################################################
 rm(list = ls())
 bfolder <- 'C:/Users/VOR1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/'
+
+nseas <- 8
 
 agecatlist <- list(list(c(0,4),'<5'),
                    list(c(5,17),'5 to 17'),
@@ -10,11 +13,44 @@ agecatlist <- list(list(c(0,4),'<5'),
                    list(c(50,64),'50-64'),
                    list(c(65,120),'65+'))
 
+seasvec <- sapply(1:nseas,function(y) paste0(y + 9,y + 10)) ### for reading-in NCHS data
 ### Load data 
-infname <- 'FluSURV-NET-states.RData'
 setwd(paste0(bfolder,'BEdata'))
-load(infname)
-nseas <- 6
+
+USpopdata <- read.csv("USpop.csv")
+
+Testdata <- read.csv("ivo_burden_20190523.csv")
+hospdates <- as.vector(Testdata$DateHosp)
+hospdates <- as.Date(hospdates,"%d%B%Y")
+
+months <- month(as.POSIXlt(hospdates, format="%Y-%m-%Y"))
+years <- year(as.POSIXlt(hospdates, format="%Y-%m-%Y"))
+
+agcat <- 5
+agernge <- agecatlist[[agcat]][[1]]
+agernge[2] <- min(agernge[2],85) 
+
+FSNpopvec <- USpopvec <- NULL
+
+for (k in 1:nseas) {
+  fname <- paste0("NCHS ",seasvec[k] ," population estimates.xls")
+  dataset <- read_excel(fname)
+  
+  FSNpop <- sum(dataset[(agernge[1]:agernge[2]) + 1,stateredvec]) ## sums over states/age ranges of relevance 
+  FSNpopvec <- c(FSNpopvec,FSNpop)  
+  
+  year <- eval(parse(text = paste0("20",substr(seasvec[k],1,2))))
+  USpop <- sum(USpopdata$pop[which(USpopdata$year==year & (USpopdata$age>=agernge[1] & USpopdata$age<=agernge[2]))])
+  USpopvec <- c(USpopvec,USpop)  
+}
+
+### example for season 4
+seas <- 4
+
+
+stateredvec <- c("CA","CO") ## only example-not valid
+
+
 #########################################################################################
 #########################################################################################
 ###  FluSurv-NET data set ###############################################################
@@ -28,7 +64,6 @@ statevec <- unique(as.vector(FSNtestdata$state))
 AgeseasoncodaList <- list()
 
 for (agcat in 1:5) {
-  cat("Running age cat ",agcat,"...")
   sensdatasel <- list(sensdata[[1]][[agcat]],sensdata[[2]][[agcat]])
   
   cipcr <- sensdatasel[[1]]/100
@@ -200,11 +235,11 @@ for (agcat in 1:5) {
       j.model <- jags.model(file=model.file,data=data, inits=inits, n.adapt=nadapt, n.chains=3)
       j.samples<-coda.samples(j.model, variable.names=variables, n.iter=niter, thin = 5) 
       
+      # summary(j.samples)
+      
       codaarr <- rbind(j.samples[[1]],j.samples[[2]],j.samples[[3]],deparse.level=0)
       codatotarr <- codatotarr + codaarr
     }
-    cat("\nSeason ",seas,"\n")
-    
     seasoncodaList[[seas]] <- list(states=stateredvec,codatotarr)
   }
 
@@ -213,8 +248,8 @@ for (agcat in 1:5) {
   #########################################################################################
 }
 #########################################################################################
-setwd(paste0(bfolder,'BEdata'))
-fname <- paste0('AgeseasoncodaList.RData')
+setwd(paste0(bfolder,'BEwriteup'))
+fname <- paste0('seasoncodaList',agcat,'.RData')
 save(seasoncodaList,file = fname)
 
 #########################################################################################
