@@ -4,17 +4,15 @@ library(R2jags)
 #########################################################################################
 bfolder <- 'C:/Users/VOR1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/'
 
-agecatlist <- list(list(c(0,4),'<5'),
-                   list(c(5,17),'5 to 17'),
-                   list(c(18,49),'18-49'),
-                   list(c(50,64),'50-64'),
-                   list(c(65,120),'65+'))
-
 ### Load data 
-infname <- 'FluSURV-NET-Nation-8seas.RData'
+infname <- 'FSNFullData.csv'
 setwd(paste0(bfolder,'BEdata'))
-load(infname)
+dataset <- read.csv(infname)
 nseas <- 8
+
+cipcrlist <- list(c(95.0,82,98.7),c(95.0,82,98.7),c(94.1,81.1,98.7),c(94.1,81.1,98.7),c(86.1,79.6,92.7))
+cirapidlist <- list(c(66.7,61.3,71.7),c(66.7,61.3,71.7),c(53.9,47.8,59.8),c(53.9,47.8,59.8),c(20.1,8.8,41.4))
+sensdata <- list(cipcrlist,cirapidlist)
 #########################################################################################
 #########################################################################################
 ###  FluSurv-NET data set ###############################################################
@@ -26,7 +24,12 @@ nadapt <- 10000
 niter <- 10000
 
 model.file <- 'BE season.txt'
-
+for (ag in 1:5){
+  for (seas in 1:8) {
+    selind <- which(dataset$season==seas & dataset$agcat==ag)
+    subdataset <- dataset[selind,]
+  }
+}
   selind1 <- which(FSNcumtestdata$agecat==agcat)
   FSNcumtestdatasel <- FSNcumtestdata[selind1,]
   
