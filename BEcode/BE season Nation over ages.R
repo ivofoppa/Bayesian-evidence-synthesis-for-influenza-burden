@@ -24,35 +24,14 @@ nadapt <- 10000
 niter <- 10000
 
 model.file <- 'BE season.txt'
-for (ag in 1:5){
-  for (seas in 1:8) {
+for (seas in 1:8) {
+  for (ag in 1:5){
     selind <- which(dataset$season==seas & dataset$agcat==ag)
     subdataset <- dataset[selind,]
+    
+    
   }
 }
-  selind1 <- which(FSNcumtestdata$agecat==agcat)
-  FSNcumtestdatasel <- FSNcumtestdata[selind1,]
-  
-  selind2 <- which(popdata$agecat==agcat)
-  agpopsel <- popdata[selind2,]
-  
-  selind3 <- which(OSHcumdata$agecat==agcat)
-  oshdatsel <- OSHcumdata[selind3,]
-  
-  selind4 <- which(FSNcumdata$agecat==agcat)
-  FSNcumdatasel <- FSNcumdata[selind4,]
-  
-  sensdatasel <- list(sensdata[[1]][[agcat]],sensdata[[2]][[agcat]])
-  
-  agecatls <- agecatlist[[agcat]]
-  
-  nttypearr <- array(0,dim = c(2,4,nseas))
-  ntotarr <- array(0,dim = c(2,nseas))
-  testposarr <- array(0,dim = c(2,3,nseas))
-  poshls <- NULL
-  
-  FSNfluhospls <- FSNcumdatasel$freq[which(FSNcumdatasel$died==0 & FSNcumdatasel$season <= nseas)]
-  FSNfludeathls <- FSNcumdatasel$freq[which(FSNcumdatasel$died==1 & FSNcumdatasel$season <= nseas)]
   #########################################################################################
   ###  Note: These calcuations for outcome P&I   ##########################################
   #########################################################################################
