@@ -53,7 +53,7 @@ for (seas in 1:8) {
       ntot[d+1] <- nttypearr[d+1,1] + nttypearr[d+1,2] + nttypearr[d+1,3] + nttypearr[d+1,4]
       
       testposarr[d+1,1] <- subdataset$testres1[d+1] # PCR
-      testpos[d+1,2] <- subdataset$testres2[d+1] # Other/unknown
+      testposarr[d+1,2] <- subdataset$testres2[d+1] # Other/unknown
       testposarr[d+1,3] <- subdataset$testres3[d+1] # Other/unknown
     }
     FSNfluhosp <- subdataset$Noutcome[1]
