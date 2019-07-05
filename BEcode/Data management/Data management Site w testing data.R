@@ -65,29 +65,33 @@ Testdata$Died <- as.numeric(sapply(Testdata$Died, function(d) ifelse(d==1,1,0)))
 ## separately by died
 ## # tested by test type (PCR,AG,other,none)
 ## # results per test type
+statels <- as.vector(unique(sapply(Testdata$State, function(st) substr(st,1,2))))
 TestdataCum <- NULL
 for (seas in 1:nseas) {
   for (ag in 1:5) {
     for (d in 1:0) {
-      selind <- which(Testdata$season==seas & Testdata$agcat==ag & Testdata$Died==d)
-      dat <- Testdata[selind,]
-      ntest1 <- length(which(dat$TestType==1))
-      ntest2 <- length(which(dat$TestType==2))
-      ntest3 <- length(which(dat$TestType>2))
-      ntest0 <- length(which(is.na(dat$TestType)))
-      
-      testres1 <- length(which(dat$TestType==1 & dat$TestResult==1))
-      testres2 <- length(which(dat$TestType==2 & dat$TestResult==1))
-      testres3 <- length(which(dat$TestType>2 & dat$TestResult==1))
-      
-      row <- c(seas,ag,d,ntest1,ntest2,ntest3,ntest0,testres1,testres2,testres3)
-      TestdataCum <- rbind(TestdataCum,row,deparse.level = 0)      
+      for (st in statels) {
+        selind <- which(Testdata$season==seas & Testdata$agcat==ag & Testdata$Died==d & substr(Testdata$State,1,2)==st)
+        if (length(selind) > 0) {
+          dat <- Testdata[selind,]
+          ntest1 <- length(which(dat$TestType==1))
+          ntest2 <- length(which(dat$TestType==2))
+          ntest3 <- length(which(dat$TestType>2))
+          ntest0 <- length(which(is.na(dat$TestType)))
+          
+          testres1 <- length(which(dat$TestType==1 & dat$TestResult==1))
+          testres2 <- length(which(dat$TestType==2 & dat$TestResult==1))
+          testres3 <- length(which(dat$TestType>2 & dat$TestResult==1))
+          
+          row <- c(st,seas,ag,d,ntest1,ntest2,ntest3,ntest0,testres1,testres2,testres3)
+          TestdataCum <- rbind(TestdataCum,row,deparse.level = 0) }
+        }
     }
   }
 }
 TestdataCum <- data.frame(TestdataCum)
-colnames(TestdataCum) <- c("season","agcat","died","ntest1","ntest2","ntest3","ntest0","testres1","testres2","testres3")
-
+colnames(TestdataCum) <- c("state","season","agcat","died","ntest1","ntest2","ntest3","ntest0","testres1","testres2","testres3")
+TestdataCum <- TestdataCum[order(TestdataCum$state,TestdataCum$agcat,TestdataCum$season,TestdataCum$died),]
 #########################################################################################
 ### FSN data by outcome (fatal, non-fatal)   ############################################
 #########################################################################################
@@ -125,21 +129,28 @@ FSNdata <- FSNdata[,c("Season","State","agcat","outcome","Count")]
 colnames(FSNdata) <- c("season","state","agcat","died","freq")
 ### Aggregating over states
 FSNdataCum <- NULL
-for (seas in 1:nseas) {
-  for (ag in 1:5) {
-    for (d in 0:1) {
-      selind <- which(FSNdata$season==seas & FSNdata$agcat==ag & FSNdata$died==d)
-      num <- sum(FSNdata$freq[selind])
-      FSNdataCum <- rbind(FSNdataCum,c(seas,ag,d,num),deparse.level = 0)
+for (st in statels) {
+  for (seas in 1:nseas) {
+    for (ag in 1:5) {
+      for (d in 0:1) {
+        selind <- which(FSNdata$season==seas & FSNdata$agcat==ag & FSNdata$died==d & FSNdata$state==st)
+        num <- sum(FSNdata$freq[selind])
+        FSNdataCum <- rbind(FSNdataCum,c(st,seas,ag,d,num),deparse.level = 0)
+      }
     }
   }
 }
 FSNdataCum <- data.frame(FSNdataCum)
-colnames(FSNdataCum) <- c("season","agcat","died","freq")
+colnames(FSNdataCum) <- c("state","season","agcat","died","freq")
 #########################################################################################
 ### US population data (NCHS)  ##########################################################
 #########################################################################################
-popfname <- "census_NCHS.xls"
+popfname <- "1990 - 2017 State Population Estimates Age.csv"
+
+USpopdata <- read.csv(popfname)
+agcatls <- unique(as.vector(USpopdata$Age.Code))
+
+fipsconv <- "fipsCode Conv.csv"
 poptotdata <- NULL
 
 yearls <- 2010:2017
@@ -153,8 +164,10 @@ for (k in seq_along(yearls)) {
   subdata <- cbind(seasls,agvec,popvec,deparse.level = 0)
   poptotdata <- rbind(poptotdata,subdata,deparse.level = 0)
 }
+
 USpoptotdata <- data.frame(poptotdata)
 colnames(USpoptotdata) <- c("season","agcat","USpop")
+
 #########################################################################################
 ### Collecting FSN denominator data #####################################################
 #########################################################################################
@@ -162,41 +175,46 @@ FSNpopdata <- NULL
 for (seas in 1:nseas) {
   fname <- paste0("NCHS ",seasvec[seas] ," population estimates.xls")
   dataset <- read_excel(fname)
+  colnamels <- colnames(dataset)
   for (ag in 1:5) {
-    agel <- agelims[,ag]
-    FSNpop <- sum(dataset[(agel[1]:agel[2]) + 1,]) ## sums over states/age ranges of relevance 
-    row <- c(seas,ag,FSNpop)
-    FSNpopdata <- rbind(FSNpopdata,row,deparse.level = 0)
+    for (st in statels) {
+      agel <- agelims[,ag]
+      colselind <- which(substr(colnamels,1,2)==st)
+      FSNpop <- sum(dataset[(agel[1]:agel[2]) + 1,colselind]) ## sums over states/age ranges of relevance 
+      row <- c(st,seas,ag,FSNpop)
+      FSNpopdata <- rbind(FSNpopdata,row,deparse.level = 0)
+    }
   }
 }
 FSNpopdata <- data.frame(FSNpopdata)
-colnames(FSNpopdata) <- c("season","agcat","FSNpop")
+colnames(FSNpopdata) <- c("state","season","agcat","FSNpop")
 ### example for season 4
 #########################################################################################
 ### Creating final data set  ############################################################
 #########################################################################################
 #########################################################################################
 Fulldata <- NULL
-for (seas in 1:nseas) {
-  for (ag in 1:5) {
-    Fpopselind <- which(FSNpopdata$seas==seas & FSNpopdata$ag==ag )
-    USpopselind <- which(USpoptotdata$seas==seas & USpoptotdata$ag==ag )
-    Fpop <- FSNpopdata[Fpopselind,"FSNpop"]
-    USpop <- USpoptotdata[USpopselind,"USpop"]
-    
-    for (d in 0:1) {
-      Testselind <- which(TestdataCum$season==seas & TestdataCum$agcat==ag&TestdataCum$died==d)
-      FSNselind <- which(FSNdataCum$season==seas & FSNdataCum$agcat==ag&FSNdataCum$died==d)
+for (st in statels) {
+  for (seas in 1:nseas) {
+    for (ag in 1:5) {
+      Fpopselind <- which(FSNpopdata$state==st & FSNpopdata$seas==seas & FSNpopdata$ag==ag )
+      USpopselind <- which(USpoptotdata$seas==seas & USpoptotdata$ag==ag )
+      Fpop <- FSNpopdata[Fpopselind,"FSNpop"]
+      USpop <- USpoptotdata[USpopselind,"USpop"]
       
-      tdat <- TestdataCum[Testselind,c("ntest1","ntest2","ntest3","ntest0","testres1","testres2","testres3")]
-      FSNoutcome <- FSNdataCum[FSNselind,"freq"]
-      
-      row <- unlist(c(seas,ag,d,tdat,FSNoutcome,Fpop,USpop))
-      Fulldata <- rbind(Fulldata,row,deparse.level = 0)
+      for (d in 0:1) {
+        Testselind <- which(TestdataCum$season==seas & TestdataCum$agcat==ag&TestdataCum$died==d)
+        FSNselind <- which(FSNdataCum$season==seas & FSNdataCum$agcat==ag&FSNdataCum$died==d)
+        
+        tdat <- TestdataCum[Testselind,c("ntest1","ntest2","ntest3","ntest0","testres1","testres2","testres3")]
+        FSNoutcome <- FSNdataCum[FSNselind,"freq"]
+        
+        row <- unlist(c(seas,ag,d,tdat,FSNoutcome,Fpop,USpop))
+        Fulldata <- rbind(Fulldata,row,deparse.level = 0)
+      }
     }
   }
 }
-
 Fulldata <- data.frame(Fulldata)
 colnames(Fulldata) <- c("season","agcat","died","ntest1","ntest2","ntest3","ntest0","testres1",
                         "testres2","testres3","Noutcome","FSNpop","USpop")  

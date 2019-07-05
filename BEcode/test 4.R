@@ -25,4 +25,12 @@ for (k in 1:2) {
     ptestarr[k,3]*sensarr[k,3]
   
 }
+pt <- ptinit; fluhosp <- fluhospinit
 
+c(pt[1],fluhosp)
+c(pt[2],fludeathinit)
+c(poshinit,Npideath)
+k <- 2; m <- 2
+
+c(pfluinit[k],nttypearr[k,m])
+c(sensarrinit[k,m],fluposarrinit[k,m])

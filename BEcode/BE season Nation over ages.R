@@ -5,20 +5,10 @@ library(R2jags)
 bfolder <- 'C:/Users/VOR1/Documents/GitHub/Bayesian-evidence-synthesis-for-influenza-burden/'
 
 ### Load data 
-infname <- 'FSNFullData.csv'
 setwd(paste0(bfolder,'BEdata'))
-dataset <- read.csv(infname)
-#########################################################################################
-### Reading-in OSH data      ############################################################
-#########################################################################################
-OSHfname <- "mort2010_17_season_osh.csv"
-OSHdata <- read.csv(OSHfname)
-#########################################################################################
-nseas <- 7
-
-cipcrlist <- list(c(95.0,82,98.7),c(95.0,82,98.7),c(94.1,81.1,98.7),c(94.1,81.1,98.7),c(86.1,79.6,92.7))
-cirapidlist <- list(c(66.7,61.3,71.7),c(66.7,61.3,71.7),c(53.9,47.8,59.8),c(53.9,47.8,59.8),c(20.1,8.8,41.4))
-sensdata <- list(cipcrlist,cirapidlist)
+### Load data 
+infname <- 'FluSURV-NET-Nation-osh-7seas.RData'
+load(infname)
 #########################################################################################
 #########################################################################################
 ###  FluSurv-NET data set ###############################################################
@@ -86,30 +76,19 @@ for (seas in 1:8) {
                  'lrapidsens'=lrapidsens,'ntot'=ntot)
     
     
-  }
-}
-  #########################################################################################
-  ###  Note: These calcuations for outcome P&I   ##########################################
-  #########################################################################################
-  for (seas in 1:nseas){
-    #########################################################################################
-    ###  testpos according to all hosp/died system ##########################################
-    #########################################################################################
-
+    ptesttot <- rowSums(nttypearr)
     
-  ptesttot <- t(sapply(1:2, function(k) sum(nttypearr[k,])))
-  
-  ptest10init <- nttypearr[,1]/ptesttot
-  ptest20init <- nttypearr[,2]/ptesttot
-  ptest30init <- nttypearr[,3]/ptesttot
-  ptest40init <- nttypearr[,4]/ptesttot
-  
-  sens1init <- c(pcrsens[1],pcrsens[1])
-  logsens2init <- c(lrapidsens[1],lrapidsens[1])
-  sens3init <- c(.4,.4)
-  
-  sensarrinit <- array(0,dim = c(2,3))
-  
+    ptest10init <- nttypearr[,1]/ptesttot
+    ptest20init <- nttypearr[,2]/ptesttot
+    ptest30init <- nttypearr[,3]/ptesttot
+    ptest40init <- nttypearr[,4]/ptesttot
+    
+    sens1init <- c(pcrsens[1],pcrsens[1])
+    logsens2init <- c(lrapidsens[1],lrapidsens[1])
+    sens3init <- c(.4,.4)
+    
+    sensarrinit <- array(0,dim = c(2,3))
+    
     for (k in 1:2){
       sensarrinit[k,1] <- sens1init[k]
       sensarrinit[k,2] <- exp(logsens2init[k])
@@ -121,14 +100,12 @@ for (seas in 1:8) {
   
   for (k in 1:2) {
     for (t in 1:3) {
-        if (fluposarrinit[k,t] > nttypearr[k,t]) {
-          fluposarrinit[k,t] <- nttypearr[k,t]
-        }
+      if (fluposarrinit[k,t] > nttypearr[k,t]) {
+        fluposarrinit[k,t] <- nttypearr[k,t]
       }
+    }
   }
   
-  
-  ## Add one to ensure non-zero denominator
   poshinit <- oshpideath/Npideath
   rfluhospinit <- FSNfluhosp /FSNpop*3
   rfludeathinit <- FSNfludeath/FSNpop/(1 - poshinit)
@@ -167,6 +144,8 @@ for (seas in 1:8) {
   fludeathinit <- round(FSNfludeath/ptinit[2])
   fluhospinit <- round(FSNfluhosp/ptinit[1])
   
+  pfluinit <- rowSums(fluposarrinit + 1)/rowSums(nttypearr + 1)
+  
   inits <- function(){
     list(
       fludeath = fludeathinit,
@@ -181,10 +160,23 @@ for (seas in 1:8) {
       sens1 = sens1init,
       logsens2 = logsens2init,
       sens3 = sens3init,
-      posh = poshinit
+      posh = poshinit,
+      pflu = pfluinit
     )}
   
   variables <- c('USfludeath','USfluhosp')
+ 
+  setwd(paste0(bfolder,'BEmodels'))
+  
+  j.model <- jags.model(file=model.file,data=data, inits=inits, n.adapt=nadapt, n.chains=3)
+  j.samples<-coda.samples(j.model, variable.names=variables, n.iter=niter, thin = 5) 
+  
+  
+  
+}
+  
+  
+  ## Add one to ensure non-zero denominator
   # variables <- c('USfluhospls')
   # variables <- c('pt')
   # variables <- c('pt')
