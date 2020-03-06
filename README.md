@@ -1,2 +1,2 @@
 # Bayesian-evidence-synthesis-for-influenza-burden
-Use a Bayesian evidence synthesis approach to influenza burden estimation, using hospital surveillance data.
+Use of a Bayesian evidence synthesis (BES) approach to influenza burden estimation, using hospital surveillance data. All the files used for the BES analysis are in folder "BES". The R code file "BES influenza burden Nation 2012-17.R" is in subfolder "/BEcode". The R code for the excess mortality analysis id saved in file "EM analysis for BES manuscript.R" in folder "EM"
