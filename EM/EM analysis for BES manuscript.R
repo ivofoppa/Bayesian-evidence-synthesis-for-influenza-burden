@@ -2,12 +2,12 @@ library(splines)
 library(R2jags)
 library(stringr)
 ###############################################################################
-###  Ivo M. Foppa, March 2020-----Check for BES paper #########################
+###  Ivo M. Foppa, March 2020-----EM analyses for BES paper ###################
 ###############################################################################
 rm(list = ls())
-bfolder <- "C:/Users/.../.../" ## project folder
+bfolder <- ".../Bayesian-evidence-synthesis-for-influenza-burden/EM/" ### Define project folder
 
-setwd(paste0(bfolder,'...')) ### set to subfolder with data
+setwd(paste0(bfolder)) ### set to subfolder with data
 
 filename <- paste0('data National 3 ag 2010_18.dat')
 datarr <- data.frame(read.table(file = filename,header = T,as.is = T))

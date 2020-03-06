@@ -3,7 +3,7 @@ library(R2jags)
 #########################################################################################
 rm(list = ls())
 
-bfolder <- ".../Bayesian-evidence-synthesis-for-influenza-burden/" ### Define project folder
+bfolder <- ".../Bayesian-evidence-synthesis-for-influenza-burden/BES/" ### Define project folder
 ### Load data 
 setwd(paste0(bfolder,'BEdata'))
 ### Load data 
