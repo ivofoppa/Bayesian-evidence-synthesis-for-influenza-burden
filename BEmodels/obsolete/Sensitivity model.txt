@@ -1,0 +1,10 @@
+model {
+     
+      pflu ~ dunif(0,1)
+      Nflupos ~ dbin(pflu,Ntest) ## actual flu pos/test type, unobserved
+      Ntestpos ~ dbin(sens,Nflupos) ## observed flu pos/test type
+ 
+     ## Prior for sensitvity
+      sens ~ dnorm(pcrsens[1],1/(pcrsens[2]*pcrsens[2]))
+
+}

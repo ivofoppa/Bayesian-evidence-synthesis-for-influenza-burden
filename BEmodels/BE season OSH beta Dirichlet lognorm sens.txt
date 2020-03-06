@@ -1,0 +1,59 @@
+model {
+  for (seas in 1:nseas) {
+    fluhospls[seas] ~ dpois(rfluhospls[seas]*FSNpopls[seas]) ## The # of flu hosp in FSN; unobserved
+    
+    ## fatal and non-fatal hospitalizations
+    fluhospfatls[seas] ~ dbin(pd[seas],fluhospls[seas]) ## The # of fatal flu hosp in FSN; not unobserved
+    fluhospnonfatls[seas] <- fluhospls[seas] -  fluhospfatls[seas] ## The # of non-fatal flu hosp in FSN
+    
+    FSNfluhospnonfatls[seas] ~ dbin(ptarr[1,seas],fluhospnonfatls[seas]) ### observed non-fatal hosp.
+    FSNfluhospfatls[seas] ~ dbin(ptarr[2,seas],fluhospfatls[seas])  ### observed fatal hosp.
+    
+    FSNfluhospls[seas] <- FSNfluhospfatls[seas] + FSNfluhospnonfatls[seas] ## Observed flu hosp. 
+    
+    fludeathls[seas] ~ dpois(rfluhospls[seas]*FSNpopls[seas]*pd[seas]/(1 - poshls[seas]))
+    fludeathoshls[seas] <- fludeathls[seas] - fluhospfatls[seas]
+      
+    FSNfludeathls[seas] ~ dbin(ptarr[2,seas],fluhospfatls[seas]) ## Observed deaths among hospitalized influenza patents
+    
+    rfluhospls[seas] ~ dgamma(0.5,0.00001)
+    
+    oshpideathls[seas] ~ dbin(poshls[seas],Npideathls[seas])
+    poshls[seas] ~ dbeta(1,1)
+    pd[seas] ~ dbeta(1,1) ### probability to die in hosp.
+    
+    for (k in 1:2){
+      ## ptarr[k,seas] is the prob. of influenza to be detected, as a function of testing prob. und sensitivity (by outcome)
+      ## The three sensitivities, test probs and flu risks correspond to the 3 diff. tests;
+      ## the 4th flu risk and 'test prob' represents those not tested
+      
+      ptarr[k,seas] <- ptestarr[k,1,seas]*sensarr[k,1,seas] + ptestarr[k,2,seas]*sensarr[k,2,seas] + 
+        ptestarr[k,3,seas]*sensarr[k,3,seas]
+      
+      nttypearr[k,,seas] ~ dmulti(ptestarr[k,1:4,seas],ntotarr[k,seas])   ### Observed testing freqs
+      
+      ## priors for testing 
+      ptestarr[k,1:4,seas] ~ ddirch(alpha[1:4])
+      
+      pfluarr[k,seas] ~ dbeta(1,1)
+      
+      for (m in 1:3) {
+        fluposarr[k,m,seas] ~ dbin(pfluarr[k,seas],nttypearr[k,m,seas]) ## actual flu pos/test type, unobserved
+        testposarr[k,m,seas] ~ dbin(sensarr[k,m,seas],fluposarr[k,m,seas]) ## observed flu pos/test type
+      }
+      
+      ## generating a sensitvity from the given distribution
+      sens1arr[k,seas] ~ dlnorm(lpcrsens[1],1/(lpcrsens[2]*lpcrsens[2]))I(,1)
+      sens2arr[k,seas] ~ dlnorm(lrapidsens[1],1/(lrapidsens[2]*lrapidsens[2]))I(,1)
+      sens3arr[k,seas] ~ dbeta(1,1)
+      
+      sensarr[k,1,seas] <- sens1arr[k,seas]
+      sensarr[k,2,seas] <- sens2arr[k,seas]
+      sensarr[k,3,seas] <- sens3arr[k,seas]
+    }
+    
+    USfluhospls[seas] ~ dpois(rfluhospls[seas]*USpopls[seas]) ## The total # of US flu hosp, non-fatal + fatal
+    
+    USfludeathls[seas] ~ dpois(rfluhospls[seas]*pd[seas]/(1 - poshls[seas])*USpopls[seas]) ## The total # of US flu deaths
+  }
+}

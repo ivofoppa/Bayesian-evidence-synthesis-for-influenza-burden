@@ -1,0 +1,61 @@
+model {
+  flutot ~ dpois(rflu*FSNpop) ## the total # of flu hosp in FSN; unobserved
+
+  fluhosp ~ dbin(phosp,flutot)
+  fludeath ~ dbin(pdeath,flutot)
+  
+  fluhospdeath ~ dbin(pdih,fludeath) ## # total flu deaths in FSN; unobserved
+
+  fluoutcome[1] <- fluhosp ##
+  fluoutcome[2] <- fluhospdeath ##
+
+  RCdeathish ~ dbin(pdih,RCdeath)  ## deaths inside hospital
+
+  rflu ~ dunif(0,10)
+  phosp ~ dunif(0,1)
+  pdeath ~ dunif(0,1)
+  pdih ~ dunif(0,1)
+
+for (k in 1:2){
+  
+    pt[k] <- (pflu*ptest[k,1]*sens1 + pflu*ptest[k,2]*sens2 + pflu*ptest[k,3]*sens3[k])/
+    (pflu*ptest[k,1] + pflu*ptest[k,2] + pflu*ptest[k,3] + pflu*ptest[k,4])
+    
+    nfluhospobs[k] ~ dbin(pt[k],fluoutcome[k])  ## observed flu hosp in FSN
+    
+    nttype[k,] ~ dmulti(ptest[k,1:4],ntot[k])## observed testing freqs
+    ## priors for testing 
+    ptest1[k] ~ dunif(0,1)
+    ptest20[k] ~ dunif(0,1)
+    ptest2[k] <- ptest20[k]*(1-ptest1[k])
+    ptest30[k] ~ dunif(0,1)
+    ptest3[k] <- ptest30[k]*(1-ptest1[k]-ptest2[k])
+
+    ptest[k,1] <- ptest1[k]
+    ptest[k,2] <- ptest2[k]
+    ptest[k,3] <- ptest3[k]
+    ptest[k,4] <- 1 - ptest1[k] - ptest2[k] - ptest3[k]
+    
+    flupos[k,1] ~ dbin(pflu,nttype[k,1]) ## actual flu pos/test type, unobserved
+    flupos[k,2] ~ dbin(pflu,nttype[k,2]) ## 
+    flupos[k,3] ~ dbin(pflu,nttype[k,3]) ## 
+
+    testpos[k,1] ~ dbin(sens1,flupos[k,1]) ## observed flu pos/test type
+    testpos[k,2] ~ dbin(sens2,flupos[k,2]) ## 
+    testpos[k,3] ~ dbin(sens3[k],flupos[k,3]) ## 
+
+  ### generating a sensitvity from the given distribution
+   sens3[k] ~ dunif(0,1)
+  }
+  
+
+  sens1 ~ dnorm(pcrsens[1],1/(pcrsens[2]*pcrsens[2]))
+  logsens2 ~ dnorm(lrapidsens[1],1/(lrapidsens[2]*lrapidsens[2]))I(,0)
+  sens2 <- exp(logsens2)
+
+  pflu ~ dunif(0,1)
+  
+  USflutot ~ dpois(rflu*Npop)
+  USfluhosp ~ dbin(phosp,USflutot)
+  USfludeath ~ dbin(pdeath,USflutot)
+}

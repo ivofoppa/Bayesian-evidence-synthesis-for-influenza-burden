@@ -1,0 +1,42 @@
+model {
+  for(k in 3:N) {
+    lambdaBase[k] <- b0 + inprod(b,ns[k,])
+    
+    muBase[k] <- lambdaBase[k]*pop[k]
+    
+    lambdaI[k] <- AH1[k]*b10 + AH3[k]*b20 + B[k]*b30 + 
+      AH1[k-1]*b11 + AH3[k-1]*b21 + B[k-1]*b31 + 
+      AH1[k-2]*b12 + AH3[k-2]*b22 + B[k-2]*b32
+    
+    muI[k] <- lambdaI[k]*pop[k]
+    
+    EM[k] <- mort[k] - muBase[k]
+    
+    mu[k] <- muBase[k] + muI[k]
+    mu0[k] <- (lambdaBase[k] + lambdaI[k])*pop[k]
+    
+    mort[k] ~ dpois(mu[k])
+  }	 
+  
+  b0~dunif(-1000,1000)
+  
+  b10~dunif(-1000,1000)
+  b11~dunif(-1000,1000)
+  b12~dunif(-1000,1000)
+  
+  b20~dunif(-1000,1000)
+  b21~dunif(-1000,1000)
+  b22~dunif(-1000,1000)
+  
+  b30~dunif(-1000,1000)
+  b31~dunif(-1000,1000)
+  b32~dunif(-1000,1000)
+  
+  for (k in 1:ndf){b[k]~dunif(-1000,1000)}  
+  
+  EM1tot <- sum(EM[seas1[1]:seas1[2]])
+  EM2tot <- sum(EM[seas2[1]:seas2[2]])
+  EM3tot <- sum(EM[seas3[1]:seas3[2]])
+  EM4tot <- sum(EM[seas4[1]:seas4[2]])
+  EM5tot <- sum(EM[seas5[1]:seas5[2]])
+}

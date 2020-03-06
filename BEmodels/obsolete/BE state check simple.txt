@@ -1,0 +1,5 @@
+model {
+  fluhosp ~ dpois(rfluhosp) ## The # of flu hosp in FSN with not fatal outcome; unobserved
+  FSNfluhosp ~ dbin(pt,fluhosp) ## Observed flu hosp. without fatal outcome  
+  rfluhosp ~ dunif(0,10^6)
+}
