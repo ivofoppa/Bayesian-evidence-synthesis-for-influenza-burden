@@ -1,9 +1,0 @@
-[0] Config.pm:354> INFO - This is Biber 2.7
-[0] Config.pm:357> INFO - Logfile is 'Notation etc.blg'
-[36] biber-MSWIN64:303> INFO - === 
-[76] Biber.pm:359> INFO - Reading 'Notation etc.bcf'
-[177] Biber.pm:835> INFO - Found 0 citekeys in bib section 0
-[187] Utils.pm:164> WARN - The file 'Notation etc.bcf' does not contain any citations!
-[193] bbl.pm:608> INFO - Writing 'Notation etc.bbl' with encoding 'ascii'
-[194] bbl.pm:712> INFO - Output to Notation etc.bbl
-[200] Biber.pm:109> INFO - WARNINGS: 1

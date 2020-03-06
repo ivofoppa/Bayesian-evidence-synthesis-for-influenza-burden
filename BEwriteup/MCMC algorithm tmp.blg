@@ -1,9 +1,0 @@
-[0] Config.pm:354> INFO - This is Biber 2.7
-[0] Config.pm:357> INFO - Logfile is 'MCMC algorithm tmp.blg'
-[56] biber-MSWIN64:303> INFO - === 
-[93] Biber.pm:359> INFO - Reading 'MCMC algorithm tmp.bcf'
-[254] Biber.pm:835> INFO - Found 0 citekeys in bib section 0
-[268] Utils.pm:164> WARN - The file 'MCMC algorithm tmp.bcf' does not contain any citations!
-[280] bbl.pm:608> INFO - Writing 'MCMC algorithm tmp.bbl' with encoding 'ascii'
-[281] bbl.pm:712> INFO - Output to MCMC algorithm tmp.bbl
-[282] Biber.pm:109> INFO - WARNINGS: 1
