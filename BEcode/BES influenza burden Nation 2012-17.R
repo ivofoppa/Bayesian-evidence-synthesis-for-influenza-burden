@@ -1,26 +1,20 @@
 library(R2jags)
 #########################################################################################
 #########################################################################################
-bfolder <- "C:/Users/VOR1/OneDrive/Work related/Misc work/BES and related/Bayesian-evidence-synthesis-for-influenza-burden/"
-### Load data 
-# infname <- 'FluSURV-NET-site-osh-7seas.RData'
-rcodenm <- "Data management Nation w testing data 3.R"
-setwd(paste0(bfolder,'BEcode/Data management'))
-source(rcodenm)
-
 rm(list = ls())
 
-bfolder <- "C:/Users/VOR1/OneDrive/Work related/Misc work/BES and related/Bayesian-evidence-synthesis-for-influenza-burden/"
+bfolder <- ".../Bayesian-evidence-synthesis-for-influenza-burden/" ### Define project folder
+### Load data 
+setwd(paste0(bfolder,'BEdata'))
+### Load data 
+infname <- 'Data management Nation w testing data.RData'
+load(infname)
 
 agecatlist <- list(list(c(0,4),'<5'),
                    list(c(5,17),'5 to 17'),
                    list(c(18,49),'18-49'),
                    list(c(50,64),'50-64'),
                    list(c(65,120),'65+'))
-
-setwd(paste0(bfolder,'BEdata'))
-infname <- 'Data management Nation w testing data 3.RData'
-load(infname)
 #########################################################################################
 #########################################################################################
 ###  FluSurv-NET data set ###############################################################
@@ -29,9 +23,11 @@ load(infname)
 ###  FSNdata,sensdata,agseaspop,oshdat
 # ag <- 5; 
 nadapt <- 10000
-niter <- 10000
+niter0 <- 10000
+rmnd <- (niter0*3)%%5
+niter <- niter0 - rmnd/3
 
-model.file <- 'BE season OSH beta dirichlet lognorm sens.txt'
+model.file <- 'BE season OSH unif norm sens.txt'
 
 Fulldata <- Fulldata[which(Fulldata$season >= 3),]
 Fulldata$season <- Fulldata$season - 2
@@ -43,8 +39,9 @@ nseas <- max(OSHcumdata$season)
 codaagList <- list()
 codatotls <- array(0,dim = c(niter*3/5, nseas*2))
 
-outfile <- "codafileFSN_OSH_beta_Dirichlet_lognorm_2012-17_10_2019.RData"
+outfile <- "codafileFSN_OSH_unif_norm_2012-17_3_2020.RData"
 # outfile <- "codafile_test.RData"
+variables <- c('USfludeathls','USfluhospls')
 
 for (ag in 1:5) {
   selind1 <- which(Fulldata$agcat==ag )
@@ -130,25 +127,23 @@ for (ag in 1:5) {
   #########################################################################################
   #########################################################################################
   cipcr <- sensdatasel[[1]]/100
-  lsepcrest <- ((log(cipcr[3]) - log(cipcr[1])) + (log(cipcr[1]) - log(cipcr[2])))/2/1.96
-  lpcrsens <- c(log(cipcr[1]),lsepcrest)
+  sepcrest <- ((cipcr[3] - cipcr[1]) + (cipcr[1] - cipcr[2]))/2/1.96
+  pcrsens <- c(cipcr[1],sepcrest)
   #########################################################################################
   #########################################################################################
   #########################################################################################
   cirapid <- sensdatasel[[2]]/100
-  lserapidest <- ((log(cirapid[3]) - log(cirapid[1])) + (log(cirapid[1]) - log(cirapid[2])))/2/1.96
-  lrapidsens <- c(log(cirapid[1]),lserapidest)
+  serapidest <- ((cirapid[3] - cirapid[1]) + (cirapid[1] - cirapid[2]))/2/1.96
+  rapidsens <- c(cirapid[1],serapidest)
   
   FSNpopls <- sapply(1:nseas, function(s) Fulldatasel$FSNpop[which(Fulldatasel$season==s)][1])
   USpopls  <- sapply(1:nseas, function(s) USpopdata$USpop[which(USpopdata$agcat==ag & USpopdata$season==s)])
   
-  alpha <- c(1,1,1,1) ### Dirichlet prior
-  
   data <- list('FSNfluhospnonfatls'=FSNfluhospnonfatls,'FSNfluhospfatls'=FSNfluhospfatls,
                'FSNpopls'=FSNpopls, 'USpopls' = USpopls,
                'Npideathls'=Npideathls,'oshpideathls'=oshpideathls,
-               'nttypearr'=nttypearr,'testposarr'=testposarr,'lpcrsens'=lpcrsens,
-               'lrapidsens'=lrapidsens,'ntotarr'=ntotarr,'alpha'=alpha,'nseas'=nseas)
+               'nttypearr'=nttypearr,'testposarr'=testposarr,'pcrsens'=pcrsens,
+               'rapidsens'=rapidsens,'ntotarr'=ntotarr,'nseas'=nseas)
   
   ptesttot <- t(sapply(1:2, function(k) sapply(1:nseas, function(s) sum(nttypearr[k,,s] +1))))
   
@@ -162,8 +157,8 @@ for (ag in 1:5) {
     ptestarrinit[,t,] <- (nttypearr[,t,1:nseas] + 1)/ptesttot
   }
 
-  sens1arrinit <- sapply(1:nseas, function(s) exp(c(lpcrsens[1],lpcrsens[1])))
-  sens2arrinit <- sapply(1:nseas, function(s) exp(c(lrapidsens[1],lrapidsens[1])))
+  sens1arrinit <- sapply(1:nseas, function(s) c(pcrsens[1],pcrsens[1]))
+  sens2arrinit <- sapply(1:nseas, function(s) c(rapidsens[1],rapidsens[1]))
   sens3arrinit <- sapply(1:nseas, function(s) c(.4,.4))
   
   sensarrinit <- array(0,dim = c(2,3,nseas))
@@ -212,7 +207,7 @@ for (ag in 1:5) {
       fluhospls = fluhosplsinit,
       fluhospfatls = fluhospfatlsinit,
       fludeathls = fludeathlsinit,
-      ptestarr = ptestarrinit,
+      ptestarr0 = ptestarrinit,
       fluposarr = fluposarrinit,
       sens1arr = sens1arrinit,
       sens2arr = sens2arrinit,
@@ -222,12 +217,7 @@ for (ag in 1:5) {
       USfluhospls = USfluhosplsinit
     )}
   
-  variables <- c('USfludeathls','USfluhospls')
-  # variables <- c('sensarr[1:2,1:3,1:5]','pfluarr[1:2,1:5]')
-  # variables <- c('sensarr[1:2,1:3,1:5]')
-  # variables <- c('ptarr[1:2,1:5]')
-  # variables <- c('ptestarr[1:2,4,1:5]')
-  
+
   setwd(paste0(bfolder,'BEmodels'))
   
   j.model <- jags.model(file=model.file,data=data, inits=inits, n.adapt=nadapt, n.chains=3)
